@@ -3,22 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <title>URLスクラップブック</title>
-</head>
-<body>
-  <h1>URL Shaing</h1>
-  <main>
-  <h2>きちんと実力を評価してもらいたい</h2>
-  <p>どうすれば学んで来たことをきちんと評価してもらえるでしょうか。誰かの定めた資格でしょうか、はたまたあるコンテストでの表彰経験でしょうか。ただひたすらに強さを追い求めて日の元を歩いたことのない人間は、ただ表舞台へ出る勇気のある人間に負けてしまうのでしょうか。</p>
-  <p>私は、評価の方法として、わかりやすい経歴には意味があると思っています。しかし、その人の実力を図るという意味では全く意味があるとは思えません。実際に、グループ内に入れるか否かは測れても、最適にその人の才能を活かすには、「知っていることを全て網羅する」方が早いでしょう。</p>
-  <h2>知っていることを公開する既存の方法</h2>
-  <p>私の好きなサービスに、<a href="note.mu">note</a>というサービスがあります。これは学んだことをまとめる、文字通り電子化されたノートのようなサービスです。これは非常に使いやすいサービスですが、学んだことを記事にするのには、非常に時間がかかります。</p>
-  <h2>学んだことをそのまま見せる</h2>
-  <p>勉強するときにノートを作成します。それは歴史的に見ても、ずっと繰り返されていることです。なぜ、自分の理解していることを人にわかってもらうのに、自分が理解するために書いたこれを見せないのでしょうか。私はここに、意味を感じました。</p>
-  <h2>ただし、作ることにではなく、見せることに特化する</h2>
-  <h2>人にものを教えるときも、これで解決</h2>
-  <h2>SEOを超え、古い情報を淘汰する</h2>
-  </main>
 <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase.js"></script>
+
+<!-- Add additional services that you want to use -->
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-messaging.js"></script>
+<script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-functions.js"></script>
 <script>
   // Initialize Firebase
   var config = {
@@ -30,6 +22,56 @@
     messagingSenderId: "756728507687"
   };
   firebase.initializeApp(config);
+</script>
+<script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+<script>var ui = new firebaseui.auth.AuthUI(firebase.auth());</script>
+</head>
+<body>
+  <h1>URL Sharing</h1>
+  <main>
+  <h2>きちんと実力を評価してもらいたい</h2>
+  <p>どうすれば学んで来たことをきちんと評価してもらえるでしょうか。誰かの定めた資格でしょうか、はたまたあるコンテストでの表彰経験でしょうか。ただひたすらに強さを追い求めて日の元を歩いたことのない人間は、ただ表舞台へ出る勇気のある人間に負けてしまうのでしょうか。</p>
+  <p>私は、評価の方法として、わかりやすい経歴には意味があると思っています。しかし、その人の実力を図るという意味では全く意味があるとは思えません。実際に、グループ内に入れるか否かは測れても、最適にその人の才能を活かすには、「知っていることを全て網羅する」方が早いでしょう。</p>
+  <h2>知っていることを公開する既存の方法</h2>
+  <p>私の好きなサービスに、<a href="note.mu">note</a>というサービスがあります。これは学んだことをまとめる、文字通り電子化されたノートのようなサービスです。これは非常に使いやすいサービスですが、学んだことを記事にするのには、非常に時間がかかります。</p>
+  <h2>学んだことをそのまま見せる</h2>
+  <p>勉強するときにノートを作成します。それは歴史的に見ても、ずっと繰り返されていることです。なぜ、自分の理解していることを人にわかってもらうのに、自分が理解するために書いたこれを見せないのでしょうか。私はここに、意味を感じました。</p>
+  <h2>ただし、作ることにではなく、見せることに特化する</h2>
+  <h2>人にものを教えるときも、これで解決</h2>
+  <h2>SEOを超え、古い情報を淘汰する</h2>
+
+  <div id="firebaseui-auth-container"></div>
+  <div id="loader">Loading...</div>
+  </main>
+  <script>
+    var uiConfig = {
+      callbacks: {
+        signInSuccess: function(currentUser, credential, redirectUrl) {
+          // サインイン成功時のコールバック関数
+          // 戻り値で自動的にリダイレクトするかどうかを指定
+          return true;
+        },
+        uiShown: function() {
+          // FirebaseUIウィジェット描画完了時のコールバック関数
+          // 読込中で表示しているローダー要素を消す
+          document.getElementById('loader').style.display = 'none';
+        }
+      },
+      // リダイレクトではなく、ポップアップでサインインフローを表示
+      signInFlow: 'popup',
+      signInSuccessUrl: 'feed/',
+      signInOptions: [
+        // サポートするプロバイダ(メールアドレス)を指定
+        firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+        firebase.auth.GithubAuthProvider.PROVIDER_ID,
+      ],
+      // Terms of service url.
+      tosUrl: '<your-tos-url>'
+    };
+    ui.start('#firebaseui-auth-container', uiConfig);
 </script>
 </body>
 </html>
