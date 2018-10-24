@@ -23,16 +23,12 @@
   };
   firebase.initializeApp(config);
 </script>
+<script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
+<link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+<script>var ui = new firebaseui.auth.AuthUI(firebase.auth());</script>
 </head>
 <body>
   <h1>URL Sharing</h1>
-  <nav>
-    <form method="" action="" name="register">
-      <input type="email" name="email_regist">
-      <input type="password" name="password_regist">
-      <button func="register()">regist</button>
-    </form>
-  </nav>
   <main>
   <h2>きちんと実力を評価してもらいたい</h2>
   <p>どうすれば学んで来たことをきちんと評価してもらえるでしょうか。誰かの定めた資格でしょうか、はたまたあるコンテストでの表彰経験でしょうか。ただひたすらに強さを追い求めて日の元を歩いたことのない人間は、ただ表舞台へ出る勇気のある人間に負けてしまうのでしょうか。</p>
@@ -44,17 +40,38 @@
   <h2>ただし、作ることにではなく、見せることに特化する</h2>
   <h2>人にものを教えるときも、これで解決</h2>
   <h2>SEOを超え、古い情報を淘汰する</h2>
+
+  <div id="firebaseui-auth-container"></div>
+  <div id="loader">Loading...</div>
   </main>
   <script>
-  func register(){
-    let emailData = document.register.email_regist.value;
-    let passwordData = document.register.password_regist.value;
-    firebase.auth().createUserWithEmailAndPassword(emailData, passwordData).catch(function(error) {
-    var errorCode = error.code;
-    var errorMessage = error.message;
-});
-    
-  };
-  </script>
+    var uiConfig = {
+      callbacks: {
+        signInSuccess: function(currentUser, credential, redirectUrl) {
+          // サインイン成功時のコールバック関数
+          // 戻り値で自動的にリダイレクトするかどうかを指定
+          return true;
+        },
+        uiShown: function() {
+          // FirebaseUIウィジェット描画完了時のコールバック関数
+          // 読込中で表示しているローダー要素を消す
+          document.getElementById('loader').style.display = 'none';
+        }
+      },
+      // リダイレクトではなく、ポップアップでサインインフローを表示
+      signInFlow: 'popup',
+      signInSuccessUrl: 'feed/',
+      signInOptions: [
+        // サポートするプロバイダ(メールアドレス)を指定
+        firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+        firebase.auth.GithubAuthProvider.PROVIDER_ID,
+      ],
+      // Terms of service url.
+      tosUrl: '<your-tos-url>'
+    };
+    ui.start('#firebaseui-auth-container', uiConfig);
+</script>
 </body>
 </html>
