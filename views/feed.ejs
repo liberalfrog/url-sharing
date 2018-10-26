@@ -5,14 +5,20 @@
   <title>URL Sharing feed</title>
   <!-- Load React. -->
   <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
-  <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/4.12.1/firebase-firestore.js"></script>
+  <script src="/common/js/react.development.js" crossorigin></script>
+  <script src="/common/js/react-dom.development.js" crossorigin></script>
+  <script src="/common/js/browser.min.js"></script>
+  <script src="/common/js/firebase.js"></script>
+  <script src="/common/js/firebase-firestore.js"></script>
+  <link rel="stylesheet" href="/css/urlput.css" media="all">
+  <link rel="stylesheet" href="/css/urlset.css" media="all">
 </head>
 <body>
-  <div id="urlput_container"></div>
-  <script type="text/babel" src="/jsx/urlput.jsx"></script>
+  <div id="container"></div>
+  <div id="urlput_post"></div>
+  <button id="add_button">+</button>
+  <script type="text/babel" src="/jsx/urlset.jsx"></script>
+  <script src="/common/js/jquery-3.3.1.min.js"></script>
+  <script type="text/babel" src="/jsx/add_button.jsx"></script>
 </body>
 </html>

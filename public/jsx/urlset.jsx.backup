@@ -1,17 +1,15 @@
-class UrlPut extends React.Component {
+class Urlset extends React.Component {
   render(){
     return (
-      <div className="urlput">
-        <h3>{this.props.title}</h3>
-        <p>{this.props.content}</p>
-        <a href={this.props.href}></a>
+      <div className="urlset">
+        <h3>{this.props.name}</h3>
       </div>
     )
   }
 }
 
 
-class Urlputs extends React.Component {
+class Urlsets extends React.Component {
   constructor(props){
     super()
     this.state = {
@@ -22,7 +20,7 @@ class Urlputs extends React.Component {
   render(){
     var return_html = []
     for(let [i, d] of this.state.list.entries()){
-      return_html.push( <UrlPut key={i} title={d.title} content={d.content} href={d.href}/>);
+      return_html.push( <Urlset key={i} name={d.name}/>);
     }
     
     return return_html;
@@ -30,7 +28,7 @@ class Urlputs extends React.Component {
 }
 
 
-export function urlputShow(list){
+var urlsetShow = function(list){
   ReactDOM.render( <Urlsets list={list}/>, document.getElementById("container"));
 }
 
@@ -52,5 +50,6 @@ db.collection("urlset").get().then((querysnapShots) => {
   for(var i of querysnapShots.docs){
     list.push(i.data())
   };
-  urlputShow(list);
+  urlsetShow(list);
 });
+
