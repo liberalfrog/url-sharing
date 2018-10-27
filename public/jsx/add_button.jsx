@@ -1,3 +1,7 @@
+// @platong URLput post view disable
+function unmountURLputPostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post")); }
+
+// @platong add button is clicked.
 $("#add_button").on("click", function(){
   ReactDOM.render(
     <UrlputMainFrame></UrlputMainFrame>,
@@ -24,7 +28,7 @@ function optionChange(){
 }
 
 
-//* URLPutの表示メインフレーム
+// @platong URLPutの表示メインフレーム
 class UrlputMainFrame extends React.Component{
 
   getChangedOption(){
@@ -39,9 +43,7 @@ class UrlputMainFrame extends React.Component{
     $.ajax({
       url:"/api_v1/",
       type:'GET',
-      data:{
-        "url": url,
-      }
+      data:{ "url": url }
     })
     .done( (data) => {
       $('.result').html(data); 
@@ -59,10 +61,11 @@ class UrlputMainFrame extends React.Component{
     let t_id = $("#urlput_option").val()
     db.collection("urlset").doc(t_id).collection("urlputs").add({
       title: document.urlput_form.title.value,
-      content: "現行のバージョンでは表示されません",
+      content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
       href: document.urlput_form.url.value,
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
+      unmountURLputPostView()
     }).catch(function(error) {
       console.error("Error adding document: ", error);
     });
@@ -142,7 +145,7 @@ class UrlsetMainFrame extends React.Component{
             img: downloadURL,
             name: document.urlset_form.title.value
           }).then(function(docRef) {
-            console.log("Document written with ID: ", docRef.id);
+            unmountURLputPostView()
           }).catch(function(error) {
             console.error("Error adding document: ", error);
           });
