@@ -19,6 +19,7 @@ function optionChange(){
     let option = $('<option>', { value: d.id, text: d.name });
     return option;
   });
+  options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成"}));
   select.append(options);
 }
 
@@ -75,7 +76,6 @@ class UrlputMainFrame extends React.Component{
           <label htmlFor="url">URL:</label>
           <input name="url" type="text" onInput={() => this.getChangeURL()} required/>
           <label htmlFor="urlbook">URLset:</label> <select id="urlput_option" required onChange={() => this.getChangedOption()}>
-            <option value="新しいURLセットを作成">新しいURLセットを作成</option>
           </select>
           <input name="title" type="text" required/>
           <input type="button" onClick={this.urlputSubmit} />

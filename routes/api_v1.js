@@ -19,13 +19,12 @@ router.get('/', function(req, res, next) {
 
 
 async function getPageInfo(url) {
-      const metaProps = await getMetaProps(url)
-      const site_name = resolveSiteName(metaProps)
-      const title = resolveTitle(metaProps)
-      const description = resolveDesc(metaProps)
-      const image = resolveImageUrl(metaProps)
-      
-      return { site_name, title, description, image }
+  const metaProps = await getMetaProps(url)
+  const site_name = resolveSiteName(metaProps)
+  const title = resolveTitle(metaProps)
+  const description = resolveDesc(metaProps)
+  const image = resolveImageUrl(metaProps)
+  return { site_name, title, description, image }
 }
 
 
@@ -89,8 +88,6 @@ function extractMetaProps(html) {
   const $ = cheerio.load(html)
   let results = []
   $('head meta').each((i, el) => {
-    console.log(el)
-    console.log(i)
     const property = $(el).attr('property')
     const content = $(el).attr('content')
     const name = $(el).attr('name')
@@ -100,11 +97,19 @@ function extractMetaProps(html) {
       results.push({ [name]: content })
     }
   })
+
+  let title =  $('head title').text()
+  if(title){
+    results.push({ "title": title })
+  }
+
   results.sort((a,b) => {
     if (Object.keys(a)[0] < Object.keys(b)[0]) return -1
     if (Object.keys(a)[0] > Object.keys(b)[0]) return 1
     return 0
   })
+
+  console.log(results)
   return results
 }
 
