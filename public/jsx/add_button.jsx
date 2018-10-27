@@ -33,12 +33,32 @@ class UrlputMainFrame extends React.Component{
       ReactDOM.render(<UrlsetMainFrame></UrlsetMainFrame>, document.getElementById("urlput_post"));
   }
 
+  getChangeURL(){
+    let url = document.urlput_form.url.value
+    $.ajax({
+      url:"/api_v1/",
+      type:'GET',
+      data:{
+        "url": url,
+      }
+    })
+    .done( (data) => {
+      $('.result').html(data); 
+      document.urlput_form.title.value = data.title
+      console.log(data);
+    })
+    .fail( (data) => {
+      $('.result').html(data);
+      console.log(data);
+    })
+  }
+
   urlputSubmit(){
     const db = firebase.firestore();
     let t_id = $("#urlput_option").val()
     db.collection("urlset").doc(t_id).collection("urlputs").add({
-      title: "Hello world",
-      content: "Hello world",
+      title: document.urlput_form.title.value,
+      content: "現行のバージョンでは表示されません",
       href: document.urlput_form.url.value,
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
@@ -53,10 +73,11 @@ class UrlputMainFrame extends React.Component{
         <h1>URLを登録する</h1>
         <form name="urlput_form">
           <label htmlFor="url">URL:</label>
-          <input name="url" type="text" required/>
+          <input name="url" type="text" onInput={() => this.getChangeURL()} required/>
           <label htmlFor="urlbook">URLset:</label> <select id="urlput_option" required onChange={() => this.getChangedOption()}>
             <option value="新しいURLセットを作成">新しいURLセットを作成</option>
           </select>
+          <input name="title" type="text" required/>
           <input type="button" onClick={this.urlputSubmit} />
         </form>
       </div>
@@ -152,5 +173,3 @@ class UrlsetMainFrame extends React.Component{
   }
 
 }
-
-

@@ -7,6 +7,7 @@ var logger = require('morgan');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var feedRouter = require('./routes/feed');
+var apiRouter = require('./routes/api_v1');
 
 const firebase = require('firebase');
 //var firebaseui = require('firebaseui');
@@ -26,6 +27,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/feed', feedRouter);
+app.use('/api_v1/', apiRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
