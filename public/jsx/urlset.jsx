@@ -1,18 +1,18 @@
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
+firebase.initializeApp({
+  apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
+  authDomain: "urlsharing-541c7.firebaseapp.com",
+  databaseURL: "https://urlsharing-541c7.firebaseio.com",
+  projectId: "urlsharing-541c7",
+  storageBucket: "urlsharing-541c7.appspot.com",
+  messagingSenderId: "756728507687"
+});
+
+const db = firebase.firestore();
+const storage = firebase.storage();
+
 function init(){
-  firebase.initializeApp({
-    apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
-    authDomain: "urlsharing-541c7.firebaseapp.com",
-    databaseURL: "https://urlsharing-541c7.firebaseio.com",
-    projectId: "urlsharing-541c7",
-    storageBucket: "urlsharing-541c7.appspot.com",
-    messagingSenderId: "756728507687"
-  });
-
-  const db = firebase.firestore();
-  const storage = firebase.storage();
-
   var d;
   db.collection("urlset").get().then((querysnapShots) => {
     var list = []
@@ -46,8 +46,15 @@ class Urlset extends React.Component {
         d.id = i.id
         list.push(d)
       };
+      history.pushState('','',"?id=" + this.props.id);
+      window.addEventListener('popstate', function(e) {
+        if(location.pathname === "/feed"){
+          init()
+        }
+      });
       urlputShow(list);
     });
+    
   }
 
   render(){
