@@ -1,3 +1,8 @@
+// @platong For compressed image
+var blob = null;
+const THUMBNAIL_WIDTH = 500;
+
+
 // @platong URLput post view disable
 function unmountURLputPostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post")); }
 
@@ -9,6 +14,13 @@ $("#add_button").on("click", function(){
   );
   optionChange();
 });
+
+
+function blobToFile(theBlob, fileName){
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
 
 
 // @platong option change from urlset_list
@@ -26,6 +38,8 @@ function optionChange(){
   options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成"}));
   select.append(options);
 }
+
+
 
 
 // @platong URLPutの表示メインフレーム
@@ -92,74 +106,112 @@ class UrlputMainFrame extends React.Component{
 class UrlsetMainFrame extends React.Component{
 
   urlsetSubmit(){
+    let file = document.urlset_form.urlbook_img.files[0]
     // validation
-    if(document.urlset_form.title.value !== ""){
-      var db = firebase.firestore();
-      var storage = firebase.storage();
-      var storageRef = storage.ref();
+    if(document.urlset_form.title.value === "" && !blob) return;
 
-      var imagesRef = storageRef.child('urlset_images');
+    var db = firebase.firestore();
+    var storage = firebase.storage();
+    var storageRef = storage.ref();
+    var imagesRef = storageRef.child('urlset_images');
 
-      var file = document.urlset_form.urlbook_img.files[0]
+    const file_name= document.urlset_form.urlbook_img.files[0].name
+    file = blobToFile(blob)
 
-      let metadata = { contentType: file.type };
-      var ref = storageRef.child('urlset_images/' + file.name);
+    var ref = storageRef.child('urlset_images/' + file_name);
 
-      var uploadTask = ref.put(file, metadata)
+    var uploadTask = ref.put(file)
 
-      // Listen for state changes, errors, and completion of the upload.
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-      function(snapshot) {
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED: // or 'paused'
-          console.log('Upload is paused');
+    // Listen for state changes, errors, and completion of the upload.
+    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+    function(snapshot) {
+      // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+      var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+      console.log('Upload is ' + progress + '% done');
+      switch (snapshot.state) {
+        case firebase.storage.TaskState.PAUSED: // or 'paused'
+        console.log('Upload is paused');
+        break;
+      case firebase.storage.TaskState.RUNNING: // or 'running'
+        console.log('Upload is running');
+        break;
+      }
+    }, function(error) { // https://firebase.google.com/docs/storage/web/handle-errors
+      switch (error.code) {
+        case 'storage/unauthorized': // User doesn't have permission to access the object
           break;
-        case firebase.storage.TaskState.RUNNING: // or 'running'
-          console.log('Upload is running');
+        case 'storage/canceled': // User canceled the upload
           break;
-        }
-      }, function(error) {
-        // A full list of error codes is available at
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            // User doesn't have permission to access the object
-            break;
-
-          case 'storage/canceled':
-            // User canceled the upload
-            break;
-
-          case 'storage/unknown':
-            // Unknown error occurred, inspect error.serverResponse
-            break;
-        }
-      }, function() {
-        // Upload completed successfully, now we can get the download URL
-        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-          console.log('File available at', downloadURL);
-          db.collection("urlset").add({
-            img: downloadURL,
-            name: document.urlset_form.title.value
-          }).then(function(docRef) {
-            unmountURLputPostView()
-          }).catch(function(error) {
-            console.error("Error adding document: ", error);
-          });
-          ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
-          ReactDOM.render(
-            <UrlputMainFrame></UrlputMainFrame>,
-            document.getElementById("urlput_post")
-          );
+        case 'storage/unknown': // Unknown error occurred, inspect error.serverResponse
+          break;
+      }
+    }, function() { // Upload completed successfully, now we can get the download URL
+      uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+        console.log('File available at', downloadURL);
+        db.collection("urlset").add({
+          img: downloadURL,
+          name: document.urlset_form.title.value
+        }).then(function(docRef) {
+          unmountURLputPostView()
+        }).catch(function(error) {
+          console.error("Error adding document: ", error);
         });
+        ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
+        ReactDOM.render(
+          <UrlputMainFrame></UrlputMainFrame>,
+          document.getElementById("urlput_post")
+        );
       });
+    });
+  };
 
-    };
+
+  // @platong If file is changed, file will be compressed.
+  fileChanged(){
+    let file = document.urlset_form.urlbook_img.files[0]
+    if (file.type != 'image/jpeg' && file.type != 'image/png') {
+      file = null;
+      blob = null;
+      return;
+     alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+    }
+    var image = new Image();
+    var reader = new FileReader();
+  
+    reader.onload = function(e) {
+      image.onload = function() {
+        var width, height;
+        if(image.width > image.height){
+          var ratio = image.height/image.width;
+          width = THUMBNAIL_WIDTH;
+          height = THUMBNAIL_WIDTH * ratio;
+        } else {
+          alert("縦長の画像はアップロードできません");
+          return
+        }
+        var canvas = $('#preview').attr('width', width).attr('height', height);
+        var ctx = canvas[0].getContext('2d');
+        ctx.clearRect(0,0,width,height);
+        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
+  
+        var base64 = canvas.get(0).toDataURL('image/jpeg');
+        var barr, bin, i, len;
+        bin = atob(base64.split('base64,')[1]);
+        len = bin.length;
+        barr = new Uint8Array(len);
+        i = 0;
+        while (i < len) {
+          barr[i] = bin.charCodeAt(i);
+          i++;
+        }
+        blob = new Blob([barr], {type: 'image/jpeg'});
+        console.log(blob);
+      }
+      image.src = e.target.result;
+    }
+    reader.readAsDataURL(file);
   }
-
+  
   render(){
     return (
       <div className="urlset_post_view">
@@ -168,11 +220,11 @@ class UrlsetMainFrame extends React.Component{
           <label htmlFor="title">タイトル:</label>
           <input name="title" type="text" required/>
           <label htmlFor="urlbook_img" required>URLSet:</label>
-          <input name="urlbook_img" type="file" />
+          <input name="urlbook_img" type="file" onChange={this.fileChanged} />
           <input type="button" onClick={this.urlsetSubmit} />
         </form>
+        <canvas id="preview" width="0" height="0"></canvas>
       </div>
     );
   }
-
 }
