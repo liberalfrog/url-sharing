@@ -48,7 +48,8 @@ class Urlset extends React.Component {
       };
       history.pushState('','',"?id=" + this.props.id);
       window.addEventListener('popstate', function(e) {
-        if(location.pathname === "/feed"){
+        const pathname = location.pathname
+        if(pathname === "/feed" || pathname === "/feed/"){
           init()
         }
       });
