@@ -13,6 +13,21 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 
 function init(){
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // User is signed in.
+      console.log(user);
+    } else {
+      console.log("Please sign in");
+      var redirect_url = "/" + location.search;
+      if (document.referrer) {
+        var referrer = "referrer=" + encodeURIComponent(document.referrer);
+        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
+      }
+      location.href = redirect_url;
+    }
+  });
+
   var d;
   db.collection("urlset").get().then((querysnapShots) => {
     var list = []
