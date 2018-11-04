@@ -8,8 +8,6 @@ function unmountURLputPostView(){ ReactDOM.unmountComponentAtNode(document.getEl
 
 function unmountPostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post")); }
 
-function closeOverlay(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
-
 
 // @platong If the form can submit, return true.
 function submitValidation(){
@@ -23,17 +21,6 @@ function submitValidation(){
 }
 
 
-// @platong If the form can submit, return true.
-function urlSubmitValidation(){
-  let url = document.urlput_form.url.value;
-  let title = document.urlput_form.title.value;
-  let index = document.getElementById("urlput_option").selectedIndex;
-  if(index !== 0 && url !== "" && title !== "")
-    return true;
-  return false;
-}
-
-
 function buttonActiveSwitch(){
   if(submitValidation()){
     $("#ap_submit").addClass("submit_is_active");
@@ -41,17 +28,6 @@ function buttonActiveSwitch(){
   }else{
     $("#ap_submit").removeClass("submit_is_active");
     $("#ap_submit").addClass("submit_is_disactive");
-  }
-}
-
-
-function urlSubmitActiveSwitch(){
-  if(urlSubmitValidation()){
-    $("#url_submit").addClass("submit_is_active");
-    $("#url_submit").removeClass("submit_is_disactive");
-  }else{
-    $("#url_submit").removeClass("submit_is_active");
-    $("#url_submit").addClass("submit_is_disactive");
   }
 }
 
@@ -120,11 +96,11 @@ class AddPanel extends React.Component{
 // @platong URLを登録する
 class UrlPost extends React.Component{
   getChangedOption(){
-    urlSubmitActiveSwitch();
     var obj = document.getElementById("urlput_option");
     let index = obj.selectedIndex;
     if (index != 0 && obj.options[index].value === "新しいURLセットを作成")
       ReactDOM.render(<UrlsetMainFrame></UrlsetMainFrame>, document.getElementById("urlput_post"));
+    else if (index != 0 && obj.options[index].value === "URLを登録するフォルダを選択")
   }
   getChangeURL(){
     let url = document.urlput_form.url.value
@@ -141,15 +117,7 @@ class UrlPost extends React.Component{
       $('.result').html(data);
     })
   }
-  getChanged(){
-    urlSubmitActiveSwitch();
-  }
   urlputSubmit(){
-    var obj = document.getElementById("urlput_option");
-    let index = obj.selectedIndex;
-    if (index == 0 || obj.options[index].value === "URLを登録するフォルダを選択")
-      return
-
     const db = firebase.firestore();
     let t_id = $("#urlput_option").val()
     db.collection("urlset").doc(t_id).collection("urlputs").add({
@@ -158,7 +126,7 @@ class UrlPost extends React.Component{
       href: document.urlput_form.url.value,
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
-      closeOverlay()
+      unmountURLputPostView()
     }).catch(function(error) {
       console.error("Error adding document: ", error);
     });
@@ -174,8 +142,8 @@ class UrlPost extends React.Component{
             <select id="urlput_option" required onChange={() => this.getChangedOption()}>
               <option value="URLを登録するフォルダを選択">URLを登録するフォルダを選択</option>
             </select>
-            <input name="title" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
-            <input type="button" onClick={this.urlputSubmit} value="登録" className="submit_is_disactive" id="url_submit"/>
+            <input name="title" type="text" placeholder="タイトル（自動入力）" required/>
+            <input type="button" onClick={this.urlputSubmit} />
           </form>
         </div>
       </div>
@@ -227,7 +195,7 @@ class UrlFolderPost extends React.Component{
           img: downloadURL,
           name: document.urlset_form.title.value
         }).then(function(docRef) {
-          closeOverlay()
+          unmountURLputPostView()
         }).catch(function(error) {
           console.error("Error adding document: ", error);
         });
@@ -296,7 +264,7 @@ class UrlFolderPost extends React.Component{
         <div className="add_post">
           <form action="" name="urlset_form">
             <div className="ap_panel_main">
-              <input id="ap_panel_title" name="title" type="text" onInput={this.buttonActiveSwitch} placeholder="タイトルを入力" required/>
+              <input id="ap_panel_title" name="title" type="text" onInput={this.buttonActiveSwitch} required/>
             </div>
             <div className="ap_panel_sub">
               <input id="ap_select_img"  name="urlbook_img" type="file" onChange={this.fileChanged} />
