@@ -3,27 +3,22 @@ var blob = null;
 const THUMBNAIL_HEIGHT = 100;
 
 
-// @platong URLput post view disable
-function unmountURLputPostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post")); }
-
-function unmountPostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post")); }
-
-function closeOverlay(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
+//@ platong unmount is not obvious for everyone who read this.
+function closePostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
+function closeAddPanel(){ ReactDOM.unmountComponentAtNode(document.getElementById("add_view")); }
 
 
-// @platong If the form can submit, return true.
-function submitValidation(){
+// @platong If the folder form can submit, return true.
+function folderSubmitValidation(){
   let title = document.getElementById("ap_panel_title").value;
   let file = document.urlset_form.urlbook_img.files[0];
-  if(title!=="" && file!==undefined){
+  if(title!=="" && file!==undefined)
     return true;
-  }else{
-    return false;
-  }
+  return false;
 }
 
 
-// @platong If the form can submit, return true.
+// @platong If the url form can submit, return true.
 function urlSubmitValidation(){
   let url = document.urlput_form.url.value;
   let title = document.urlput_form.title.value;
@@ -34,8 +29,9 @@ function urlSubmitValidation(){
 }
 
 
+// @platong Change button color if the form can submit.
 function buttonActiveSwitch(){
-  if(submitValidation()){
+  if(folderSubmitValidation()){
     $("#ap_submit").addClass("submit_is_active");
     $("#ap_submit").removeClass("submit_is_disactive");
   }else{
@@ -45,6 +41,7 @@ function buttonActiveSwitch(){
 }
 
 
+// @platong Change button color if the form can submit.
 function urlSubmitActiveSwitch(){
   if(urlSubmitValidation()){
     $("#url_submit").addClass("submit_is_active");
@@ -65,21 +62,17 @@ function blobToFile(theBlob, fileName){
 
 // @platong add button is clicked.
 $("#add_button").on("click", function(){
-  ReactDOM.render(
-    <AddPanel></AddPanel>,
-    document.getElementById("add_view")
-  );
+  ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
   optionChange();
 });
 
 
-// @platong option change from urlset_list
+// @platong option change from folder which is got from Firebase.
 function optionChange(){
-  var list = sessionStorage.urlset_list.split("-@-")
+  let list = sessionStorage.urlset_list.split("-@-")
   list = list.map(value => {
     return JSON.parse(value)
   })
-
   let select = $("#urlput_option")
   let options = $.map(list, (d) => {
     let option = $('<option>', { value: d.id, text: d.name });
@@ -90,24 +83,24 @@ function optionChange(){
 }
 
 
+// @platong Appear if plus button is tapped or clicked.
 class AddPanel extends React.Component{
   folderCreate(){
     ReactDOM.render(<UrlFolderPost></UrlFolderPost>, document.getElementById("post_add_view"));
-    ReactDOM.unmountComponentAtNode(document.getElementById("add_view"));
+    closeAddPanel();
   }
   urlCreate(){
     ReactDOM.render(<UrlPost></UrlPost>, document.getElementById("post_add_view"));
-    optionChange();
-    ReactDOM.unmountComponentAtNode(document.getElementById("add_view"));
+    closeAddPanel();
   }
   render(){
     return(
       <div>
-        <div className="add_panel" onClick={() => this.folderCreate()}>
+        <div className="add_panel" onClick={this.folderCreate}>
           <h3>Add folder</h3>
           <p>URLをまとめて管理するフォルダを作成</p>
         </div>
-        <div className="add_panel" onClick={() => this.urlCreate()}>
+        <div className="add_panel" onClick={this.urlCreate}>
           <h3>Add URL</h3>
           <p>URLをフォルダに追加</p>
         </div>
@@ -117,7 +110,7 @@ class AddPanel extends React.Component{
 }
 
 
-// @platong URLを登録する
+// @platong register URL
 class UrlPost extends React.Component{
   getChangedOption(){
     urlSubmitActiveSwitch();
@@ -126,8 +119,9 @@ class UrlPost extends React.Component{
     if (index != 0 && obj.options[index].value === "新しいURLセットを作成")
       ReactDOM.render(<UrlsetMainFrame></UrlsetMainFrame>, document.getElementById("urlput_post"));
   }
-  getChangeURL(){
-    let url = document.urlput_form.url.value
+  // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
+  urlConverter(){
+    const url = document.urlput_form.url.value
     $.ajax({
       url:"/api_v1/",
       type:'GET',
@@ -137,17 +131,13 @@ class UrlPost extends React.Component{
       $('.result').html(data); 
       document.urlput_form.title.value = data.title
     })
-    .fail( (data) => {
-      $('.result').html(data);
-    })
+    .fail( console.log("Error something bug is occured. Please contact us to inform this.") )
   }
-  getChanged(){
-    urlSubmitActiveSwitch();
-  }
+  getChanged(){ urlSubmitActiveSwitch(); }
   urlputSubmit(){
     var obj = document.getElementById("urlput_option");
     let index = obj.selectedIndex;
-    if (index == 0 || obj.options[index].value === "URLを登録するフォルダを選択")
+    if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択")
       return
 
     const db = firebase.firestore();
@@ -158,20 +148,19 @@ class UrlPost extends React.Component{
       href: document.urlput_form.url.value,
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
-      closeOverlay()
+      closePostView()
     }).catch(function(error) {
       console.error("Error adding document: ", error);
     });
   }
-  closeOverlay(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
   render(){
     return (
       <div>
-        <div className="window-overlay" onClick={this.closeOverlay}></div>
+        <div className="window-overlay" onClick={closePostView}></div>
         <div className="add_post">
           <form name="urlput_form">
-            <input name="url" type="text" onInput={() => this.getChangeURL()} placeholder="URLを入力" required/>
-            <select id="urlput_option" required onChange={() => this.getChangedOption()}>
+            <input name="url" type="text" onInput={this.urlConverter} placeholder="URLを入力" required/>
+            <select id="urlput_option" required onChange={this.getChangedOption}>
               <option value="URLを登録するフォルダを選択">URLを登録するフォルダを選択</option>
             </select>
             <input name="title" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
@@ -185,9 +174,9 @@ class UrlPost extends React.Component{
 
 
 class UrlFolderPost extends React.Component{
-  urlsetSubmit(){
+  submit(){
     let file = document.urlset_form.urlbook_img.files[0]
-    if(!submitValidation()) return;
+    if(!folderSubmitValidation()) return;
     if(document.urlset_form.title.value === "" && !blob) return; // validation
     let db = firebase.firestore();
     let storage = firebase.storage();
@@ -227,7 +216,7 @@ class UrlFolderPost extends React.Component{
           img: downloadURL,
           name: document.urlset_form.title.value
         }).then(function(docRef) {
-          closeOverlay()
+          closePostView()
         }).catch(function(error) {
           console.error("Error adding document: ", error);
         });
@@ -239,8 +228,6 @@ class UrlFolderPost extends React.Component{
       });
     });
   };
-
-
   // @platong If file is changed, file will be compressed.
   fileChanged(){
     let file = document.urlset_form.urlbook_img.files[0]
@@ -280,27 +267,24 @@ class UrlFolderPost extends React.Component{
           i++;
         }
         blob = new Blob([barr], {type: 'image/jpeg'});
-        console.log(blob);
       }
       image.src = e.target.result;
     }
     reader.readAsDataURL(file);
     buttonActiveSwitch()
   }
-  closeOverlay(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
-  buttonActiveSwitch(){ buttonActiveSwitch() }
   render(){
     return (
       <div>
-        <div className="window-overlay" onClick={this.closeOverlay}></div>
+        <div className="window-overlay" onClick={closePostView}></div>
         <div className="add_post">
           <form action="" name="urlset_form">
             <div className="ap_panel_main">
-              <input id="ap_panel_title" name="title" type="text" onInput={this.buttonActiveSwitch} placeholder="タイトルを入力" required/>
+              <input id="ap_panel_title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
             </div>
             <div className="ap_panel_sub">
               <input id="ap_select_img"  name="urlbook_img" type="file" onChange={this.fileChanged} />
-              <input type="button" onClick={this.urlsetSubmit} value="作成" className="submit_is_disactive" id="ap_submit" />
+              <input type="button" onClick={this.submit} value="作成" className="submit_is_disactive" id="ap_submit" />
             </div>
             <canvas id="preview" width="0" height="0"></canvas>
           </form>
