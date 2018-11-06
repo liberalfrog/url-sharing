@@ -107,11 +107,10 @@ class Folder extends React.Component {
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
+        <a href={"/account?aId=" + this.props.aId}><img src={this.props.aProfileImg} className="account_profile_img" /></a>
         <h3>{this.props.name}</h3>
-        <a onClick={() => this.putShow()}></a>
-        <img src={this.props.aProfileImg} className="account_profile_img" />
         <p className="account_name">{this.props.aName}</p>
-        <span style={{display: "none"}}>{this.props.aId}</span>
+        <a className="rigidFolder" onClick={() => this.putShow()}></a>
       </div>
     )
   }

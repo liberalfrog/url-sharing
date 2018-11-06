@@ -33,7 +33,7 @@ body{
   margin: 10px 0 0 0;
 }
 
-.urlset_panel a{
+.urlset_panel a.rigidFolder{
   position: absolute;
   top: 0;
   left: 0;
