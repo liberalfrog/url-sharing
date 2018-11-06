@@ -123,3 +123,15 @@ body{
   background: white;
   color: gray;
 }
+
+
+/* Begin Register Account */
+.centering_popover{
+  position: fixed;
+  z-index: 30;
+  background: silver;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+/* End Register Account */
