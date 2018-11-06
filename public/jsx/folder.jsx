@@ -46,8 +46,8 @@ function init(){
     if (user) {
       getAccountId(user).then(a => {
         if(a === undefined){
-          $("body").append('<div id="centering_popover"></div>');
-          ReactDOM.render( <CenteringPopover/>, document.getElementById("centering_popover"));
+          $("body").prepend('<div id="popover"></div>');
+          ReactDOM.render( <CenteringPopover/>, document.getElementById("popover"));
           return
         }
         localStorage.setItem("accountId", a);
@@ -107,11 +107,10 @@ class Folder extends React.Component {
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
+        <a href={"/account?aId=" + this.props.aId}><img src={this.props.aProfileImg} className="account_profile_img" /></a>
         <h3>{this.props.name}</h3>
-        <a onClick={() => this.putShow()}></a>
-        <img src={this.props.aProfileImg} className="account_profile_img" />
         <p className="account_name">{this.props.aName}</p>
-        <span style={{display: "none"}}>{this.props.aId}</span>
+        <a className="rigidFolder" onClick={() => this.putShow()}></a>
       </div>
     )
   }
@@ -255,8 +254,9 @@ class AccountRegister extends React.Component{
     let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('account_profile_imgs');
+    const file_name = file.name
     file = blobToFile(blob)
-    var ref = storageRef.child('account_profile_imgs/' + file.name);
+    var ref = storageRef.child('account_profile_imgs/' + file_name);
     var uploadTask = ref.put(file)
     // Listen for state changes, errors, and completion of the upload.
     uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
@@ -294,9 +294,10 @@ class AccountRegister extends React.Component{
           user.updateProfile({
             displayName: name,
             photoURL: downloadURL
-          }).then(
-            console.log("All process is done")
-          ).catch(err => {
+          }).then(() => {
+            console.log("All process is done");
+            location.reload();
+          }).catch(err => {
             console.error("Error: Register account: ", err);
           });
         }).catch(function(error) {
@@ -307,15 +308,19 @@ class AccountRegister extends React.Component{
   };
   render(){
     return(
-      <div>
-      <h2>Register an account</h2>
-      <form>
-        <input type="text" id="ra_name" onInput={raButtonActiveSwitch}/>
-        <input type="file" id="ra_profile_img" onChange={this.fileChanged} />
-        <input type="text" id="ra_intro" />
-        <input type="button" onClick={this.submit} value="登録" className="submit_is_disactive" id="ra_submit"/>
-      </form>
-      <canvas id="ra_preview" width="96" height="96"></canvas>
+      <div className="ra">
+        <div className="window-overlay"></div>
+        <div className="centering_popover">
+          <h2>Register an account</h2>
+          <form>
+            <input type="text" id="ra_name" style={{display: "block"}} placeholder="表示名（アカウント名）" onInput={raButtonActiveSwitch}/>
+            <label htmlFor="ra_profile_img">プロフィール画像を選択</label>
+            <input type="file" id="ra_profile_img" name="ra_profile_img" onChange={this.fileChanged} />
+            <input type="text" id="ra_intro" placeholder="自己紹介" />
+            <input type="button" onClick={this.submit} value="登録" className="submit_is_disactive" id="ra_submit"/>
+          </form>
+          <canvas id="ra_preview" width="96" height="96"></canvas>
+        </div>
       </div>
     );
   }
