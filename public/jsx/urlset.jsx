@@ -255,8 +255,9 @@ class AccountRegister extends React.Component{
     let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('account_profile_imgs');
+    const file_name = file.name
     file = blobToFile(blob)
-    var ref = storageRef.child('account_profile_imgs/' + file.name);
+    var ref = storageRef.child('account_profile_imgs/' + file_name);
     var uploadTask = ref.put(file)
     // Listen for state changes, errors, and completion of the upload.
     uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'

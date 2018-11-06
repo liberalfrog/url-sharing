@@ -4,7 +4,11 @@ const THUMBNAIL_HEIGHT = 100;
 
 
 //@ platong unmount is not obvious for everyone who read this.
-function closePostView(){ ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); }
+function closePostView(){ 
+  ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); 
+  ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
+}
+
 function closeAddPanel(){ ReactDOM.unmountComponentAtNode(document.getElementById("add_view")); }
 
 
@@ -187,7 +191,7 @@ class UrlFolderPost extends React.Component{
     let imagesRef = storageRef.child('urlset_images');
     const file_name = file.name
     file = blobToFile(blob)
-    var ref = storageRef.child('urlset_images/' + file.name);
+    var ref = storageRef.child('urlset_images/' + file_name);
     var uploadTask = ref.put(file)
     // Listen for state changes, errors, and completion of the upload.
     uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
@@ -227,7 +231,6 @@ class UrlFolderPost extends React.Component{
         }).catch(function(error) {
           console.error("Error adding document: ", error);
         });
-        ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
         ReactDOM.render(
           <UrlPost></UrlPost>,
           document.getElementById("urlput_post")
