@@ -63,7 +63,6 @@ function blobToFile(theBlob, fileName){
 // @platong add button is clicked.
 $("#add_button").on("click", function(){
   ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
-  optionChange();
 });
 
 
@@ -92,6 +91,7 @@ class AddPanel extends React.Component{
   urlCreate(){
     ReactDOM.render(<UrlPost></UrlPost>, document.getElementById("post_add_view"));
     closeAddPanel();
+    optionChange();
   }
   render(){
     return(
@@ -142,10 +142,14 @@ class UrlPost extends React.Component{
 
     const db = firebase.firestore();
     let t_id = $("#urlput_option").val()
+    let user = firebase.auth().currentUser;
     db.collection("urlset").doc(t_id).collection("urlputs").add({
       title: document.urlput_form.title.value,
       content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
       href: document.urlput_form.url.value,
+      aId: localStorage.getItem("accountId"),
+      aProfileImg: user.photoURL,
+      aName: user.displayName
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
       closePostView()
@@ -176,15 +180,14 @@ class UrlPost extends React.Component{
 class UrlFolderPost extends React.Component{
   submit(){
     let file = document.urlset_form.urlbook_img.files[0]
-    if(!folderSubmitValidation()) return;
-    if(document.urlset_form.title.value === "" && !blob) return; // validation
+    if(!folderSubmitValidation() && !blob) return; // validation
     let db = firebase.firestore();
     let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('urlset_images');
-    const file_name = document.urlset_form.urlbook_img.files[0].name
+    const file_name = file.name
     file = blobToFile(blob)
-    var ref = storageRef.child('urlset_images/' + file_name);
+    var ref = storageRef.child('urlset_images/' + file.name);
     var uploadTask = ref.put(file)
     // Listen for state changes, errors, and completion of the upload.
     uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
@@ -210,11 +213,15 @@ class UrlFolderPost extends React.Component{
           break;
       }
     }, function() { // Upload completed successfully, now we can get the download URL
+      let user = firebase.auth().currentUser;
       uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
         console.log('File available at', downloadURL);
         db.collection("urlset").add({
           img: downloadURL,
-          name: document.urlset_form.title.value
+          name: document.urlset_form.title.value,
+          aId: localStorage.getItem("accountId"),
+          aProfileImg: user.photoURL,
+          aName: user.displayName
         }).then(function(docRef) {
           closePostView()
         }).catch(function(error) {
@@ -251,7 +258,7 @@ class UrlFolderPost extends React.Component{
           alert("縦長の画像はアップロードできません");
           return
         }
-        var canvas = $('#preview').attr('width', width).attr('height', height);
+        var canvas = $('#ap_preview').attr('width', width).attr('height', height);
         var ctx = canvas[0].getContext('2d');
         ctx.clearRect(0,0,width,height);
         ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
@@ -286,7 +293,7 @@ class UrlFolderPost extends React.Component{
               <input id="ap_select_img"  name="urlbook_img" type="file" onChange={this.fileChanged} />
               <input type="button" onClick={this.submit} value="作成" className="submit_is_disactive" id="ap_submit" />
             </div>
-            <canvas id="preview" width="0" height="0"></canvas>
+            <canvas id="ap_preview" width="0" height="0"></canvas>
           </form>
         </div>
       </div>
