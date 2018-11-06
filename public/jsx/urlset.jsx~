@@ -89,7 +89,7 @@ class UrlPut extends React.Component {
     return (
       <div className="urlput_panel">
         <h3>{this.props.title}</h3>
-
+        <p>{this.props.content}</p>
         <a href={this.props.href}></a>
       </div>
     )
