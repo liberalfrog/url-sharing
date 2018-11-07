@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>URLスクラップブック</title>
+ <html lang="ja">
+   <head>
+    <meta charset="UTF-8">
+    <title>URLスクラップブック</title>
+	<link rel="stylesheet" href="/css/stylesheet.css">
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-database.js"></script>
@@ -17,25 +18,40 @@
       storageBucket: "urlsharing-541c7.appspot.com",
       messagingSenderId: "756728507687"
     };
+
     firebase.initializeApp(config);
   </script>
   <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
-  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" />
+ <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" /> 
   <script>var ui = new firebaseui.auth.AuthUI(firebase.auth());</script>
-</head>
+ </head>
+
 <body>
-  <h1>URL Sharing</h1>
-  <main>
-  <h2>きちんと実力を評価してもらいたい</h2>
-  <p>どうすれば学んで来たことをきちんと評価してもらえるでしょうか。誰かの定めた資格でしょうか、はたまたあるコンテストでの表彰経験でしょうか。ただひたすらに強さを追い求めて日の元を歩いたことのない人間は、ただ表舞台へ出る勇気のある人間に負けてしまうのでしょうか。</p>
+ <div class="header">URL Sharing</div> 
+ 
+ <main>
+<ul class="topic-list">
+  <li>きちんと<span>実力</span>を<span>評価</span>してもらいたい</li>
+ 
+ <p>どうすれば学んで来たことをきちんと評価してもらえるでしょうか。誰かの定めた資格でしょうか、はたまたあるコンテストでの表彰経験でしょうか。ただひたすらに強さを追い求めて日の元を歩いたことのない人間は、ただ表舞台へ出る勇気のある人間に負けてしまうのでしょうか。</p>
   <p>私は、評価の方法として、わかりやすい経歴には意味があると思っています。しかし、その人の実力を図るという意味では全く意味があるとは思えません。実際に、グループ内に入れるか否かは測れても、最適にその人の才能を活かすには、「知っていることを全て網羅する」方が早いでしょう。</p>
-  <h2>知っていることを公開する既存の方法</h2>
+
+  <li>知っていることを<span>公開</span>する既存の方法</li>
+
   <p>私の好きなサービスに、<a href="note.mu">note</a>というサービスがあります。これは学んだことをまとめる、文字通り電子化されたノートのようなサービスです。これは非常に使いやすいサービスですが、学んだことを記事にするのには、非常に時間がかかります。</p>
-  <h2>学んだことをそのまま見せる</h2>
+
+  <li><span>学んだこと</span>をそのまま見せる</li>
+
   <p>勉強するときにノートを作成します。それは歴史的に見ても、ずっと繰り返されていることです。なぜ、自分の理解していることを人にわかってもらうのに、自分が理解するために書いたこれを見せないのでしょうか。私はここに、意味を感じました。</p>
-  <h2>ただし、作ることにではなく、見せることに特化する</h2>
-  <h2>人にものを教えるときも、これで解決</h2>
-  <h2>SEOを超え、古い情報を淘汰する</h2>
+</ul>
+
+<div class="Maxim">
+ <ul>
+  <div align="left">「<span1>作ること</span1>」でなく「<span1>見せること</span1>」に特化</div>
+  <div align="center">人に教えるとき、これで解決</div1>
+  <div align="right">SEOを超え、古い情報を淘汰</div>
+ </ul>
+</div>
 
   <div id="firebaseui-auth-container"></div>
   <div id="loader">Loading...</div>
@@ -68,6 +84,6 @@
       tosUrl: '<your-tos-url>'
     };
     ui.start('#firebaseui-auth-container', uiConfig);
-</script>
-</body>
+  </script>
+ </body>
 </html>
