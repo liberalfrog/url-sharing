@@ -1,0 +1,29 @@
+.header{
+  font-family:Tahoma;
+  color:black;
+  font-size:50px;
+
+  background-color:#00FFBF;
+  padding-left : 37%;
+}
+
+span {
+  color:red;
+}
+span1{
+  color:#FA5858;
+}
+
+.topic-list li{
+  font-size:35px;
+}
+.topic-list p{
+  color:#2E2E2E;
+  font-size:20px;
+}
+
+.Maxim{
+  font-family:arial narrow;
+  font-size:35px;
+}
+
