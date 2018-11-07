@@ -1,0 +1,37 @@
+body{
+background-color:#FAFAFA;
+}
+.header{
+  font-family:Tahoma;
+  color:black;
+  font-size:65px;
+
+  background-color:#A9F5F2;
+  padding-left : 37%;
+
+  border-radius: 20px;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
+}
+
+span {
+  color:red;
+}
+span1{
+  color:#FA5858;
+}
+
+.topic-list li{
+  font-size:35px;
+}
+.topic-list p{
+  color:#2E2E2E;
+  font-size:20px;
+}
+
+.Maxim{
+  font-family:arial narrow;
+  font-size:35px;
+  padding-left:50px;
+}
+
