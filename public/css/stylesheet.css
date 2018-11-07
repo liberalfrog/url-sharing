@@ -1,10 +1,17 @@
+body{
+background-color:#FAFAFA;
+}
 .header{
   font-family:Tahoma;
   color:black;
-  font-size:50px;
+  font-size:65px;
 
-  background-color:#00FFBF;
+  background-color:#A9F5F2;
   padding-left : 37%;
+
+  border-radius: 20px;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
 }
 
 span {
@@ -25,5 +32,6 @@ span1{
 .Maxim{
   font-family:arial narrow;
   font-size:35px;
+  padding-left:50px;
 }
 
