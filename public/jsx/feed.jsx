@@ -1,19 +1,14 @@
+import React from 'react';
+import Folders from '../js/folder';
+
+
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
-firebase.initializeApp({
-  apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
-  authDomain: "urlsharing-541c7.firebaseapp.com",
-  databaseURL: "https://urlsharing-541c7.firebaseio.com",
-  projectId: "urlsharing-541c7",
-  storageBucket: "urlsharing-541c7.appspot.com",
-  messagingSenderId: "756728507687"
-});
-
 const db = firebase.firestore();
 const storage = firebase.storage();
 var blob;
 
-// @platong initialize this page
+
 init()
 
 function blobToFile(theBlob, fileName){
@@ -78,107 +73,12 @@ function init(){
 }
 
 
-// @platong component of a urlset
-class Folder extends React.Component {
-  putShow(){
-    let list = []
-    let d
-    db.collection("urlset").doc(this.props.id).collection("urlputs").get().then((querysnapShots) => {
-      for(var i of querysnapShots.docs){
-        d = i.data()
-        d.id = i.id
-        if(d.aId === undefined){
-          d.aId = ""
-          d.aProfileImg = ""
-          d.aName = ""
-        }
-        list.push(d)
-      };
-      history.pushState('','',"?id=" + this.props.id);
-      window.addEventListener('popstate', function(e) {
-        const pathname = location.pathname
-        if(pathname === "/feed" || pathname === "/feed/"){
-          init()
-        }
-      });
-      urlputShow(list);
-    });
-  }
-  render(){
-    return (
-      <div className="urlset_panel" id={this.props.id}>
-        <a href={"/account?aId=" + this.props.aId}><img src={this.props.aProfileImg} className="account_profile_img" /></a>
-        <h3>{this.props.name}</h3>
-        <p className="account_name">{this.props.aName}</p>
-        <a className="rigidFolder" onClick={() => this.putShow()}></a>
-      </div>
-    )
-  }
-}
-
-
-class UrlPut extends React.Component {
-  render(){
-    return (
-      <div className="urlput_panel">
-        <h3>{this.props.title}</h3>
-
-        <a href={this.props.href}></a>
-      </div>
-    )
-  }
-}
-
-
-class Folders extends React.Component {
-  constructor(props){
-    super()
-    this.state = {
-      list: props.list
-    };
-  }
-  render(){
-    var return_html = []
-    for(let d of this.state.list){
-      return_html.push( <Folder key={d.id} name={d.name} aName={d.aName} aId={d.aId} aProfileImg={d.aProfileImg} id={d.id}/>);
-    }
-    return return_html;
-  }
-}
-
-
-class Urlputs extends React.Component {
-
-  constructor(props){
-    super()
-    this.state = {
-      list: props.list
-    };
-  }
-
-  render(){
-    var return_html = []
-    for(let [i, d] of this.state.list.entries()){
-      return_html.push( <UrlPut key={i} title={d.title} content={d.content} href={d.href}/>);
-    }
-    
-    return return_html;
-  }
-}
-
-
 var folderShow = function(list){
   ReactDOM.render( <Folders list={list}/>, document.getElementById("container"));
   for(let d of list){
     $("#" + d.id ).css("background-image", "url(" + d.img + ")")
   }
 }
-
-
-function urlputShow(list){
-  ReactDOM.render( <Urlputs list={list}/>, document.getElementById("container"));
-}
-
 
 
 class CenteringPopover extends React.Component{
