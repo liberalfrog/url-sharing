@@ -2258,101 +2258,6 @@ if (process.env.NODE_ENV === 'production') {
 },{"./cjs/react.development.js":5,"./cjs/react.production.min.js":6,"_process":1}],8:[function(require,module,exports){
 'use strict';
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _folder = require('./folder');
-
-var _folder2 = _interopRequireDefault(_folder);
-
-var db = firebase.firestore();
-var storage = firebase.storage();
-
-// @platong initialize this page
-init();
-
-function init() {
-  var aId = location.search.substring(1).split('=')[1];
-  db.collection("account").doc(aId).get().then(function (querysnapShot) {
-    var d = querysnapShot.data();
-    console.log(d);
-    document.getElementById("account_profile_img").src = d.img;
-    document.getElementById("account_name").innerHTML = d.name;
-    document.getElementById("account_intro").innerHTML = d.intro;
-  });
-
-  db.collection("urlset").where("aId", "==", aId).get().then(function (querysnapShots) {
-    var d = undefined;
-    var list = [];
-    var for_saved_list = [];
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = querysnapShots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var i = _step.value;
-
-        d = i.data();
-        d.id = i.id;
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator['return']) {
-          _iterator['return']();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    ;
-    folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-  });
-}
-
-var folderShow = function folderShow(list) {
-  ReactDOM.render(_react2['default'].createElement(_folder2['default'], { list: list }), document.getElementById("container"));
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var d = _step2.value;
-
-      $("#" + d.id).css("background-image", "url(" + d.img + ")");
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-        _iterator2['return']();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-};
-
-},{"./folder":9,"react":7}],9:[function(require,module,exports){
-'use strict';
-
 Object.defineProperty(exports, '__esModule', {
   value: true
 });
@@ -2617,7 +2522,7 @@ var folderShow = function folderShow(list) {
 };
 module.exports = exports['default'];
 
-},{"./url":10,"react":7}],10:[function(require,module,exports){
+},{"./url":9,"react":7}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2722,4 +2627,356 @@ var Urls = (function (_React$Component2) {
 exports["default"] = Urls;
 module.exports = exports["default"];
 
-},{"react":7}]},{},[8]);
+},{"react":7}],10:[function(require,module,exports){
+'use strict';
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _jsFolder = require('../js/folder');
+
+var _jsFolder2 = _interopRequireDefault(_jsFolder);
+
+// @plaong Use session storage ( like a iOS user defaults )
+// If anyone knows more smart ways, please tell me about that.
+var db = firebase.firestore();
+var storage = firebase.storage();
+var blob;
+
+// @platong initialize this page
+init();
+
+function blobToFile(theBlob, fileName) {
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
+
+function getAccountId(user) {
+  return db.collection("account").where("uId", "==", user.uid).get().then(function (querySnapshots) {
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = querySnapshots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var i = _step.value;
+
+        return i.id;
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator['return']) {
+          _iterator['return']();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+  });
+}
+
+function accountRegisterSubmitValidation() {
+  var name = document.getElementById("ra_name").value;
+  var file = document.getElementById("ra_profile_img").files[0];
+  if (name !== "" && file !== undefined) return true;
+  return false;
+}
+
+function init() {
+  firebase.auth().onAuthStateChanged(function (user) {
+    if (user) {
+      getAccountId(user).then(function (a) {
+        if (a === undefined) {
+          $("body").prepend('<div id="popover"></div>');
+          ReactDOM.render(_react2['default'].createElement(CenteringPopover, null), document.getElementById("popover"));
+          return;
+        }
+        localStorage.setItem("accountId", a);
+      });
+    } else {
+      var redirect_url = "/" + location.search;
+      if (document.referrer) {
+        var referrer = "referrer=" + encodeURIComponent(document.referrer);
+        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
+      }
+      location.href = redirect_url;
+    }
+  });
+
+  db.collection("urlset").get().then(function (querysnapShots) {
+    var d = undefined;
+    var list = [];
+    var for_saved_list = [];
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = querysnapShots.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var i = _step2.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+          _iterator2['return']();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    ;
+    folderShow(list);
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+  });
+}
+
+var folderShow = function folderShow(list) {
+  ReactDOM.render(_react2['default'].createElement(_jsFolder2['default'], { list: list }), document.getElementById("container"));
+  var _iteratorNormalCompletion3 = true;
+  var _didIteratorError3 = false;
+  var _iteratorError3 = undefined;
+
+  try {
+    for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+      var d = _step3.value;
+
+      $("#" + d.id).css("background-image", "url(" + d.img + ")");
+    }
+  } catch (err) {
+    _didIteratorError3 = true;
+    _iteratorError3 = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+        _iterator3['return']();
+      }
+    } finally {
+      if (_didIteratorError3) {
+        throw _iteratorError3;
+      }
+    }
+  }
+};
+
+var CenteringPopover = (function (_React$Component) {
+  _inherits(CenteringPopover, _React$Component);
+
+  function CenteringPopover() {
+    _classCallCheck(this, CenteringPopover);
+
+    _get(Object.getPrototypeOf(CenteringPopover.prototype), 'constructor', this).apply(this, arguments);
+  }
+
+  _createClass(CenteringPopover, [{
+    key: 'render',
+    value: function render() {
+      return _react2['default'].createElement(AccountRegister, null);
+    }
+  }]);
+
+  return CenteringPopover;
+})(_react2['default'].Component);
+
+function raButtonActiveSwitch() {
+  if (accountRegisterSubmitValidation()) {
+    $("#ra_submit").addClass("submit_is_active");
+    $("#ra_submit").removeClass("submit_is_disactive");
+  } else {
+    $("#ra_submit").removeClass("submit_is_active");
+    $("#ra_submit").addClass("submit_is_disactive");
+  }
+}
+
+var AccountRegister = (function (_React$Component2) {
+  _inherits(AccountRegister, _React$Component2);
+
+  function AccountRegister() {
+    _classCallCheck(this, AccountRegister);
+
+    _get(Object.getPrototypeOf(AccountRegister.prototype), 'constructor', this).apply(this, arguments);
+  }
+
+  _createClass(AccountRegister, [{
+    key: 'fileChanged',
+
+    // @platong If file is changed, file will be compressed.
+    value: function fileChanged() {
+      var file = document.getElementById("ra_profile_img").files[0];
+      if (file.type != 'image/jpeg' && file.type != 'image/png') {
+        file = null;
+        blob = null;
+        return;
+        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+      }
+      var image = new Image();
+      var reader = new FileReader();
+      var IMG_MAX_WIDTH = 96;
+
+      reader.onload = function (e) {
+        image.onload = function () {
+          var width, height, ratio;
+          if (image.width > image.height) {
+            ratio = image.height / image.width;
+            width = IMG_MAX_WIDTH;
+            height = IMG_MAX_WIDTH * ratio;
+          } else {
+            ratio = image.width / image.height;
+            width = IMG_MAX_WIDTH * ratio;
+            height = IMG_MAX_WIDTH;
+          }
+          var canvas = $('#ra_preview').attr('width', width).attr('height', height);
+          var ctx = canvas[0].getContext('2d');
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+
+          var base64 = canvas.get(0).toDataURL('image/jpeg');
+          var barr, bin, i, len;
+          bin = atob(base64.split('base64,')[1]);
+          len = bin.length;
+          barr = new Uint8Array(len);
+          i = 0;
+          while (i < len) {
+            barr[i] = bin.charCodeAt(i);
+            i++;
+          }
+          blob = new Blob([barr], { type: 'image/jpeg' });
+        };
+        image.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      raButtonActiveSwitch();
+    }
+  }, {
+    key: 'submit',
+    value: function submit() {
+      var file = document.getElementById("ra_profile_img").files[0];
+      if (!accountRegisterSubmitValidation() && !blob) return; // validation
+      var db = firebase.firestore();
+      var storage = firebase.storage();
+      var storageRef = storage.ref();
+      var imagesRef = storageRef.child('account_profile_imgs');
+      var file_name = file.name;
+      file = blobToFile(blob);
+      var ref = storageRef.child('account_profile_imgs/' + file_name);
+      var uploadTask = ref.put(file);
+      // Listen for state changes, errors, and completion of the upload.
+      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+      function (snapshot) {
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+          case firebase.storage.TaskState.PAUSED:
+            // or 'paused'
+            console.log('Upload is paused');
+            break;
+          case firebase.storage.TaskState.RUNNING:
+            // or 'running'
+            console.log('Upload is running');
+            break;
+        }
+      }, function (error) {
+        // https://firebase.google.com/docs/storage/web/handle-errors
+        switch (error.code) {
+          case 'storage/unauthorized':
+            // User doesn't have permission to access the object
+            break;
+          case 'storage/canceled':
+            // User canceled the upload
+            break;
+          case 'storage/unknown':
+            // Unknown error occurred, inspect error.serverResponse
+            break;
+        }
+      }, function () {
+        // Upload completed successfully, now we can get the download URL
+        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+          console.log('File available at', downloadURL);
+          var user = firebase.auth().currentUser;
+          var name = document.getElementById("ra_name").value;
+          db.collection("account").add({
+            img: downloadURL,
+            name: name,
+            uId: user.uid
+          }).then(function (docRef) {
+            user.updateProfile({
+              displayName: name,
+              photoURL: downloadURL
+            }).then(function () {
+              console.log("All process is done");
+              location.reload();
+            })['catch'](function (err) {
+              console.error("Error: Register account: ", err);
+            });
+          })['catch'](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        });
+      });
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2['default'].createElement(
+        'div',
+        { className: 'ra' },
+        _react2['default'].createElement('div', { className: 'window-overlay' }),
+        _react2['default'].createElement(
+          'div',
+          { className: 'centering_popover' },
+          _react2['default'].createElement(
+            'h2',
+            null,
+            'Register an account'
+          ),
+          _react2['default'].createElement(
+            'form',
+            null,
+            _react2['default'].createElement('input', { type: 'text', id: 'ra_name', style: { display: "block" }, placeholder: '表示名（アカウント名）', onInput: raButtonActiveSwitch }),
+            _react2['default'].createElement(
+              'label',
+              { htmlFor: 'ra_profile_img' },
+              'プロフィール画像を選択'
+            ),
+            _react2['default'].createElement('input', { type: 'file', id: 'ra_profile_img', name: 'ra_profile_img', onChange: this.fileChanged }),
+            _react2['default'].createElement('input', { type: 'text', id: 'ra_intro', placeholder: '自己紹介' }),
+            _react2['default'].createElement('input', { type: 'button', onClick: this.submit, value: '登録', className: 'submit_is_disactive', id: 'ra_submit' })
+          ),
+          _react2['default'].createElement('canvas', { id: 'ra_preview', width: '96', height: '96' })
+        )
+      );
+    }
+  }]);
+
+  return AccountRegister;
+})(_react2['default'].Component);
+
+},{"../js/folder":8,"react":7}]},{},[10]);
