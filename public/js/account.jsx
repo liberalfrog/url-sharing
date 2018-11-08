@@ -18,18 +18,17 @@ function init(){
   });
 
 
-  db.collection("urlset").where("aId", "==", aId).get().then((querysnapShots) => {
+  db.collection("account").doc(aId).collection("folders").get().then((querysnapShots2) => {
     let d;
     let list = []
     let for_saved_list = []
-    for(var i of querysnapShots.docs){
+    for(let i of querysnapShots2.docs){
       d = i.data()
       d.id = i.id
       list.push(d)
       for_saved_list.push(JSON.stringify(d))
-    };
+    }
     folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
   });
 }
 

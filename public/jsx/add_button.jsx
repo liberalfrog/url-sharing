@@ -135,7 +135,7 @@ class UrlPost extends React.Component{
       $('.result').html(data); 
       document.urlput_form.title.value = data.title
     })
-    .fail( console.log("Error something bug is occured. Please contact us to inform this.") )
+    .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
   getChanged(){ urlSubmitActiveSwitch(); }
   urlputSubmit(){
