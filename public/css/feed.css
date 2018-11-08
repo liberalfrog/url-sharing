@@ -33,7 +33,7 @@ body{
   margin: 10px 0 0 0;
 }
 
-.urlset_panel a{
+.urlset_panel a.rigidFolder{
   position: absolute;
   top: 0;
   left: 0;
@@ -107,7 +107,7 @@ body{
 
 #ap_select_img{ width: 90px; }
 
-#preview{
+#ap_preview{
   position: absolute;
   top: 10px;
   left: 0;
@@ -149,3 +149,14 @@ body{
 .list-nav li:first-child a{
   border-left:1px solid red;
 }
+
+/* Begin Register Account */
+.centering_popover{
+  position: fixed;
+  z-index: 30;
+  background: silver;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+/* End Register Account */

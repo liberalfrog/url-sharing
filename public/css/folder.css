@@ -1,0 +1,7 @@
+.account_profile_img{
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  z-index: 2;
+}
