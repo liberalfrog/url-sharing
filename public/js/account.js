@@ -2284,7 +2284,7 @@ function init() {
     document.getElementById("account_intro").innerHTML = d.intro;
   });
 
-  db.collection("urlset").where("aId", "==", aId).get().then(function (querysnapShots) {
+  db.collection("account").doc(aId).collection("folders").get().then(function (querysnapShots2) {
     var d = undefined;
     var list = [];
     var for_saved_list = [];
@@ -2293,7 +2293,7 @@ function init() {
     var _iteratorError = undefined;
 
     try {
-      for (var _iterator = querysnapShots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      for (var _iterator = querysnapShots2.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
         var i = _step.value;
 
         d = i.data();
@@ -2316,9 +2316,7 @@ function init() {
       }
     }
 
-    ;
     folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
   });
 }
 
