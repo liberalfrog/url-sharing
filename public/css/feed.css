@@ -43,7 +43,7 @@ body{
 }
 
 
-/* Add Pane */
+/* Add Panel */
 #add_view{
   position: fixed;
   bottom: 140px;
@@ -122,4 +122,30 @@ body{
 .submit_is_disactive{
   background: white;
   color: gray;
+}
+
+.list-nav{
+  width:980px;
+  margin:0 auto;
+}
+.list-nav:after {
+  content: "";
+  clear: both;
+  display: block;
+}
+.list-nav li{
+  float:left;
+  width:220px;
+}
+.list-nav a{
+  display:block;
+  line-height:70px;
+  height:70px;
+  text-align:center;
+  background:#000;
+  color:#fff;
+  border-right:1px solid red;
+}
+.list-nav li:first-child a{
+  border-left:1px solid red;
 }
