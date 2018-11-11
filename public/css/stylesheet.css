@@ -1,14 +1,14 @@
 body{
-background-color:#FAFAFA;
+ background-color:#FAFAFA;
 }
+
 .header{
-  font-family:Tahoma;
-  color:black;
+  font-family:arial black;
+  color:white;
   font-size:65px;
 
-  background-color:#A9F5F2;
-  padding-left : 37%;
-
+  background-color:black;
+  text-align:center;
   border-radius: 20px;
     -webkit-border-radius: 20px;
     -moz-border-radius: 20px;
@@ -33,5 +33,17 @@ span1{
   font-family:arial narrow;
   font-size:35px;
   padding-left:50px;
+}
+
+.footer-logo{
+ color:white;
+ background-color:black;
+ font-family:arial black;
+ font-size:30px;
+ text-align:center;
+
+ border-radius: 20px;
+    -webkit-border-radius: 20px;
+    -moz-border-radius: 20px;
 }
 
