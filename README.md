@@ -5,6 +5,6 @@ URLを第三者と共有するサービス
 
 - [Nagai Kazuki（永井　一輝）](https://github.com/dev-platong)
 - [Ito Taiga （伊藤　泰賀）](https://github.com/taiga246)
-- [Miyazaki katsura （宮崎　桂）](https://github.com/devTKM)
+- [Miyazaki katsura （宮崎　嘉桂）](https://github.com/devTKM)
 
   We also belong to [Real OZ Project](https://github.com/realozproject).
