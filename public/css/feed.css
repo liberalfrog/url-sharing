@@ -17,16 +17,20 @@ body{
   margin: 0 auto;
   display: flex;
   flex-wrap: wrap;
-  width: 860px;
+  width: 900px;
 }
 
 /* @platong urlput outermost frame */
 .urlset_panel{
+  color:black;
   position: relative;
   height: 100px;
   width: 23.5%;
   background-size: cover;
-  margin: 10px 2% 0 0;
+  margin: 10px 5px;
+  border-radius: 5px;
+      -webkit-border-radius: 5px;
+      -moz-border-radius: 5px;
 }
 
 #container .urlset_panel:nth-child(4n){
@@ -65,9 +69,10 @@ body{
 }
 
 .add_panel{
+  color:black;
   background: white;
   height: 90px;
-  margin: 5px 0;
+  margin: 3px 0;
 }
 
 .window-overlay{
@@ -125,17 +130,20 @@ body{
 }
 
 .list-nav{
-  width:980px;
-  margin:0 auto;
-}
+   width:100%;
+   margin:0 auto;
+ }
+
 .list-nav:after {
   content: "";
   clear: both;
   display: block;
 }
 .list-nav li{
-  float:left;
-  width:220px;
+  list-style:none;
+  float:right;
+  font-size:18px;
+  width:25%;
 }
 .list-nav a{
   display:block;
