@@ -1,6 +1,11 @@
 # url-sharing
 URLを第三者と共有するサービス
 
+# Installation
+
+## Node version
+v8.1.0
+
 ## Core team
 
 - [Nagai Kazuki（永井　一輝）](https://github.com/dev-platong)
