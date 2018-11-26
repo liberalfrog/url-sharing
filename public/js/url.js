@@ -4,7 +4,9 @@ class Url extends React.Component {
   render(){
     return (
       <div className="urlput_panel">
+        <p class="textOverflowUrl">
         <h3>{this.props.title}</h3>
+        </p>
         <a href={this.props.href}></a>
       </div>
     )
@@ -27,3 +29,30 @@ export default class Urls extends React.Component {
     return return_html;
   }
 }
+
+jQuery(function($){
+  $('.textOverflowUrl').each(function() {
+    var $target = $(this);
+
+    var html = $target.html();
+
+    var $clone = $target.clone();
+    $clone
+      .css({
+        display: 'none',
+        position : 'absolute',
+        overflow : 'visible'
+      })
+      .width($target.width())
+      .height('auto');
+
+    $target.after($clone);
+    while((html.length>0) && ($clone.height()>$target.height())){
+      html = html.substr(0, html.length-1);
+      $clone.html(html+'...');
+    }
+
+    $target.html($clone.html());
+    $clone.remove();
+  });
+});
