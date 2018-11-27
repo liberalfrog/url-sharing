@@ -18,7 +18,16 @@
   <h2 id="account_name"></h2>
   <p id="account_intro"></p>
   <div id="container"></div>
+  <buttton onclick="copyURL()">Copy URL</button>
   <script src="/common/js/jquery-3.3.1.min.js"></script>
   <script src="/js/account.js"></script>
+  <script>
+    function copyURL(){
+       $('body').append('<textarea id="currentURL" style="position:fixed;left:-100%;">'+location.href+'</textarea>');
+       $('#currentURL').select();
+       document.execCommand('copy');
+       $('#currentURL').remove();
+    }
+  </script>
 </body>
 </html>
