@@ -4,10 +4,13 @@ class Url extends React.Component {
   render(){
     return (
       <div className="urlput_panel">
-        <class="text_overflow_url">
-        <h3>{this.props.title}</h3>
-     
-        <a href={this.props.href}></a>
+        <p class="text_overflow_url">
+          <mouse_over>
+          <h3>{this.props.title}</h3>
+          <a href={this.props.href}></a>
+          </mouse_over>
+        </p>
+        <p class = "baloon">[this.props.content]</p>
       </div>
     )
   }
@@ -54,5 +57,13 @@ jQuery(function($){
 
     $target.html($clone.html());
     $clone.remove();
+  });
+});
+
+$(function () {
+  $('mouse_over').hover(function() {
+    $(this).next('p').show();
+  }, function(){
+    $(this).next('p').hide();
   });
 });
