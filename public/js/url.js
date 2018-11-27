@@ -4,9 +4,9 @@ class Url extends React.Component {
   render(){
     return (
       <div className="urlput_panel">
-        <p class="textOverflowUrl">
+        <class="text_overflow_url">
         <h3>{this.props.title}</h3>
-        </p>
+     
         <a href={this.props.href}></a>
       </div>
     )
