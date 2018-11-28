@@ -152,10 +152,10 @@ body{
   text-align:center;
   background:#000;
   color:#fff;
-  border-right:1px solid red;
+  border-right: 1px solid dimgray;
 }
 .list-nav li:first-child a{
-  border-left:1px solid red;
+  border-left:1px solid dimgray;
 }
 
 /* Begin Register Account */
