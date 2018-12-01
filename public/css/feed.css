@@ -130,21 +130,30 @@ body{
 }
 
 .list-nav{
-   width:100%;
    margin:0 auto;
  }
+
+@media screen and (max-width:1023px) {
+  .list-nav{ width:100%; }
+}
+
+@media screen and (min-width:1024px) {
+ .list-nav{ width:1024px; }
+}
 
 .list-nav:after {
   content: "";
   clear: both;
   display: block;
 }
+
 .list-nav li{
   list-style:none;
   float: left;
   font-size:18px;
   width:25%;
 }
+
 .list-nav a{
   display:block;
   line-height:70px;
@@ -154,6 +163,7 @@ body{
   color:#fff;
   border-right: 1px solid dimgray;
 }
+
 .list-nav li:first-child a{
   border-left:1px solid dimgray;
 }
