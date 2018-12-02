@@ -7,7 +7,7 @@ class Url extends React.Component {
         <p class="text_overflow_url">
           <mouse_over>
           <h3>{this.props.title}</h3>
-          <a href={this.props.href}></a>
+          <a href={this.props.href} target="_blank"></a>
           </mouse_over>
         </p>
         <p class = "baloon">[this.props.content]</p>
