@@ -70,6 +70,7 @@ function init(){
     folderShow(list);
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
   });
+
 }
 
 
