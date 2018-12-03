@@ -102,7 +102,7 @@ class AddPanel extends React.Component{
       <div>
         <div className="add_panel" onClick={this.folderCreate}>
           <h3>Add folder</h3>
-          <p>URLをまとめて管理するフォルダを作成</p>
+          <p>URLを管理するフォルダを作成</p>
         </div>
         <div className="add_panel" onClick={this.urlCreate}>
           <h3>Add URL</h3>
@@ -126,10 +126,13 @@ class UrlPost extends React.Component{
   // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
   urlConverter(){
     const url = document.urlput_form.url.value
+    
     $.ajax({
       url:"/api_v1/",
       type:'GET',
-      data:{ "url": url }
+      data:{ 
+        "url": url,
+      }
     })
     .done( (data) => {
       $('.result').html(data); 
@@ -145,6 +148,7 @@ class UrlPost extends React.Component{
       return
 
     const db = firebase.firestore();
+    
     let t_id = $("#urlput_option").val()
     let user = firebase.auth().currentUser;
     db.collection("urlset").doc(t_id).collection("urlputs").add({
@@ -153,7 +157,8 @@ class UrlPost extends React.Component{
       href: document.urlput_form.url.value,
       aId: localStorage.getItem("accountId"),
       aProfileImg: user.photoURL,
-      aName: user.displayName
+      aName: user.displayName,
+      dateTime: new Date()
     }).then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
       closePostView()
@@ -225,7 +230,9 @@ class UrlFolderPost extends React.Component{
           name: document.urlset_form.title.value,
           aId: localStorage.getItem("accountId"),
           aProfileImg: user.photoURL,
-          aName: user.displayName
+          aName: user.displayName,
+          dateTime : new Date()
+
         }).then(function(docRef) {
           closePostView()
         }).catch(function(error) {
