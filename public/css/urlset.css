@@ -12,6 +12,10 @@
   width: 100%;
   height: 100%;
 }
+
+.urlset_panel a:hover,  .baloon{
+  display: block;
+}
  
 .text_overflow_url{
   overflow: hidden;
