@@ -13,7 +13,7 @@
   height: 100%;
 }
 
-.urlset_panel a:hover + .baloon{
+.urlset_panel a:hover,  .baloon{
   display: block;
 }
  
