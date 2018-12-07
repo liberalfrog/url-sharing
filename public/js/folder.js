@@ -13,10 +13,11 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const storage = firebase.storage();
 
+
 // @platong component of a urlset
 class Folder extends React.Component {
-  putShow(){
-    let list = []
+putShow(){
+  let list = []
     let d
     db.collection("urlset").doc(this.props.id).collection("urlputs").get().then((querysnapShots) => {
       for(var i of querysnapShots.docs){

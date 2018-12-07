@@ -1,5 +1,6 @@
 import React from 'react';
 import Folders from '../js/folder';
+import Urls from '../js/url';
 
 
 // @plaong Use session storage ( like a iOS user defaults )
@@ -39,14 +40,57 @@ function accountRegisterSubmitValidation(){
 function init(){
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
-      getAccountId(user).then(a => {
-        if(a === undefined){
-          $("body").prepend('<div id="popover"></div>');
-          ReactDOM.render( <CenteringPopover/>, document.getElementById("popover"));
-          return
+      let query = location.search;
+      if(query!==""){
+        console.log("Hello world");
+        let hash = query.slice(1).split("&");
+        var parameters = [];
+        for(let i=0; i<hash.length; i++){
+          let array = hash[i].split("=");
+          parameters.push(array[0]); 
+          parameters[array[0]] = array[1];
         }
-        localStorage.setItem("accountId", a);
-      });
+        console.log(parameters);
+        let list = [];
+        let d;
+        db.collection("urlset").doc(parameters.id).collection("urlputs").get().then((querysnapShots) => {
+          for(var i of querysnapShots.docs){
+            d = i.data()
+            d.id = i.id
+            if(d.aId === undefined){
+              d.aId = ""
+              d.aProfileImg = ""
+              d.aName = ""
+            }
+            list.push(d)
+          };
+         ReactDOM.render( <Urls list={list}/>, document.getElementById("container"));
+        });
+        return;
+      }
+      else {
+        getAccountId(user).then(a => {
+          if(a === undefined){
+            $("body").prepend('<div id="popover"></div>');
+            ReactDOM.render( <CenteringPopover/>, document.getElementById("popover"));
+            return
+          }
+          localStorage.setItem("accountId", a);
+        });
+        db.collection("urlset").get().then((querysnapShots) => {
+          let d;
+          let list = []
+          let for_saved_list = []
+          for(let i of querysnapShots.docs){
+            d = i.data()
+            d.id = i.id
+            list.push(d)
+            for_saved_list.push(JSON.stringify(d))
+          };
+          folderShow(list);
+          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+        });
+      }
     } else {
       var redirect_url = "/" + location.search;
       if (document.referrer) {
@@ -57,19 +101,7 @@ function init(){
     }
   });
 
-  db.collection("urlset").get().then((querysnapShots) => {
-    let d;
-    let list = []
-    let for_saved_list = []
-    for(var i of querysnapShots.docs){
-      d = i.data()
-      d.id = i.id
-      list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    };
-    folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-  });
+
 }
 
 
