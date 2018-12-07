@@ -2693,6 +2693,10 @@ var _jsFolder = require('../js/folder');
 
 var _jsFolder2 = _interopRequireDefault(_jsFolder);
 
+var _jsUrl = require('../js/url');
+
+var _jsUrl2 = _interopRequireDefault(_jsUrl);
+
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
 var db = firebase.firestore();
@@ -2746,85 +2750,145 @@ function accountRegisterSubmitValidation() {
 function init() {
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
-      getAccountId(user).then(function (a) {
-        if (a === undefined) {
-          $("body").prepend('<div id="popover"></div>');
-          ReactDOM.render(_react2['default'].createElement(CenteringPopover, null), document.getElementById("popover"));
-          return;
-        }
-        localStorage.setItem("accountId", a);
-      });
+      var query = location.search;
+      if (query !== "") {
+        var parameters;
+
+        var _ret = (function () {
+          console.log("Hello world");
+          var hash = query.slice(1).split("&");
+          parameters = [];
+
+          for (var i = 0; i < hash.length; i++) {
+            var array = hash[i].split("=");
+            parameters.push(array[0]);
+            parameters[array[0]] = array[1];
+          }
+          console.log(parameters);
+          var list = [];
+          var d = undefined;
+          db.collection("urlset").doc(parameters.id).collection("urlputs").get().then(function (querysnapShots) {
+            var _iteratorNormalCompletion2 = true;
+            var _didIteratorError2 = false;
+            var _iteratorError2 = undefined;
+
+            try {
+              for (var _iterator2 = querysnapShots.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+                var i = _step2.value;
+
+                d = i.data();
+                d.id = i.id;
+                if (d.aId === undefined) {
+                  d.aId = "";
+                  d.aProfileImg = "";
+                  d.aName = "";
+                }
+                list.push(d);
+              }
+            } catch (err) {
+              _didIteratorError2 = true;
+              _iteratorError2 = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+                  _iterator2['return']();
+                }
+              } finally {
+                if (_didIteratorError2) {
+                  throw _iteratorError2;
+                }
+              }
+            }
+
+            ;
+            ReactDOM.render(_react2['default'].createElement(_jsUrl2['default'], { list: list }), document.getElementById("container"));
+          });
+          return {
+            v: undefined
+          };
+        })();
+
+        if (typeof _ret === 'object') return _ret.v;
+      } else {
+        getAccountId(user).then(function (a) {
+          if (a === undefined) {
+            $("body").prepend('<div id="popover"></div>');
+            ReactDOM.render(_react2['default'].createElement(CenteringPopover, null), document.getElementById("popover"));
+            return;
+          }
+          localStorage.setItem("accountId", a);
+        });
+        db.collection("urlset").get().then(function (querysnapShots) {
+          var d = undefined;
+          var list = [];
+          var for_saved_list = [];
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            for (var _iterator3 = querysnapShots.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var i = _step3.value;
+
+              d = i.data();
+              d.id = i.id;
+              list.push(d);
+              for_saved_list.push(JSON.stringify(d));
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+                _iterator3['return']();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+
+          ;
+          folderShow(list);
+          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+        });
+      }
     } else {
-      var redirect_url = "/" + location.search;
-      if (document.referrer) {
-        var referrer = "referrer=" + encodeURIComponent(document.referrer);
-        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
-      }
-      location.href = redirect_url;
-    }
-  });
-
-  db.collection("urlset").get().then(function (querysnapShots) {
-    var d = undefined;
-    var list = [];
-    var for_saved_list = [];
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = querysnapShots.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var i = _step2.value;
-
-        d = i.data();
-        d.id = i.id;
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-          _iterator2['return']();
+        var redirect_url = "/" + location.search;
+        if (document.referrer) {
+          var referrer = "referrer=" + encodeURIComponent(document.referrer);
+          redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
         }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
+        location.href = redirect_url;
       }
-    }
-
-    ;
-    folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
   });
 }
 
 var folderShow = function folderShow(list) {
   ReactDOM.render(_react2['default'].createElement(_jsFolder2['default'], { list: list }), document.getElementById("container"));
-  var _iteratorNormalCompletion3 = true;
-  var _didIteratorError3 = false;
-  var _iteratorError3 = undefined;
+  var _iteratorNormalCompletion4 = true;
+  var _didIteratorError4 = false;
+  var _iteratorError4 = undefined;
 
   try {
-    for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-      var d = _step3.value;
+    for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+      var d = _step4.value;
 
       $("#" + d.id).css("background-image", "url(" + d.img + ")");
     }
   } catch (err) {
-    _didIteratorError3 = true;
-    _iteratorError3 = err;
+    _didIteratorError4 = true;
+    _iteratorError4 = err;
   } finally {
     try {
-      if (!_iteratorNormalCompletion3 && _iterator3['return']) {
-        _iterator3['return']();
+      if (!_iteratorNormalCompletion4 && _iterator4['return']) {
+        _iterator4['return']();
       }
     } finally {
-      if (_didIteratorError3) {
-        throw _iteratorError3;
+      if (_didIteratorError4) {
+        throw _iteratorError4;
       }
     }
   }
@@ -3023,4 +3087,4 @@ var AccountRegister = (function (_React$Component2) {
   return AccountRegister;
 })(_react2['default'].Component);
 
-},{"../js/folder":8,"react":7}]},{},[10]);
+},{"../js/folder":8,"../js/url":9,"react":7}]},{},[10]);
