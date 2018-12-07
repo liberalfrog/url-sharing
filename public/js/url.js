@@ -5,10 +5,8 @@ class Url extends React.Component {
     return (
       <div className="urlput_panel">
         <p class="text_overflow_url">
-          <mouse_over>
           <h3>{this.props.title}</h3>
           <a href={this.props.href} target="_blank"></a>
-          </mouse_over>
         </p>
         <p class = "baloon">[this.props.content]</p>
       </div>
@@ -60,10 +58,10 @@ jQuery(function($){
   });
 });
 
-$(function () {
-  $('mouse_over').hover(function() {
-    $(this).next('p').show();
-  }, function(){
-    $(this).next('p').hide();
-  });
-});
+
+
+
+
+
+
+
