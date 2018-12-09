@@ -27,10 +27,15 @@ body{
   height: 100px;
   width: 23.5%;
   background-size: cover;
+  background-color: #000;
   margin: 10px 5px;
   border-radius: 5px;
       -webkit-border-radius: 5px;
       -moz-border-radius: 5px;
+}
+
+.urlset_panel: hover{
+  opacity(0.3);
 }
 
 #container .urlset_panel:nth-child(4n){
