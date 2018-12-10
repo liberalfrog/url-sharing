@@ -1,0 +1,48 @@
+/* css reset */
+}
+
+/*      */
+
+body{
+ /*background-color:#FAFAFA;*/
+}
+
+header{
+ background-color:black;
+ color:white;
+}
+
+.main-logo1{
+ margin-left:5%;
+}
+
+.main-logo1{
+ margin-left:5%;
+}
+.main-logo1{
+ margin-left:5%;
+}
+
+.main-1{
+}
+
+.main-1 img{
+ box-shadow: 0px 0px 20px -5px rgba(0, 0, 0, 0.8);
+}
+.main-2{
+}
+
+.main-3{
+}
+
+.footer-logo{
+ position:absolute;
+ left:50%;
+ transform:translateX(-50%);
+ color:silver;
+ font-size:1.6em;
+ margin:0em;
+ border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -moz-border-radius: 10px;
+}
