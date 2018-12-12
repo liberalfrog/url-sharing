@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>URLスクラップブック</title>
+  <title>URL Sharing</title>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-database.js"></script>
@@ -11,7 +11,7 @@
   const config = {
     apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
     authDomain: "urlsharing-541c7.firebaseapp.com",
-    databaseURL: "https://urlsharing-541c7.firebaseio.com",
+databaseURL: "https://urlsharing-541c7.firebaseio.com",
     projectId: "urlsharing-541c7",
     storageBucket: "urlsharing-541c7.appspot.com",
     messagingSenderId: "756728507687"
@@ -20,42 +20,49 @@
   </script>
   <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
   <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" /> 
-  <link rel="stylesheet" href="/css/stylesheet.css">
+  <link rel="stylesheet" href="/css/top_page.css">
   <script>var ui = new firebaseui.auth.AuthUI(firebase.auth());</script>
 </head>
 <body>
- <div class="header">URL Sharing</div> 
- 
- <main>
-<ul class="topic-list">
-  <li><span>実力</span>を<span>評価</span>してもらいたい</li>
- 
- <p>どうすれば学んで来たことを評価してもらえるのか ...　　それは資格を持つ事でしょうか、またはコンテスト等での表彰経験でしょうか。
-<br>ただひたすらに強さを追い求め、日の元を歩いたことのない人間はただ表舞台へ出る勇気のある人間に負けてしまうのだろうか。</p>
- <p>人の評価の方法として「経歴」には意味があると私は思います。しかし、実力を図るという点ではまた話が違ってくると思います。<br>
-実際にグループ内に入れるか否かは測れても、その人の才能を活かすには「知識を全て網羅する」方が早いでしょう。</p>
+  <header>
+      <img src="/img/OZ.png">
+      <p>URL-Sharing<br>情報を一瞬で<br>共有しよう<br></p>
+      <div class="clear"></div>
+  </header>
 
-  <li>知識を<span>公開</span>する既存の方法</li>
+  <main>
+   <h1 class="main-logo">まとめるの やめません？</h1>
+      <div class="clear"></div>
+  <div class="main-1">
+     情報を発信するためにブログやQiita,noteに記事を書く時間はもったいない。<br>
+     なぜなら発信したい情報は、多くの場合Webに既にあるから。<br>
+   <img src="/img/pc_img.jpeg">
+  </div>
 
-  <p>私の好きなサービスに<a href="note.mu">note</a>というものがあります。これは学んだことをまとめる、文字通り電子化されたノートのようなサービスです。<br>非常に使いやすいサービスですが、学んだことを書き記すにはとても時間がかかってしまいます。</p>
+   <h1 class="main-logo">チームで知識を共有</h1>
+      <div class="clear"></div>
+  <div class="main-2">
+   実装理由の分からないコードや常識を覆すデザインなど、相手が自分より力を持っている時、<br>
+   直接相手の知識を覗けたらチームの成長スピードは格段に上がるはず。
+      <img src="/img/share_img.jpg">
+  </div>
+  
+  <h1 class="main-logo">有益な知識を売る</h1>
+      <div class="clear"></div>
+  <div class="main-3"> 
+   アイデアには絶対的に金銭的価値を持っています。<br>
+   SoftBankや、ARMなど知識人の方が実装作業よりも重要になる例はたくさんあります。<br>
+    テーマに沿ってURLをまとめ、価格を決めて販売しましょう。<br>
+    これはコンサルティングよりも圧倒的に少ない手の内で、<br>
+    買う側は安く、売る側は高い収益を上げることができます。<br>
+      <img src="/img/sold_img.jpg">
+  </div>
 
-  <li><span>学んだこと</span>をそのまま見せる</li>
-
-  <p>勉強する時、皆さんノートに記します。それは歴史的に見ても繰り返されていることです。<br>
-なぜ、自分の理解していることを人にわかってもらうのに、自分が理解するために書いたこれを見せないのでしょうか。私はこの点に注目しました。</p>
-</ul>
-
- <div class="Maxim">
-   <div align="left">---「<span1>作る</span1>」でなく「<span1>見せる</span1>」に特化 ---</div>
-   <div align="center">--- 人に教えるとき、これで解決 ---</div1>
-   <div align="right">--- SEOを超え、古い情報を<span1>淘汰</span1>する --- </div>
- </div>
-
+  </main>
   <div id="firebaseui-auth-container"></div>
   <div id="loader">Loading...</div>
-  </main>
  <footer>
-  <div class="footer-logo">Real OZ Project</div>
+   <p class="footer-logo">&copy; Real OZ Project  org.| 2018</p>
  </footer>
 
   <script>
