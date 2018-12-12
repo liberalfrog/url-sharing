@@ -1,26 +1,40 @@
 /* css reset */
-}
 
 /*      */
 
 body{
+ text-align:center;
  /*background-color:#FAFAFA;*/
+ max-width:1024px;
+ margin:0 auto;
 }
 
+.clear{
+ clear:both;
+}
 header{
- background-color:black;
- color:white;
+border-bottom:1px black solid;
 }
 
-.main-logo1{
- margin-left:5%;
+header p{
+ float:right;
+ text-align:center;
+ font-size:4.7em;
+ font-family:impact;
+ margin: 0.5em 0  0;
 }
 
-.main-logo1{
- margin-left:5%;
+header img{
+ float:left;
+ height:40%;
+ width:40%;
+ margin:0 0 0 3em;
 }
-.main-logo1{
- margin-left:5%;
+.main-logo{
+ float:left;
+ display:inline-block;
+ padding:0.5em;
+ background-color:#F5FFFA;
 }
 
 .main-1{
@@ -41,7 +55,7 @@ header{
  transform:translateX(-50%);
  color:silver;
  font-size:1.6em;
- margin:0em;
+ margin:0 0 0.2em 0;
  border-radius: 10px;
     -webkit-border-radius: 10px;
     -moz-border-radius: 10px;
