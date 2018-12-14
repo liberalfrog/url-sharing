@@ -64,7 +64,7 @@ body{
 
 #later_button{
   position: fixed;
-  bottom: 160px;
+  bottom: 350px;
   right: 0px;
   background:	#00AA00;
   color: white;
@@ -76,8 +76,8 @@ body{
 
 #add_button{
   position: fixed;
-  bottom: 40px;
-  right: 30px;
+  bottom: 50px;
+  right: 25px;
   background: #00AA00;
   color: white;
   width: 100px;
@@ -88,9 +88,11 @@ body{
 
 .add_panel{
   color:black;
-  background: white;
-  height: 90px;
-  margin: 3px 0;
+  height: 70px;
+  margin: 5px 0;
+  padding:6px;
+  border-radius: 5px;
+  border:solid 2px silver;
 }
 
 .window-overlay{
@@ -109,7 +111,7 @@ body{
   transform: translate(-50%, -50%);
   width: 320px;
   height: 120px;
-  background: pink;
+  background: red;
 }
 
 .ap_panel_main{
@@ -147,10 +149,6 @@ body{
   color: gray;
 }
 
-.list-nav{
-   margin:0 auto;
- }
-
 @media screen and (max-width:1023px) {
   .list-nav{ width:100%; }
 }
@@ -181,6 +179,9 @@ body{
   font-size:19px;
   text-decoration: none;
   margin-left:20px;
+ 
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight: 400;
 }
 
 
@@ -192,5 +193,14 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+
+footer{
+ position:absolute;
+ left:50%;
+ transform:translateX(-50%);
+ color:silver;
+ font-size:1.6em;
+ margin:0 0 0.2em 0;
 }
 /* End Register Account */
