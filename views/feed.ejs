@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>URL Sharing</title>
-  <!-- Load React. -->
   <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
   <script src="/common/js/react.development.js" crossorigin></script>
   <script src="/common/js/react-dom.development.js" crossorigin></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
   <script src="/common/js/firebase.js"></script>
   <script src="/common/js/firebase-firestore.js"></script>
   <link rel="stylesheet" href="/css/urlput.css" media="all">
@@ -16,19 +14,22 @@
 </head>
 <body>
   <ul class="list-nav">
-   <li><a href="/feed/">TOP</a></li>
-   <li><a href="">Profile</a></li>
-   <li><a href="">Notice</a></li>
-   <li><a href="">Menu</a></li>
+    <a href="">Profile</a>
+    <a href="">Home</a>
+    <a href="">folders</a>
+    <a href="">通知</a>
+    <a href="">説明書</a>
   </ul>
   <div id="post_add_view"></div>
   <div id="container__latest"></div>
   <div id="container"></div>
   <div id="urlput_post"></div>
   <div id="add_view"></div>
-  <button id="add_button">+</button>
+  <button id="later_button">Watch later</button>
+  <footer>
+    <p>&copy; Real OZ Project org. | 2018</p>
+  </footer>
   <script src="/common/js/jquery-3.3.1.min.js"></script>
   <script src="/js/feed.js"></script>
-  <script type="text/jsx" src="/jsx/add_button.jsx"></script>
 </body>
 </html>

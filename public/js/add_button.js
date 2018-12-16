@@ -2,8 +2,39 @@
 var blob = null;
 const THUMBNAIL_HEIGHT = 100;
 
+firebase.initializeApp({
+  apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
+  authDomain: "urlsharing-541c7.firebaseapp.com",
+  databaseURL: "https://urlsharing-541c7.firebaseio.com",
+  projectId: "urlsharing-541c7",
+  storageBucket: "urlsharing-541c7.appspot.com",
+  messagingSenderId: "756728507687"
+});
 
-//@ platong unmount is not obvious for everyone who read this.
+
+// @platong Button observe URL address in order to change myself by states.
+const observer = new MutationObserver(mutation => {
+  console.log(location.href);
+  let a = location.href.split("/");
+  a = a.slice(3, a.length).filter((element, index, array) => {
+    return (element != "" && element[0] != "?");
+  }).join("/");
+  if(a === "feed/folder"){
+  }
+});
+
+const config = { attributes: true, childList: true, subtree: true };
+observer.observe(document, config);
+
+
+/* @platong add button is clicked.
+$("#add_button").on("click", function(){
+  ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
+});*/
+
+
+
+// @platong unmount is not obvious.
 function closePostView(){ 
   ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); 
   ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
@@ -64,11 +95,6 @@ function blobToFile(theBlob, fileName){
 }
 
 
-// @platong add button is clicked.
-$("#add_button").on("click", function(){
-  ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
-});
-
 
 // @platong option change from folder which is got from Firebase.
 function optionChange(){
@@ -83,6 +109,15 @@ function optionChange(){
   });
   options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成"}));
   select.append(options);
+}
+
+
+export default class AddButton extends React.Component{
+  render(){
+    return(
+      <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>
+    );
+  }
 }
 
 
@@ -126,7 +161,6 @@ class UrlPost extends React.Component{
   // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
   urlConverter(){
     const url = document.urlput_form.url.value
-    
     $.ajax({
       url:"/api_v1/",
       type:'GET',
@@ -170,7 +204,7 @@ class UrlPost extends React.Component{
     return (
       <div>
         <div className="window-overlay" onClick={closePostView}></div>
-        <div className="add_post">
+        <div className="post__container">
           <form name="urlput_form">
             <input name="url" type="text" onInput={this.urlConverter} placeholder="URLを入力" required/>
             <select id="urlput_option" required onChange={this.getChangedOption}>
@@ -198,10 +232,8 @@ class UrlFolderPost extends React.Component{
     file = blobToFile(blob)
     var ref = storageRef.child('urlset_images/' + file_name);
     var uploadTask = ref.put(file)
-    // Listen for state changes, errors, and completion of the upload.
-    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, 
     function(snapshot) {
-      // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
       var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
       console.log('Upload is ' + progress + '% done');
       switch (snapshot.state) {
@@ -214,14 +246,14 @@ class UrlFolderPost extends React.Component{
       }
     }, function(error) { // https://firebase.google.com/docs/storage/web/handle-errors
       switch (error.code) {
-        case 'storage/unauthorized': // User doesn't have permission to access the object
+        case 'storage/unauthorized': 
           break;
-        case 'storage/canceled': // User canceled the upload
+        case 'storage/canceled': 
           break;
-        case 'storage/unknown': // Unknown error occurred, inspect error.serverResponse
+        case 'storage/unknown': 
           break;
       }
-    }, function() { // Upload completed successfully, now we can get the download URL
+    }, function() { 
       let user = firebase.auth().currentUser;
       uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
         console.log('File available at', downloadURL);
@@ -294,16 +326,19 @@ class UrlFolderPost extends React.Component{
     return (
       <div>
         <div className="window-overlay" onClick={closePostView}></div>
-        <div className="add_post">
+        <div className="post__container">
+          <h1>URLを入れるフォルダを作成</h1>
           <form action="" name="urlset_form">
-            <div className="ap_panel_main">
-              <input id="ap_panel_title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
+            <div className="post-folder__preview">
+              <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
+              <input id="ap_select_img"  className="post-folder__image" name="urlbook_img" type="file" onChange={this.fileChanged} />
+              <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
             </div>
-            <div className="ap_panel_sub">
-              <input id="ap_select_img"  name="urlbook_img" type="file" onChange={this.fileChanged} />
-              <input type="button" onClick={this.submit} value="作成" className="submit_is_disactive" id="ap_submit" />
+            <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+            <div className="sell__section">
+              <input type="text" name="price" /><label htmlFor="price">円</label>
             </div>
-            <canvas id="ap_preview" width="0" height="0"></canvas>
+            <input type="button" onClick={this.submit} value="作成" className="post__submit submit_is_disactive" id="ap_submit" />
           </form>
         </div>
       </div>

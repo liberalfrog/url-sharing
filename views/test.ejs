@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+</head>
+<body>
+  <div id="paypal-button"></div>
+<script src="https://www.paypalobjects.com/api/checkout.js"></script>
+<script>
+  paypal.Button.render({
+    env: 'sandbox', // Or 'production'
+    payment: function(data, actions) {
+      return actions.request.post('/api_v1_paypal/create-payment/', {
+         total: 200,
+         folderId: "folderId"
+      })
+      .then(function(res) {
+        return res.id;
+      });
+    },
+    onAuthorize: function(data, actions) {
+      return actions.request.post('/api_v1_paypal/execute-payment/', {
+        folderId: "folderId",
+        paymentID: data.paymentID,
+        payerID:   data.payerID
+      })
+      .then(function(res) {
+      });
+    }
+  }, '#paypal-button');
+</script>
+</body>
+</html>

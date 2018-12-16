@@ -9,29 +9,42 @@ form{
   padding: 0;
 }
 
+input[type="text"]{
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: none;
+}
+
 body{
-  background-color: lightgray;
+  background-color:white;
 }
 
 #container{
   margin: 0 auto;
+  width: 900px;
+}
+
+.container__wrapper{
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
-  width: 900px;
+}
+
+.urlset_panel, .post-folder__folder{
+  border-radius: 5px;
+  height: 100px;
 }
 
 /* @platong urlput outermost frame */
 .urlset_panel{
   color:black;
   position: relative;
-  height: 100px;
   width: 23.5%;
   background-size: cover;
   background-color: #000;
   margin: 10px 5px;
-  border-radius: 5px;
-      -webkit-border-radius: 5px;
-      -moz-border-radius: 5px;
 }
 
 .urlset_panel: hover{
@@ -61,11 +74,24 @@ body{
   height: 195px;
 }
 
+
+#later_button{
+  position: fixed;
+  bottom: 350px;
+  right: 0px;
+  background:	#00AA00;
+  color: white;
+  width: 130px;
+  height: 100px;
+  border-radius:50% 0 0 50%;
+  font-size: 20px;
+}
+
 #add_button{
   position: fixed;
-  bottom: 40px;
-  right: 40px;
-  background: #47b347;
+  bottom: 50px;
+  right: 25px;
+  background: #00AA00;
   color: white;
   width: 100px;
   height: 100px;
@@ -75,9 +101,11 @@ body{
 
 .add_panel{
   color:black;
-  background: white;
-  height: 90px;
-  margin: 3px 0;
+  height: 70px;
+  margin: 5px 0;
+  padding:6px;
+  border-radius: 5px;
+  border:solid 2px silver;
 }
 
 .window-overlay{
@@ -88,41 +116,59 @@ body{
   z-index: 20;
 }
 
-.add_post{
+.post__container{
   position: fixed;
   z-index: 30;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 320px;
-  height: 120px;
+  width: 46vw;
+  height: 76vh;
   background: pink;
+  padding: 2vh 2vw;
 }
 
-.ap_panel_main{
+.post-folder__preview{
   position: relative;
-  height: 100px;
-  width: 202px;
-  background-size: cover;
-  margin: 10px 2% 0 0;
-  z-index: 26;
 }
 
-.ap_panel_sub{
-  left: 202px;
+.post-folder__title{
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 24px;
+  background: gray;
+}
+
+.post-folder__folder, .post-folder__image{
+  width: 423px;
+  height: 200px;
+}
+
+.post-folder__image{
+  opacity: 0;
+}
+
+.post-folder__folder{
+  position: relative;
+  background: green;
+}
+
+.post-folder__image{
+  position: absolute;
   top: 0;
-  position: absolute;
-  width: 90px;
-}
-
-#ap_select_img{ width: 90px; }
-
-#ap_preview{
-  position: absolute;
-  top: 10px;
   left: 0;
-  z-index: 25;
 }
+
+.post__submit{
+  position: absolute;
+  display: block;
+  bottom: 10px;
+  right: 10px;
+  width: 140px;
+}
+
+.sell__section{ display: none; }
 
 .submit_is_active{
   background: green;
@@ -134,9 +180,6 @@ body{
   color: gray;
 }
 
-.list-nav{
-   margin:0 auto;
- }
 
 @media screen and (max-width:1023px) {
   .list-nav{ width:100%; }
@@ -152,26 +195,26 @@ body{
   display: block;
 }
 
-.list-nav li{
-  list-style:none;
-  float: left;
-  font-size:18px;
-  width:25%;
+.list-nav{
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  max-width: 220px;
+  background-color: #220000;
+  height: 100%;
 }
 
 .list-nav a{
-  display:block;
-  line-height:70px;
-  height:70px;
-  text-align:center;
-  background:#000;
-  color:#fff;
-  border-right: 1px solid dimgray;
+  color:#BBB;
+  line-height:90px;
+  font-size:19px;
+  text-decoration: none;
+  margin-left:20px;
+ 
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight: 400;
 }
 
-.list-nav li:first-child a{
-  border-left:1px solid dimgray;
-}
 
 /* Begin Register Account */
 .centering_popover{
@@ -181,5 +224,14 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+
+footer{
+ position:absolute;
+ left:50%;
+ transform:translateX(-50%);
+ color:silver;
+ font-size:1.6em;
+ margin:0 0 0.2em 0;
 }
 /* End Register Account */

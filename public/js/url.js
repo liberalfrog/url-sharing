@@ -4,11 +4,11 @@ class Url extends React.Component {
   render(){
     return (
       <div className="urlput_panel">
-        <p class="text_overflow_url">
-          <h3>{this.props.title}</h3>
+        <h3>{this.props.title}</h3>
+        <p className="text_overflow_url">
           <a href={this.props.href} target="_blank"></a>
         </p>
-        <p class = "baloon">[this.props.content]</p>
+        <p className="baloon">[this.props.content]</p>
       </div>
     )
   }
@@ -57,11 +57,3 @@ jQuery(function($){
     $clone.remove();
   });
 });
-
-
-
-
-
-
-
-
