@@ -1,0 +1,119 @@
+.prof_img {
+ display:inline-block;
+ height:200px;
+ width:200px;
+ margin:25px;
+ margin-left:50px;
+ margin-bottom:0px;
+ border-radius:100px;
+}
+
+.prof_name{
+ display:inline-block;
+ width:350px;
+ font-size:50px;
+ margin:25px;
+ text-align:center;
+}
+
+.button_follow{
+ display:inline-block;
+ font-size:20px;
+ text-align:center;
+ width:150px;
+ height:50px;
+ margin:25px;
+ background-color:#FFFFFF;
+ color:#4CAF50;
+ border-radius:25px;
+}
+
+.account_intro{
+ display:inline-block;
+ position:relative;
+ top:-120px;
+ left:300px;
+ width:650px;
+ height:200px;
+ margin:25px;
+ margin-top:0px;
+ background:lightgray;
+}
+
+.num_follow{
+ display:inline-block;
+ font-size:30px;
+ width:240px;
+ height:30px;
+ color:#4CAF50;
+ font-weight:bold;
+ text-align:center;
+ margin-top:45px;
+ margin-left:125px;
+ margin-right:10px;
+ position:relative;
+ left:-800px;
+ top:25px;
+}
+
+.num_follower{
+ display:inline-block;
+ font-size:30px;
+ width:240px;
+ height:30px;
+ color:#4CAF50;
+ font-weight:bold;
+ text-align:center;
+ margin-top:45px;
+ margin-left:125px;
+ margin-right:10px;
+ position:relative;
+ top:-150px;
+ left:-90px;
+}
+
+.copy_url_design{
+    position:relative;
+    top:-160px;
+    left:-50px;
+    width:75px;
+    height:75px;
+    background-color:rgba(0, 0, 0, 0);
+}
+
+.copy_url_img{
+    position:relative;
+    top:-3px;
+    left:-8px;
+    width:75px;
+    height:75px;
+}
+
+.SNS_img{
+ position:relative;
+ display:inline-block;
+ width:75px;
+ height:75px;
+ margin-left:25px;
+ border-radius:3px;
+ top:-160px;
+ left:-50px;
+}
+
+.container-title{
+ position:relative;
+ top:-150px;
+ font-size:50px;
+ margin-left:75px;
+}
+
+.hr{
+    position:relative;
+    top:-160px;
+}
+
+.container_position{
+    position:relative;
+    top:-160px;
+    left:75px;
+}

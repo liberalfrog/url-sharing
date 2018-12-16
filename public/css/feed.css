@@ -47,10 +47,6 @@ body{
   margin: 10px 5px;
 }
 
-.urlset_panel: hover{
-  opacity(0.3);
-}
-
 #container .urlset_panel:nth-child(4n){
   margin: 10px 0 0 0;
 }
@@ -224,6 +220,7 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
 }
 
 footer{

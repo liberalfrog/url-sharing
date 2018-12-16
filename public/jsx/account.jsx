@@ -42,7 +42,7 @@ var folderShow = function(list){
 
 
 // @platong Follow button
-$("#button__follow").on("click", function(){
+$("#button_follow").on("click", function(){
   let aId = location.search.substring(1).split('=')[1];
 
   db.collection("account").doc(aId).get().then((querysnapShot) => {
