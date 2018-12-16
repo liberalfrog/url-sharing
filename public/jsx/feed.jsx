@@ -1,13 +1,21 @@
 import React from 'react';
 import Folders from '../js/folder';
 import Urls from '../js/url';
-
+import {SegueAnyToUrl, SegueAnyToFolder} from '../js/segue';
 
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
 const db = firebase.firestore();
 const storage = firebase.storage();
 var blob;
+
+
+window.addEventListener('popstate', function(e) {
+  const pathname = location.pathname
+  if(pathname === "/feed" || pathname === "/feed/"){
+    init()
+  }
+});
 
 
 init()
@@ -20,8 +28,8 @@ function blobToFile(theBlob, fileName){
 
 
 function getAccountId(user){
-  return db.collection("account").where("uId", "==", user.uid).get().then(querySnapshots  => {
-    for(let i of querySnapshots.docs){
+  return db.collection("account").where("uId", "==", user.uid).get().then(snap  => {
+    for(let i of snap.docs){
       return i.id
     }
   });
@@ -42,19 +50,19 @@ function init(){
     if (user) {
       let query = location.search;
       if(query!==""){
-        console.log("Hello world");
         let hash = query.slice(1).split("&");
         var parameters = [];
         for(let i=0; i<hash.length; i++){
-          let array = hash[i].split("=");
-          parameters.push(array[0]); 
-          parameters[array[0]] = array[1];
+          let array = hash[i].split("=")
+          parameters.push(array[0])
+          parameters[array[0]] = array[1]
         }
-        console.log(parameters);
+        let folderId = parameters["id"]
         let list = [];
         let d;
-        db.collection("urlset").doc(parameters.id).collection("urlputs").get().then((querysnapShots) => {
-          for(var i of querysnapShots.docs){
+        let folderQuery = db.collection("urlset").doc(folderId).collection("urlputs")
+        folderQuery.get().then(snap => {
+          for(let i of snap.docs){
             d = i.data()
             d.id = i.id
             if(d.aId === undefined){
@@ -64,7 +72,7 @@ function init(){
             }
             list.push(d)
           };
-         ReactDOM.render( <Urls list={list}/>, document.getElementById("container"));
+          ReactDOM.render(<SegueAnyToUrl list={list}/>, document.getElementById("container"))
         });
         return;
       }
@@ -77,18 +85,21 @@ function init(){
           }
           localStorage.setItem("accountId", a);
         });
-        db.collection("urlset").get().then((querysnapShots) => {
+        let list = []
+        db.collection("urlset").get().then(snap => {
           let d;
-          let list = []
           let for_saved_list = []
-          for(let i of querysnapShots.docs){
+          for(let i of snap.docs){
             d = i.data()
             d.id = i.id
             list.push(d)
             for_saved_list.push(JSON.stringify(d))
           };
-          folderShow(list);
+          for(let d of list){
+            $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+          }
           sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+          ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
         });
       }
     } else {
@@ -105,12 +116,6 @@ function init(){
 }
 
 
-var folderShow = function(list){
-  ReactDOM.render( <Folders list={list}/>, document.getElementById("container"));
-  for(let d of list){
-    $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-  }
-}
 
 
 class CenteringPopover extends React.Component{

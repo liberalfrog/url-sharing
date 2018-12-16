@@ -6,8 +6,8 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var accountRouter = require('./routes/account');
-var feedRouter = require('./routes/feed');
 var apiRouter = require('./routes/api_v1');
+var apiPaypalRouter = require('./routes/api_v1_paypal');
 
 const firebase = require('firebase');
 //var firebaseui = require('firebaseui');
@@ -26,8 +26,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/account', accountRouter);
-app.use('/feed', feedRouter);
 app.use('/api_v1/', apiRouter);
+app.use('/api_v1_paypal/', apiPaypalRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

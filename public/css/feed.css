@@ -9,29 +9,42 @@ form{
   padding: 0;
 }
 
+input[type="text"]{
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: none;
+}
+
 body{
   background-color: lightgray;
 }
 
 #container{
   margin: 0 auto;
+  width: 900px;
+}
+
+.container__wrapper{
+  width: 100%;
   display: flex;
   flex-wrap: wrap;
-  width: 900px;
+}
+
+.urlset_panel, .post-folder__folder{
+  border-radius: 5px;
+  height: 100px;
 }
 
 /* @platong urlput outermost frame */
 .urlset_panel{
   color:black;
   position: relative;
-  height: 100px;
   width: 23.5%;
   background-size: cover;
   background-color: #000;
   margin: 10px 5px;
-  border-radius: 5px;
-      -webkit-border-radius: 5px;
-      -moz-border-radius: 5px;
 }
 
 .urlset_panel: hover{
@@ -88,41 +101,59 @@ body{
   z-index: 20;
 }
 
-.add_post{
+.post__container{
   position: fixed;
   z-index: 30;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 320px;
-  height: 120px;
+  width: 46vw;
+  height: 76vh;
   background: pink;
+  padding: 2vh 2vw;
 }
 
-.ap_panel_main{
+.post-folder__preview{
   position: relative;
-  height: 100px;
-  width: 202px;
-  background-size: cover;
-  margin: 10px 2% 0 0;
-  z-index: 26;
 }
 
-.ap_panel_sub{
-  left: 202px;
+.post-folder__title{
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  font-size: 24px;
+  background: gray;
+}
+
+.post-folder__folder, .post-folder__image{
+  width: 423px;
+  height: 200px;
+}
+
+.post-folder__image{
+  opacity: 0;
+}
+
+.post-folder__folder{
+  position: relative;
+  background: green;
+}
+
+.post-folder__image{
+  position: absolute;
   top: 0;
-  position: absolute;
-  width: 90px;
-}
-
-#ap_select_img{ width: 90px; }
-
-#ap_preview{
-  position: absolute;
-  top: 10px;
   left: 0;
-  z-index: 25;
 }
+
+.post__submit{
+  position: absolute;
+  display: block;
+  bottom: 10px;
+  right: 10px;
+  width: 140px;
+}
+
+.sell__section{ display: none; }
 
 .submit_is_active{
   background: green;
@@ -135,8 +166,9 @@ body{
 }
 
 .list-nav{
-   margin:0 auto;
- }
+  margin:0 auto;
+  display: none;
+}
 
 @media screen and (max-width:1023px) {
   .list-nav{ width:100%; }

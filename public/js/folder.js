@@ -1,26 +1,17 @@
 import React from 'react';
 import Urls from './url';
-
-firebase.initializeApp({
-  apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
-  authDomain: "urlsharing-541c7.firebaseapp.com",
-  databaseURL: "https://urlsharing-541c7.firebaseio.com",
-  projectId: "urlsharing-541c7",
-  storageBucket: "urlsharing-541c7.appspot.com",
-  messagingSenderId: "756728507687"
-});
+import {SegueAnyToUrl} from "./segue";
 
 const db = firebase.firestore();
 const storage = firebase.storage();
 
 
-// @platong component of a urlset
 class Folder extends React.Component {
-putShow(){
-  let list = []
+  putShow(){
+    let list = []
     let d
-    db.collection("urlset").doc(this.props.id).collection("urlputs").get().then((querysnapShots) => {
-      for(var i of querysnapShots.docs){
+    db.collection("urlset").doc(this.props.id).collection("urlputs").get().then(snap => {
+      for(let i of snap.docs){
         d = i.data()
         d.id = i.id
         if(d.aId === undefined){
@@ -30,20 +21,16 @@ putShow(){
         }
         list.push(d)
       };
-      history.pushState('','',"?id=" + this.props.id);
-      window.addEventListener('popstate', function(e) {
-        const pathname = location.pathname
-        if(pathname === "/feed" || pathname === "/feed/"){
-          init()
-        }
-      });
-      urlputShow(list);
+      history.pushState('','',"folder/?id=" + this.props.id);
+      ReactDOM.render(<SegueAnyToUrl list={list}/>, document.getElementById("container"))
     });
   }
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
-        <a href={"/account?aId=" + this.props.aId}><img src={this.props.aProfileImg} className="account_profile_img" /></a>
+        <a href={"/account?aId=" + this.props.aId}>
+          <img src={this.props.aProfileImg} className="account_profile_img" />
+        </a>
         <h3>{this.props.name}</h3>
         <p className="account_name">{this.props.aName}</p>
         <a className="rigidFolder" onClick={() => this.putShow()}></a>
@@ -67,11 +54,6 @@ export default class Folders extends React.Component {
     }
     return return_html;
   }
-}
-
-
-function urlputShow(list){
-  ReactDOM.render( <Urls list={list}/>, document.getElementById("container"));
 }
 
 
