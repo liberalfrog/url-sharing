@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿img<!DOCTYPE html>
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
@@ -12,14 +12,26 @@
   <script src="/common/js/firebase-firestore.js"></script>
   <link rel="stylesheet" href="/css/urlput.css" media="all">
   <link rel="stylesheet" href="/css/feed.css" media="all">
+  <link rel="stylesheet" href="/css/account.css" media="all">
 </head>
 <body>
-  <img id="account_profile_img" src="" alt="">
-  <h2 id="account_name"></h2>
-  <p id="account_intro"></p>
-  <button id="button__follow">この人をフォロー</button>
-  <div id="container"></div>
-  <button onclick="copyURL()">Copy URL</button>
+  <img id="account_profile_img" src="" alt="" class="prof_img">
+  <h2 id="account_name" class="prof_name"></h2>
+  <button id="button_follow" class="button_follow">フォローする</button>
+  <div class="account_intro">
+  <id="account_intro">
+  </div>
+  <a href="#" class="num_follow">????Follow</a>
+  <a href="#" class="num_follow">????Follower</a>
+  <button onclick="copyURL()" class="copy_url_design"><img src ="https://ord.yahoo.co.jp/o/image/RV=1/RE=1545043940/RH=b3JkLnlhaG9vLmNvLmpw/RB=/RU=aHR0cHM6Ly9pbWFnZS5mcmVlcGlrLmNvbS9mcmVlLWljb24vbm8tdHJhbnNsYXRlLWRldGVjdGVkXzMxOC00MDIxMy5qcGc-/RS=%5EADB0aeGgW.ENgXJb7dLn5o_EdZFOaU-;_ylt=A2RiomBjLhZcyWAAngGU3uV7;_ylu=X3oDMTAyN3Vldmc1BDAD;_ylc=X3IDMgRmc3QDMARpZHgDMARvaWQDQU5kOUdjVFBfZWpUOUhrX0JmU3JTQWZ4QTkxTlhYV0Y4b2dSQ0RZd0VRM1g1UHlpVC1idjdMNVZYY3RMak9zX29BBHADNDRLejQ0T1U0NE84SU9PQ291T0NwT09Dcy5PRHN3LS0EcG9zAzkEc2VjA3NodwRzbGsDc2ZzdAR0dXJsA2h0dHBzOi8vbXNwLmMueWltZy5qcC95amltYWdlP3E9S1ZmZ05Dc1h5TEhfWnhoQXRHcmdtbHpCSkdkLlJLbjZxRUVYeFNQVzUwRk03ZTIxZjBCZy5kSno1ckZoT2NBRWZFNTlDaTEyUEZJRXhxNjlmc2ZwQy5ZM1lycUNMVjlTejkzcHFmOXpFWDBvWERwNktRWEozY0FmaUprVFUyeUYxaTNUUU1UeVBteS52U3NwVGpWZiZzaWc9MTNhMDM0Zm42" class="copy_url_img"></button>
+  <a href="#"><img src="https://msp.c.yimg.jp/yjimage?q=xSLD0akXyLE4S5o8wAJC2QcZ5Otmsox1hgQsQWF0LhG4XApAzo8fvnV0dacMGYzHgPY3ZeFLgx0vjHG4SQeETKRPaAx48JU21fE75F5BJG_CcXQJCDzHr29uFhAu3hBIB66shfSKmu2F3EdMbg--&sig=138mpht03&x=225&y=225" class="SNS_img"></a>
+  <a href="#"><img src="https://ord.yahoo.co.jp/o/image/RV=1/RE=1545044178/RH=b3JkLnlhaG9vLmNvLmpw/RB=/RU=aHR0cHM6Ly9zMy1hcC1ub3J0aGVhc3QtMS5hbWF6b25hd3MuY29tL2Nkbi5hcHBsaS13b3JsZC5qcC9wcm9kdWN0aW9uL3Bvc3RzL2V5ZWNhdGNoZXMvMDAwLzAwMS8xODAvZXllY2F0Y2gucG5nPzE1NDIwMzgzOTY-/RS=%5EADBZU038pOT.dSgi9Q9wsYPjX4Xtog-;_ylt=A2RCD09SLxZccQ8ApiiU3uV7;_ylu=X3oDMTAyN3Vldmc1BDAD;_ylc=X3IDMgRmc3QDMQRpZHgDMARvaWQDQU5kOUdjVFVaMG9WRllrRVh4V2RMUTRiZDZzbkIwMkJuU0hvVnFUU2dNUlVNajJ4UG1GZUwxTXFxaEZuVVQ0BHADWm1GalpXSnZiMnNnNDRLaTQ0S2s0NEt6NDRPegRwb3MDNQRzZWMDc2h3BHNsawNzZnN0BHR1cmwDaHR0cHM6Ly9tc3AuYy55aW1nLmpwL3lqaW1hZ2U_cT1kOTQ5V0wwWHlMRkczXzNRS3BsMm5vcGhjV2owY1IuX3ZkMGd2VzNkMG9JZkFOMldkaUFqcVdQWnBwQm1uUzBDN01jX3hScDViOFcxX3FwOExyaUtOSWpiTG9yVGFjWGZjVzZzWXdVUS5aV0x4enpQNXJnTFA0SFV6X0EybGx1MlMybktxUWtYNTQ5ZmxkYWhuTVo0JnNpZz0xM2FwNDhjNzY-" class="SNS_img"></a>
+  <a href="#"><img src="https://ord.yahoo.co.jp/o/image/RV=1/RE=1545044208/RH=b3JkLnlhaG9vLmNvLmpw/RB=/RU=aHR0cDovL3d3dy5tYXJrLXNpZ24ubmV0L2Rvd25sb2FkMDIvZGF0YTAxNzEvaW5zdGFncmFtLnBuZw--/RS=%5EADBsTZwPSO.rLxY8poI1c3o89AO7g0-;_ylt=A2RCAw9wLxZcxm4AxTCU3uV7;_ylu=X3oDMTAyN3Vldmc1BDAD;_ylc=X3IDMgRmc3QDMQRpZHgDMARvaWQDQU5kOUdjUUh5SExjcG1hNDJQWHE0b2toQ0tVTnRGbXZuYTl2RjJ1SEktaHdINUlSWEdNeDl2aTIxWGNxUUpmbEhRBHADYVc1emRHRm5jbUZ0SU9PQ291T0NwT09Dcy5PRHN3LS0EcG9zAzEEc2VjA3NodwRzbGsDc2ZzdAR0dXJsA2h0dHBzOi8vbXNwLmMueWltZy5qcC95amltYWdlP3E9UWdJUEUya1h5TEhYUEFHb1hfczVmVlMzZlh6OWduX2suNjljQWM5TE5pM05BcXNVVlpqb3ZLLng5WFFkQ05QU1BtdWY0c2Z5aDU1UDExNEpMNTI4RjE5Z2FZYUF0MGhzUzcyMUhoN1JQdW91Lmdab0tYOVRDRzRSQWIwUW5NVFltV29hSjFJVjBFcUE4NGNhTVdpayZzaWc9MTNhdTgwaDlz" class="SNS_img"></a>
+  <a href="#"><img src="https://msp.c.yimg.jp/yjimage?q=uHJ4AUYXyLGGsMpCx2Bz_bQcJAu3BVpbViXIQVDXHennJdRpOXg5fM3Gnl5RaJjeGAKjgOwndOUnaIQ6Y39B_0dBZo9Ju8_D0ekzh294N9J4Xhpxtu3VFFbnzt604xKVqdY10wpE1ZTU9bynUQ--&sig=138jpto63&x=225&y=225" class="SNS_img"></a>
+  <a href="#"><img src="https://msp.c.yimg.jp/yjimage?q=Qr1QePYXyLGDqfO93.NprhvpgblzGCa.hN4K.Mt.M6tNgT0gdH2qsQn9KXrUlKOYCCFfH96ojBPckIBmKB9pVqcLqOsjGhh1d2rE6eWUFBmbdlTIWKbdCtHE5.2qYHvoMzoNDdrf8gQKs6svnyOX&sig=13astjjfn&x=225&y=225" class="SNS_img"></a> 
+  <h2 class="container-title">URLs</h2>
+  <hr width="1150" class="hr">
+  <div id="container" class="container_position"></div>
   <script src="/common/js/jquery-3.3.1.min.js"></script>
   <script src="/js/account.js"></script>
   <script>

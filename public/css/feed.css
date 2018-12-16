@@ -34,8 +34,14 @@ body{
       -moz-border-radius: 5px;
 }
 
-.urlset_panel: hover{
-  opacity(0.3);
+.urlset_panel: hover:before{
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  content: ' ';
 }
 
 #container .urlset_panel:nth-child(4n){
@@ -181,5 +187,12 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+
 }
+
+
+
+
+
+
 /* End Register Account */
