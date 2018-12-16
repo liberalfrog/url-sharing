@@ -95,11 +95,11 @@ function init(){
             list.push(d)
             for_saved_list.push(JSON.stringify(d))
           };
+          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+          ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
           for(let d of list){
             $("#" + d.id ).css("background-image", "url(" + d.img + ")")
           }
-          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-          ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
         });
       }
     } else {

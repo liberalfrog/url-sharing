@@ -18,7 +18,7 @@ input[type="text"]{
 }
 
 body{
-  background-color: lightgray;
+  background-color:white;
 }
 
 #container{
@@ -74,11 +74,24 @@ body{
   height: 195px;
 }
 
+
+#later_button{
+  position: fixed;
+  bottom: 350px;
+  right: 0px;
+  background:	#00AA00;
+  color: white;
+  width: 130px;
+  height: 100px;
+  border-radius:50% 0 0 50%;
+  font-size: 20px;
+}
+
 #add_button{
   position: fixed;
-  bottom: 40px;
-  right: 40px;
-  background: #47b347;
+  bottom: 50px;
+  right: 25px;
+  background: #00AA00;
   color: white;
   width: 100px;
   height: 100px;
@@ -88,9 +101,11 @@ body{
 
 .add_panel{
   color:black;
-  background: white;
-  height: 90px;
-  margin: 3px 0;
+  height: 70px;
+  margin: 5px 0;
+  padding:6px;
+  border-radius: 5px;
+  border:solid 2px silver;
 }
 
 .window-overlay{
@@ -165,10 +180,6 @@ body{
   color: gray;
 }
 
-.list-nav{
-  margin:0 auto;
-  display: none;
-}
 
 @media screen and (max-width:1023px) {
   .list-nav{ width:100%; }
@@ -184,26 +195,26 @@ body{
   display: block;
 }
 
-.list-nav li{
-  list-style:none;
-  float: left;
-  font-size:18px;
-  width:25%;
+.list-nav{
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  max-width: 220px;
+  background-color: #220000;
+  height: 100%;
 }
 
 .list-nav a{
-  display:block;
-  line-height:70px;
-  height:70px;
-  text-align:center;
-  background:#000;
-  color:#fff;
-  border-right: 1px solid dimgray;
+  color:#BBB;
+  line-height:90px;
+  font-size:19px;
+  text-decoration: none;
+  margin-left:20px;
+ 
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-weight: 400;
 }
 
-.list-nav li:first-child a{
-  border-left:1px solid dimgray;
-}
 
 /* Begin Register Account */
 .centering_popover{
@@ -213,5 +224,14 @@ body{
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+}
+
+footer{
+ position:absolute;
+ left:50%;
+ transform:translateX(-50%);
+ color:silver;
+ font-size:1.6em;
+ margin:0 0 0.2em 0;
 }
 /* End Register Account */

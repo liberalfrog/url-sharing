@@ -3393,6 +3393,8 @@ function init() {
             }
 
             ;
+            sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+            ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
             var _iteratorNormalCompletion4 = true;
             var _didIteratorError4 = false;
             var _iteratorError4 = undefined;
@@ -3417,9 +3419,6 @@ function init() {
                 }
               }
             }
-
-            sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-            ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
           });
         })();
       }
