@@ -2256,7 +2256,6 @@ if (process.env.NODE_ENV === 'production') {
 
 }).call(this,require('_process'))
 },{"./cjs/react.development.js":5,"./cjs/react.production.min.js":6,"_process":1}],8:[function(require,module,exports){
-// @platong For compressed image
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2271,6 +2270,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+var _segue = require("./segue");
+
+// @platong For compressed image
 var blob = null;
 var THUMBNAIL_HEIGHT = 100;
 
@@ -2283,28 +2285,39 @@ firebase.initializeApp({
   messagingSenderId: "756728507687"
 });
 
-// @platong Button observe URL address in order to change myself by states.
-var observer = new MutationObserver(function (mutation) {
-  console.log(location.href);
-  var a = location.href.split("/");
-  a = a.slice(3, a.length).filter(function (element, index, array) {
-    return element != "" && element[0] != "?";
-  }).join("/");
-  if (a === "feed/folder") {}
-});
-
-var config = { attributes: true, childList: true, subtree: true };
-observer.observe(document, config);
-
-/* @platong add button is clicked.
-$("#add_button").on("click", function(){
-  ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
-});*/
-
 // @platong unmount is not obvious.
 function closePostView() {
   ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view"));
   ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
+  var list = sessionStorage.urlset_list.split("-@-");
+  for (var i = 0; i < list.length; i++) {
+    list[i] = JSON.parse(list[i]);
+  }
+  ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var d = _step.value;
+
+      $("#" + d.id).css("background-image", "url(" + d.img + ")");
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator["return"]) {
+        _iterator["return"]();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
 }
 
 function closeAddPanel() {
@@ -2395,8 +2408,6 @@ var AddButton = (function (_React$Component) {
 
   return AddButton;
 })(React.Component);
-
-exports["default"] = AddButton;
 
 var AddPanel = (function (_React$Component2) {
   _inherits(AddPanel, _React$Component2);
@@ -2727,9 +2738,12 @@ var UrlFolderPost = (function (_React$Component4) {
   return UrlFolderPost;
 })(React.Component);
 
-module.exports = exports["default"];
+exports.AddButton = AddButton;
+exports.AddPanel = AddPanel;
+exports.UrlFolderPost = UrlFolderPost;
+exports.UrlPost = UrlPost;
 
-},{}],9:[function(require,module,exports){
+},{"./segue":10}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -2776,6 +2790,7 @@ var Folder = (function (_React$Component) {
       var list = [];
       var d = undefined;
       db.collection("urlset").doc(this.props.id).collection("urlputs").get().then(function (snap) {
+        var for_saved_list = [];
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
         var _iteratorError = undefined;
@@ -2792,6 +2807,7 @@ var Folder = (function (_React$Component) {
               d.aName = "";
             }
             list.push(d);
+            for_saved_list.push(JSON.stringify(d));
           }
         } catch (err) {
           _didIteratorError = true;
@@ -2809,6 +2825,7 @@ var Folder = (function (_React$Component) {
         }
 
         ;
+        sessionStorage.url_list = for_saved_list.join("-@-");
         history.pushState('', '', "folder/?id=" + _this.props.id);
         ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { list: list }), document.getElementById("container"));
       });
@@ -2898,9 +2915,7 @@ exports['default'] = Folders;
 
 function init() {
   firebase.auth().onAuthStateChanged(function (user) {
-    if (user) {
-      console.log("Hello world");
-    } else {
+    if (user) {} else {
       var redirect_url = "/" + location.search;
       if (document.referrer) {
         var referrer = "referrer=" + encodeURIComponent(document.referrer);
@@ -2977,7 +2992,7 @@ var folderShow = function folderShow(list) {
 };
 module.exports = exports['default'];
 
-},{"./segue":10,"./url":11,"react":7}],10:[function(require,module,exports){
+},{"./segue":10,"./url":12,"react":7}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3008,11 +3023,10 @@ var _folder2 = _interopRequireDefault(_folder);
 
 var _add_button = require('./add_button');
 
-var _add_button2 = _interopRequireDefault(_add_button);
+var _side_menu = require("./side_menu");
 
-var func = function func() {
-  console.log("Hello world");
-};
+var _side_menu2 = _interopRequireDefault(_side_menu);
+
 var db = firebase.firestore();
 
 var SegueAnyToUrl = (function (_React$Component) {
@@ -3025,13 +3039,23 @@ var SegueAnyToUrl = (function (_React$Component) {
   }
 
   _createClass(SegueAnyToUrl, [{
+    key: "openAddPanel",
+    value: function openAddPanel() {
+      var list = sessionStorage.url_list.split("-@-");
+      for (var i = 0; i < list.length; i++) {
+        list[i] = JSON.parse(list[i]);
+      }
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list }), document.getElementById("container"));
+    }
+  }, {
     key: "render",
     value: function render() {
       return _react2["default"].createElement(
         "div",
-        null,
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button2["default"], { func: func, icon: "f" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel, icon: "url" })
       );
     }
   }]);
@@ -3049,13 +3073,19 @@ var SegueAnyToFolder = (function (_React$Component2) {
   }
 
   _createClass(SegueAnyToFolder, [{
+    key: "openAddPanel",
+    value: function openAddPanel() {
+      ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("add_view"));
+    }
+  }, {
     key: "render",
     value: function render() {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button2["default"], { func: func, icon: "+" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel, icon: "+" })
       );
     }
   }]);
@@ -3063,10 +3093,328 @@ var SegueAnyToFolder = (function (_React$Component2) {
   return SegueAnyToFolder;
 })(_react2["default"].Component);
 
+var SegueAnyToFolderList = (function (_React$Component3) {
+  _inherits(SegueAnyToFolderList, _React$Component3);
+
+  function SegueAnyToFolderList() {
+    _classCallCheck(this, SegueAnyToFolderList);
+
+    _get(Object.getPrototypeOf(SegueAnyToFolderList.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueAnyToFolderList, [{
+    key: "openFolderPost",
+    value: function openFolderPost() {
+      var list = sessionStorage.urlset_list.split("-@-");
+      for (var i = 0; i < list.length; i++) {
+        list[i] = JSON.parse(list[i]);
+      }
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var d = _step.value;
+
+          $("#" + d.id).css("background-image", "url(" + d.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator["return"]) {
+            _iterator["return"]();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
+      );
+    }
+  }]);
+
+  return SegueAnyToFolderList;
+})(_react2["default"].Component);
+
+var SegueAnyToFolderPost = (function (_React$Component4) {
+  _inherits(SegueAnyToFolderPost, _React$Component4);
+
+  function SegueAnyToFolderPost() {
+    _classCallCheck(this, SegueAnyToFolderPost);
+
+    _get(Object.getPrototypeOf(SegueAnyToFolderPost.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueAnyToFolderPost, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_add_button.UrlFolderPost, null),
+        _react2["default"].createElement(_folder2["default"], { list: this.props.list })
+      );
+    }
+  }]);
+
+  return SegueAnyToFolderPost;
+})(_react2["default"].Component);
+
+var SegueAnyToUrlPost = (function (_React$Component5) {
+  _inherits(SegueAnyToUrlPost, _React$Component5);
+
+  function SegueAnyToUrlPost() {
+    _classCallCheck(this, SegueAnyToUrlPost);
+
+    _get(Object.getPrototypeOf(SegueAnyToUrlPost.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueAnyToUrlPost, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_add_button.UrlPost, null),
+        _react2["default"].createElement(_url2["default"], { list: this.props.list })
+      );
+    }
+  }]);
+
+  return SegueAnyToUrlPost;
+})(_react2["default"].Component);
+
 exports.SegueAnyToUrl = SegueAnyToUrl;
 exports.SegueAnyToFolder = SegueAnyToFolder;
+exports.SegueAnyToFolderList = SegueAnyToFolderList;
+exports.SegueAnyToFolderPost = SegueAnyToFolderPost;
 
-},{"./add_button":8,"./folder":9,"./url":11,"react":7}],11:[function(require,module,exports){
+},{"./add_button":8,"./folder":9,"./side_menu":11,"./url":12,"react":7}],11:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _segue = require("./segue");
+
+var db = firebase.firestore();
+
+var SideMenu = (function (_React$Component) {
+  _inherits(SideMenu, _React$Component);
+
+  function SideMenu() {
+    _classCallCheck(this, SideMenu);
+
+    _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SideMenu, [{
+    key: "homeClicked",
+    value: function homeClicked() {
+      var list = [];
+      db.collection("urlset").get().then(function (snap) {
+        var d = undefined;
+        var for_saved_list = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var i = _step.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator["return"]) {
+              _iterator["return"]();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+        ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+        ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var _d = _step2.value;
+
+            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+              _iterator2["return"]();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+      });
+    }
+  }, {
+    key: "folderClicked",
+    value: function folderClicked() {
+      history.pushState('', '', "folders/");
+      var list = [];
+      var aId = localStorage.getItem("accountId");
+      db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+        var d = undefined;
+        var for_saved_list = [];
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var i = _step3.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+              _iterator3["return"]();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+
+        ;
+        // @platong save list at urlset_list
+        sessionStorage.urlset_list = for_saved_list.join("-@-");
+        ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+        ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+          for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _d2 = _step4.value;
+
+            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+          }
+        } catch (err) {
+          _didIteratorError4 = true;
+          _iteratorError4 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+              _iterator4["return"]();
+            }
+          } finally {
+            if (_didIteratorError4) {
+              throw _iteratorError4;
+            }
+          }
+        }
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "ul",
+        { className: "list-nav" },
+        _react2["default"].createElement(
+          "a",
+          { href: "/account?aId=" + localStorage.getItem("accountId") },
+          "Profile"
+        ),
+        _react2["default"].createElement(
+          "a",
+          { onClick: this.homeClicked },
+          "Home"
+        ),
+        _react2["default"].createElement(
+          "a",
+          { onClick: this.folderClicked },
+          "folders"
+        ),
+        _react2["default"].createElement(
+          "a",
+          { href: "" },
+          "通知"
+        ),
+        _react2["default"].createElement(
+          "a",
+          { href: "" },
+          "説明書"
+        )
+      );
+    }
+  }]);
+
+  return SideMenu;
+})(_react2["default"].Component);
+
+exports["default"] = SideMenu;
+module.exports = exports["default"];
+
+},{"./segue":10,"react":7}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3204,7 +3552,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"react":7}],12:[function(require,module,exports){
+},{"react":7}],13:[function(require,module,exports){
 'use strict';
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
@@ -3626,4 +3974,4 @@ var AccountRegister = (function (_React$Component2) {
   return AccountRegister;
 })(_react2['default'].Component);
 
-},{"../js/folder":9,"../js/segue":10,"../js/url":11,"react":7}]},{},[12]);
+},{"../js/folder":9,"../js/segue":10,"../js/url":12,"react":7}]},{},[13]);

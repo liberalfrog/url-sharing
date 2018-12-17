@@ -11,6 +11,7 @@ class Folder extends React.Component {
     let list = []
     let d
     db.collection("urlset").doc(this.props.id).collection("urlputs").get().then(snap => {
+      let for_saved_list = []
       for(let i of snap.docs){
         d = i.data()
         d.id = i.id
@@ -20,7 +21,9 @@ class Folder extends React.Component {
           d.aName = ""
         }
         list.push(d)
+        for_saved_list.push(JSON.stringify(d))
       };
+      sessionStorage.url_list = for_saved_list.join("-@-");
       history.pushState('','',"folder/?id=" + this.props.id);
       ReactDOM.render(<SegueAnyToUrl list={list}/>, document.getElementById("container"))
     });
@@ -60,7 +63,6 @@ export default class Folders extends React.Component {
 function init(){
   firebase.auth().onAuthStateChanged(function(user) {
     if (user) {
-      console.log("Hello world");
     } else {
       var redirect_url = "/" + location.search;
       if (document.referrer) {

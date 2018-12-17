@@ -1,3 +1,5 @@
+import {SegueAnyToFolderList} from "./segue";
+
 // @platong For compressed image
 var blob = null;
 const THUMBNAIL_HEIGHT = 100;
@@ -12,32 +14,18 @@ firebase.initializeApp({
 });
 
 
-// @platong Button observe URL address in order to change myself by states.
-const observer = new MutationObserver(mutation => {
-  console.log(location.href);
-  let a = location.href.split("/");
-  a = a.slice(3, a.length).filter((element, index, array) => {
-    return (element != "" && element[0] != "?");
-  }).join("/");
-  if(a === "feed/folder"){
-  }
-});
-
-const config = { attributes: true, childList: true, subtree: true };
-observer.observe(document, config);
-
-
-/* @platong add button is clicked.
-$("#add_button").on("click", function(){
-  ReactDOM.render(<AddPanel></AddPanel>, document.getElementById("add_view"));
-});*/
-
-
-
 // @platong unmount is not obvious.
 function closePostView(){ 
   ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); 
   ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
+  let list = sessionStorage.urlset_list.split("-@-")
+  for(let i=0; i<list.length; i++){
+    list[i] = JSON.parse(list[i])
+  }
+  ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"));
+  for(let d of list){
+    $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+  }
 }
 
 function closeAddPanel(){ ReactDOM.unmountComponentAtNode(document.getElementById("add_view")); }
@@ -112,7 +100,7 @@ function optionChange(){
 }
 
 
-export default class AddButton extends React.Component{
+class AddButton extends React.Component{
   render(){
     return(
       <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>
@@ -345,3 +333,5 @@ class UrlFolderPost extends React.Component{
     );
   }
 }
+
+export {AddButton, AddPanel, UrlFolderPost, UrlPost}
