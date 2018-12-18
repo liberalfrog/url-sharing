@@ -4,7 +4,7 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 var router = express.Router();
 
-router.get('/', function(req, res, next) {
+router.get('/url_to_title', function(req, res, next) {
   if(!req.query.url)
     return
   const url = req.query.url

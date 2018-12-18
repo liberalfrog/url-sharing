@@ -1,9 +1,9 @@
-const db = firebase.firestore();
+let db = firebase.firestore();
+const settings = { timestampsInSnapshots: true};
+db.settings(settings);
 const storage = firebase.storage();
 var blob;
 
-// @platong initialize this page
-init()
 
 function blobToFile(theBlob, fileName){
   theBlob.lastModifiedDate = new Date();
@@ -29,51 +29,6 @@ function accountRegisterSubmitValidation(){
   return false;
 }
 
-
-function init(){
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-      getAccountId(user).then(a => {
-        if(a === undefined){
-          $("body").prepend('<div id="popover"></div>');
-          ReactDOM.render( <CenteringPopover/>, document.getElementById("popover"));
-          return
-        }
-        localStorage.setItem("accountId", a);
-      });
-    } else {
-      var redirect_url = "/" + location.search;
-      if (document.referrer) {
-        var referrer = "referrer=" + encodeURIComponent(document.referrer);
-        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
-      }
-      location.href = redirect_url;
-    }
-  });
-
-  db.collection("urlset").get().then((querysnapShots) => {
-    let d;
-    let list = []
-    let for_saved_list = []
-    for(var i of querysnapShots.docs){
-      d = i.data()
-      d.id = i.id
-      list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    };
-    folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-  });
-}
-
-
-class CenteringPopover extends React.Component{
-  render(){
-    return(
-      <AccountRegister />
-    );
-  }
-}
 
 function raButtonActiveSwitch(){
   if(accountRegisterSubmitValidation()){
@@ -176,7 +131,9 @@ class AccountRegister extends React.Component{
         db.collection("account").add({
           img: downloadURL,
           name: name,
-          uId: user.uid
+          uId: user.uid,
+          followee: 0,
+          follower: 0,
         }).then(docRef => {
           user.updateProfile({
             displayName: name,
