@@ -59,6 +59,7 @@ class SegueAnyToFolderList extends React.Component {
       <div className="container__wrapper">
         <SideMenu />
         <Folders list={this.props.list} />
+        <button id="later_button">Watch later</button>
         <AddButton func={this.openFolderPost} icon={"folder"} />
       </div>
     );

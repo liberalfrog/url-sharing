@@ -1,7 +1,6 @@
-import {SegueAnyToFolderList} from "./segue";
+import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPost} from "./segue";
 
 // @platong For compressed image
-var blob = null;
 const THUMBNAIL_HEIGHT = 100;
 
 firebase.initializeApp({
@@ -14,10 +13,7 @@ firebase.initializeApp({
 });
 
 
-// @platong unmount is not obvious.
 function closePostView(){ 
-  ReactDOM.unmountComponentAtNode(document.getElementById("post_add_view")); 
-  ReactDOM.unmountComponentAtNode(document.getElementById("urlput_post"));
   let list = sessionStorage.urlset_list.split("-@-")
   for(let i=0; i<list.length; i++){
     list[i] = JSON.parse(list[i])
@@ -27,8 +23,6 @@ function closePostView(){
     $("#" + d.id ).css("background-image", "url(" + d.img + ")")
   }
 }
-
-function closeAddPanel(){ ReactDOM.unmountComponentAtNode(document.getElementById("add_view")); }
 
 
 // @platong If the folder form can submit, return true.
@@ -83,7 +77,6 @@ function blobToFile(theBlob, fileName){
 }
 
 
-
 // @platong option change from folder which is got from Firebase.
 function optionChange(){
   let list = sessionStorage.urlset_list.split("-@-")
@@ -112,12 +105,10 @@ class AddButton extends React.Component{
 // @platong Appear if plus button is tapped or clicked.
 class AddPanel extends React.Component{
   folderCreate(){
-    ReactDOM.render(<UrlFolderPost></UrlFolderPost>, document.getElementById("post_add_view"));
-    closeAddPanel();
+    ReactDOM.render(<SegueAnyToFolderPost/>, document.getElementById("container"));
   }
   urlCreate(){
-    ReactDOM.render(<UrlPost></UrlPost>, document.getElementById("post_add_view"));
-    closeAddPanel();
+    ReactDOM.render(<SegueAnyToUrlPost />, document.getElementById("container"));
     optionChange();
   }
   render(){
@@ -150,11 +141,9 @@ class UrlPost extends React.Component{
   urlConverter(){
     const url = document.urlput_form.url.value
     $.ajax({
-      url:"/api_v1/",
+      url:"/api_v1/url_to_title",
       type:'GET',
-      data:{ 
-        "url": url,
-      }
+      data:{ "url": url }
     })
     .done( (data) => {
       $('.result').html(data); 
@@ -165,15 +154,14 @@ class UrlPost extends React.Component{
   getChanged(){ urlSubmitActiveSwitch(); }
   urlputSubmit(){
     var obj = document.getElementById("urlput_option");
+    let aId = localStorage.accountId
+    let db = firebase.firestore();
     let index = obj.selectedIndex;
     if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択")
       return
-
-    const db = firebase.firestore();
-    
     let t_id = $("#urlput_option").val()
     let user = firebase.auth().currentUser;
-    db.collection("urlset").doc(t_id).collection("urlputs").add({
+    db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
       title: document.urlput_form.title.value,
       content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
       href: document.urlput_form.url.value,
@@ -208,6 +196,8 @@ class UrlPost extends React.Component{
 }
 
 
+
+var blob = null;
 class UrlFolderPost extends React.Component{
   submit(){
     let file = document.urlset_form.urlbook_img.files[0]
@@ -245,14 +235,16 @@ class UrlFolderPost extends React.Component{
       let user = firebase.auth().currentUser;
       uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
         console.log('File available at', downloadURL);
-        db.collection("urlset").add({
+        let aId = localStorage.getItem("accountId")
+        let ref = db.collection("account").doc(aId).collection("myfreefolders")
+
+        ref.add({
           img: downloadURL,
           name: document.urlset_form.title.value,
           aId: localStorage.getItem("accountId"),
           aProfileImg: user.photoURL,
           aName: user.displayName,
           dateTime : new Date()
-
         }).then(function(docRef) {
           closePostView()
         }).catch(function(error) {

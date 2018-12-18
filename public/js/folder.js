@@ -58,39 +58,3 @@ export default class Folders extends React.Component {
     return return_html;
   }
 }
-
-
-function init(){
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-    } else {
-      var redirect_url = "/" + location.search;
-      if (document.referrer) {
-        var referrer = "referrer=" + encodeURIComponent(document.referrer);
-        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
-      }
-      location.href = redirect_url;
-    }
-  });
-
-  db.collection("urlset").get().then((querysnapShots) => {
-    let d;
-    let list = []
-    let for_saved_list = []
-    for(var i of querysnapShots.docs){
-      d = i.data()
-      d.id = i.id
-      list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    };
-    folderShow(list);
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-  });
-}
-
-var folderShow = function(list){
-  ReactDOM.render( <Folders list={list}/>, document.getElementById("container"));
-  for(let d of list){
-    $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-  }
-}
