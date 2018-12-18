@@ -1,4 +1,7 @@
 import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPost} from "./segue";
+let db = firebase.firestore();
+const settings = { timestampsInSnapshots: true};
+db.settings(settings)
 
 // @platong For compressed image
 const THUMBNAIL_HEIGHT = 100;
@@ -155,7 +158,6 @@ class UrlPost extends React.Component{
   urlputSubmit(){
     var obj = document.getElementById("urlput_option");
     let aId = localStorage.accountId
-    let db = firebase.firestore();
     let index = obj.selectedIndex;
     if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択")
       return
@@ -202,7 +204,6 @@ class UrlFolderPost extends React.Component{
   submit(){
     let file = document.urlset_form.urlbook_img.files[0]
     if(!folderSubmitValidation() && !blob) return; // validation
-    let db = firebase.firestore();
     let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('urlset_images');

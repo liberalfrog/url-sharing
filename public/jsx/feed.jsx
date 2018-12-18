@@ -6,7 +6,9 @@ import {SegueAnyToUrl, SegueAnyToFolder} from '../js/segue';
 
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
-const db = firebase.firestore();
+let db = firebase.firestore();
+const settings = { timestampsInSnapshots: true};
+db.settings(settings)
 const storage = firebase.storage();
 var blob;
 
