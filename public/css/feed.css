@@ -39,8 +39,12 @@ body{
   position: relative;
   width: 23.5%;
   background-size: cover;
-  background-color: #000;
+
   margin: 10px 5px;
+}
+
+.urlset_panel :hover :after{
+color:rgba(1, 1, 1, 0.3)
 }
 
 #container .urlset_panel:nth-child(4n){
