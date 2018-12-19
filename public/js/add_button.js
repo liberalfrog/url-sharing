@@ -1,19 +1,9 @@
 import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPost} from "./segue";
-let db = firebase.firestore();
-const settings = { timestampsInSnapshots: true};
-db.settings(settings)
+import {db, storage, auth} from "./firebase";
+
 
 // @platong For compressed image
 const THUMBNAIL_HEIGHT = 100;
-
-firebase.initializeApp({
-  apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
-  authDomain: "urlsharing-541c7.firebaseapp.com",
-  databaseURL: "https://urlsharing-541c7.firebaseio.com",
-  projectId: "urlsharing-541c7",
-  storageBucket: "urlsharing-541c7.appspot.com",
-  messagingSenderId: "756728507687"
-});
 
 
 function closePostView(){ 
@@ -162,7 +152,7 @@ class UrlPost extends React.Component{
     if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択")
       return
     let t_id = $("#urlput_option").val()
-    let user = firebase.auth().currentUser;
+    let user = auth.currentUser;
     db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
       title: document.urlput_form.title.value,
       content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
@@ -204,7 +194,6 @@ class UrlFolderPost extends React.Component{
   submit(){
     let file = document.urlset_form.urlbook_img.files[0]
     if(!folderSubmitValidation() && !blob) return; // validation
-    let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('urlset_images');
     const file_name = file.name
@@ -233,7 +222,7 @@ class UrlFolderPost extends React.Component{
           break;
       }
     }, function() { 
-      let user = firebase.auth().currentUser;
+      let user = auth.currentUser;
       uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
         console.log('File available at', downloadURL);
         let aId = localStorage.getItem("accountId")

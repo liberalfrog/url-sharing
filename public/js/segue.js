@@ -3,9 +3,9 @@ import Urls from "./url";
 import Folders from "./folder";
 import {AddButton, AddPanel, UrlFolderPost, UrlPost} from './add_button';
 import SideMenu from "./side_menu";
+import {db} from "./firebase";
 
 
-const db = firebase.firestore();
 
 class SegueAnyToUrl extends React.Component {
   openAddPanel(){ 

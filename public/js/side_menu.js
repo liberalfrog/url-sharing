@@ -1,7 +1,7 @@
 import React from "react";
 import {SegueAnyToFolder, SegueAnyToFolderList} from "./segue";
+import {db} from "./firebase";
 
-const db = firebase.firestore();
 
 export default class SideMenu extends React.Component{
   homeClicked(){

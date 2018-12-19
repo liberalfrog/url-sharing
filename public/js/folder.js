@@ -1,9 +1,7 @@
 import React from 'react';
 import Urls from './url';
 import {SegueAnyToUrl} from "./segue";
-
-const db = firebase.firestore();
-const storage = firebase.storage();
+import {db, storage} from "./firebase";
 
 
 class Folder extends React.Component {

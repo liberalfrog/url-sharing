@@ -1,7 +1,5 @@
-let db = firebase.firestore();
-const settings = { timestampsInSnapshots: true};
-db.settings(settings);
-const storage = firebase.storage();
+import {db, storage, auth} from "./firebase";
+
 var blob;
 
 
@@ -92,7 +90,6 @@ class AccountRegister extends React.Component{
   submit(){
     let file = document.getElementById("ra_profile_img").files[0]
     if(!accountRegisterSubmitValidation() && !blob) return; // validation
-    let db = firebase.firestore();
     let storage = firebase.storage();
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('account_profile_imgs');
@@ -126,7 +123,7 @@ class AccountRegister extends React.Component{
     }, function() { // Upload completed successfully, now we can get the download URL
       uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
         console.log('File available at', downloadURL);
-        let user = firebase.auth().currentUser;
+        let user = auth.currentUser;
         let name = document.getElementById("ra_name").value
         db.collection("account").add({
           img: downloadURL,

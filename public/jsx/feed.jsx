@@ -3,16 +3,12 @@ import Folders from '../js/folder';
 import Urls from '../js/url';
 import AccountRegister from '../js/account_register';
 import {SegueAnyToUrl, SegueAnyToFolder} from '../js/segue';
+import {auth, storage, db} from "../js/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
-let db = firebase.firestore();
-const settings = { timestampsInSnapshots: true};
-db.settings(settings)
-const storage = firebase.storage();
+
 var blob;
-
-
 window.addEventListener('popstate', function(e) {
   const pathname = location.pathname
   if(pathname === "/feed" || pathname === "/feed/"){
@@ -49,7 +45,7 @@ function accountRegisterSubmitValidation(){
 
 
 function init(){
-  firebase.auth().onAuthStateChanged(function(user) {
+  auth.onAuthStateChanged(function(user) {
     if (user) {
       let query = location.search;
       if(query!==""){

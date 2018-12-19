@@ -1,3 +1,4 @@
+import firebase from "./firebase";
 import React from 'react';
 
 class Url extends React.Component {
