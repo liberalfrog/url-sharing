@@ -43,7 +43,7 @@ body{
   margin: 10px 5px;
 }
 
-.urlset_panel :hover :after{
+.urlset_panel :hover :before
 color:rgba(1, 1, 1, 0.3)
 }
 
