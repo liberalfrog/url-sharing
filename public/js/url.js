@@ -1,15 +1,30 @@
-import firebase from "./firebase";
+import {db} from "./firebase";
 import React from 'react';
 
 class Url extends React.Component {
+  constructor(props){
+    this.state = {
+      title: props.title,
+      href: props.href,
+      content: props.content
+    }
+  }
+  clickHandler(){
+    let aId = localStorage.getItem("accountId")
+    let data = {
+      href: this.state.href,
+      date: new Data()
+    }
+    db.collection("account").doc(aId).collection("page_trackings").add(data);
+  }
   render(){
     return (
       <div className="urlput_panel">
-        <h3>{this.props.title}</h3>
+        <h3>{this.state.title}</h3>
         <p className="text_overflow_url">
-          <a href={this.props.href} target="_blank"></a>
+          <a href={this.state.href} target="_blank" onClick={this.clickHandler}></a>
         </p>
-        <p className="baloon">[this.props.content]</p>
+        <p className="baloon">{this.state.content}</p>
       </div>
     )
   }
