@@ -6,8 +6,6 @@
   <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
   <script src="/common/js/react.development.js" crossorigin></script>
   <script src="/common/js/react-dom.development.js" crossorigin></script>
-  <script src="/common/js/firebase.js"></script>
-  <script src="/common/js/firebase-firestore.js"></script>
   <link rel="stylesheet" href="/css/urlput.css" media="all">
   <link rel="stylesheet" href="/css/folder.css" media="all">
   <link rel="stylesheet" href="/css/feed.css" media="all">
@@ -18,6 +16,21 @@
   <footer>
     <p>&copy; Real OZ Project org. | 2018</p>
   </footer>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-storage.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-firestore.js"></script>
+  <script>
+    var config = {
+      apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
+      authDomain: "urlsharing-541c7.firebaseapp.com",
+      databaseURL: "https://urlsharing-541c7.firebaseio.com",
+      projectId: "urlsharing-541c7",
+      storageBucket: "urlsharing-541c7.appspot.com",
+      messagingSenderId: "756728507687"
+    };
+    firebase.initializeApp(config);
+  </script>
   <script src="/common/js/jquery-3.3.1.min.js"></script>
   <script src="/js/feed.js"></script>
 </body>

@@ -39,8 +39,12 @@ body{
   position: relative;
   width: 23.5%;
   background-size: cover;
-  background-color: #000;
+
   margin: 10px 5px;
+}
+
+.urlset_panel :hover :after{
+color:rgba(1, 1, 1, 0.3)
 }
 
 #container .urlset_panel:nth-child(4n){
@@ -58,7 +62,7 @@ body{
 
 
 /* Add Panel */
-#add_view{
+.add_view{
   position: fixed;
   bottom: 140px;
   right: 40px;
@@ -102,6 +106,8 @@ body{
 
 .window-overlay{
   position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.75);
@@ -130,6 +136,14 @@ body{
   left: 24px;
   font-size: 24px;
   background: gray;
+}
+
+.post-folder__upload-message{
+  display: block;
+  position: absolute;
+  top: 50%;
+  right: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .post-folder__folder, .post-folder__image{

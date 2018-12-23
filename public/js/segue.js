@@ -3,24 +3,33 @@ import Urls from "./url";
 import Folders from "./folder";
 import {AddButton, AddPanel, UrlFolderPost, UrlPost} from './add_button';
 import SideMenu from "./side_menu";
+import {db} from "./firebase";
 
 
-const db = firebase.firestore();
 
 class SegueAnyToUrl extends React.Component {
-  openAddPanel(){ 
-    let list = sessionStorage.url_list.split("-@-")
-    for(let i=0; i<list.length; i++){
-      list[i] = JSON.parse(list[i])
+  constructor(props){
+    super(props)
+    this.state = {
+      id: props.id
     }
-    ReactDOM.render(<SegueAnyToUrlPost list={list} />, document.getElementById("container"))
+    history.pushState('','',"folders?id=" + this.props.id);
+  }
+  openAddPanel(){ 
+    let listStr = sessionStorage.url_list
+    let list
+    if(listStr !== "")
+      list = listStr.split("-@-").map(x => JSON.parse(x))
+    else
+      list = []
+    ReactDOM.render(<SegueAnyToUrlPost list={list} id={this.state.id}/>, document.getElementById("container"))
   }
   render(){
     return(
       <div className="container__wrapper">
         <SideMenu />
         <Urls list={this.props.list} />
-        <AddButton func={this.openAddPanel} icon={"url"} />
+        <AddButton func={this.openAddPanel.bind(this)} icon={"url"} />
       </div>
     );
   }
@@ -28,15 +37,38 @@ class SegueAnyToUrl extends React.Component {
 
 
 class SegueAnyToFolder extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      list: props.list
+    }
+  }
   openAddPanel(){ 
-    ReactDOM.render(<AddPanel />, document.getElementById("add_view"));
+    ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+    ReactDOM.render( <SegueFolderToAddPanel list={this.state.list}/>, document.getElementById("container"));
+    for(let d of this.state.list){
+      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+    }
   }
   render(){
     return(
       <div className="container__wrapper">
         <SideMenu />
+        <Folders list={this.state.list} />
+        <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
+      </div>
+    );
+  }
+}
+
+
+class SegueFolderToAddPanel extends React.Component {
+  render(){
+    return(
+      <div className="container__wrapper">
+        <SideMenu />
         <Folders list={this.props.list} />
-        <AddButton func={this.openAddPanel} icon={"+"} />
+        <AddPanel />
       </div>
     );
   }
@@ -68,12 +100,33 @@ class SegueAnyToFolderList extends React.Component {
 
 
 class SegueAnyToFolderPost extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = { list: this.props.list }
+  }
   render(){
     return(
       <div className="container__wrapper">
         <SideMenu />
         <UrlFolderPost />
-        <Folders list={this.props.list} />
+        <Folders list={this.state.list} />
+      </div>
+    );
+  }
+}
+
+
+class SegueAnyToUrlPostFolderChoice extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = { list: this.props.list }
+  }
+  render(){
+    return(
+      <div className="container__wrapper">
+        <h1>URLを登録するフォルダを選択</h1>
+        <SideMenu />
+        <Folders post={true} list={this.state.list} />
       </div>
     );
   }
@@ -85,12 +138,46 @@ class SegueAnyToUrlPost extends React.Component {
     return(
       <div className="container__wrapper">
         <SideMenu />
-        <UrlPost/>
         <Urls list={this.props.list} />
+        <UrlPost id={this.props.id} />
       </div>
     );
   }
 }
 
 
-export {SegueAnyToUrl, SegueAnyToFolder, SegueAnyToFolderList, SegueAnyToFolderPost}
+function segueToFolders(){
+  history.pushState('','',"folders")
+  let list = []
+  let aId = localStorage.getItem("accountId")
+  db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
+    let d;
+    let for_saved_list = []
+    for(let i of snap1.docs){
+      d = i.data()
+      d.id = i.id
+      d.kind = "folders"
+      list.push(d)
+      for_saved_list.push(JSON.stringify(d))
+    };  
+    db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+      let d;
+      for(let i of snap2.docs){
+        d = i.data()
+        d.id = i.id
+        d.kind = "myfreefolders"
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };  
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); 
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"))
+      ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
+      for(let d of list){
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }   
+    })  
+  })
+}
+
+export {SegueAnyToUrlPostFolderChoice, SegueAnyToFolder, SegueAnyToFolderList, SegueAnyToFolderPost,
+  SegueAnyToUrl, SegueAnyToUrlPost, segueToFolders}

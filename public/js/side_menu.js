@@ -1,10 +1,11 @@
 import React from "react";
 import {SegueAnyToFolder, SegueAnyToFolderList} from "./segue";
+import {db} from "./firebase";
 
-const db = firebase.firestore();
 
 export default class SideMenu extends React.Component{
   homeClicked(){
+    history.pushState('','',"feed")
     let list = []
     db.collection("urlset").get().then(snap => {
       let d;
@@ -24,25 +25,35 @@ export default class SideMenu extends React.Component{
     });
   }
   folderClicked(){
-    history.pushState('','',"folders/")
+    history.pushState('','',"folders")
     let list = []
     let aId = localStorage.getItem("accountId")
-    db.collection("account").doc(aId).collection("folders").get().then(snap => {
+    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
       let d;
       let for_saved_list = []
-      for(let i of snap.docs){
+      for(let i of snap1.docs){
         d = i.data()
         d.id = i.id
+        d.kind = "folders"
         list.push(d)
         for_saved_list.push(JSON.stringify(d))
       };  
-      // @platong save list at urlset_list
-      sessionStorage.urlset_list = for_saved_list.join("-@-"); 
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"))
-      ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
-      for(let d of list){
-        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      }
+      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+        let d;
+        for(let i of snap2.docs){
+          d = i.data()
+          d.id = i.id
+          d.kind = "myfreefolders"
+          list.push(d)
+          for_saved_list.push(JSON.stringify(d))
+        };  
+        sessionStorage.urlset_list = for_saved_list.join("-@-"); 
+        ReactDOM.unmountComponentAtNode(document.getElementById("container"))
+        ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
+        for(let d of list){
+          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+        }
+      })
     })
   }
   render(){

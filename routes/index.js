@@ -14,7 +14,7 @@ router.get('/feed', function(req, res, next) {
   res.render('feed', {});
 });
 
-router.get('/folder', function(req, res, next) { 
+router.get('/folders', function(req, res, next) { 
   res.render('feed', {});
 });
 

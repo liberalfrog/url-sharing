@@ -1,10 +1,6 @@
 import React from 'react';
 import Folders from '../js/folder';
-
-let db = firebase.firestore();
-const settings = { timestampsInSnapshots: true};
-db.settings(settings);
-const storage = firebase.storage();
+import {storage, db} from "../js/firebase";
 
 init()
 

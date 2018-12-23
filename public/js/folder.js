@@ -1,16 +1,36 @@
 import React from 'react';
 import Urls from './url';
-import {SegueAnyToUrl} from "./segue";
-
-const db = firebase.firestore();
-const storage = firebase.storage();
+import {SegueAnyToUrl, SegueAnyToUrlPost} from "./segue";
+import {db, storage} from "./firebase";
 
 
 class Folder extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {
+      putShow: props.post ? this.urlPost : this.putShow,
+      id: props.id,
+      kind: props.kind
+    }
+  }
   putShow(){
     let list = []
     let d
-    db.collection("urlset").doc(this.props.id).collection("urlputs").get().then(snap => {
+    let aId = localStorage.accountId
+    let query
+    switch(this.state.kind){
+      case "folders":
+        query = db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls")
+        break
+      case "myfreefolders":
+        query = db.collection("account").doc(aId).collection("myfreefolders")
+                  .doc(this.state.id).collection("urls")
+        break
+      default:
+        query = db.collection("urlset").doc(this.state.id).collection("urlputs")
+        break
+    }
+    query.get().then(snap => {
       let for_saved_list = []
       for(let i of snap.docs){
         d = i.data()
@@ -24,8 +44,28 @@ class Folder extends React.Component {
         for_saved_list.push(JSON.stringify(d))
       };
       sessionStorage.url_list = for_saved_list.join("-@-");
-      history.pushState('','',"folder/?id=" + this.props.id);
-      ReactDOM.render(<SegueAnyToUrl list={list}/>, document.getElementById("container"))
+      ReactDOM.render(<SegueAnyToUrl id={this.state.id} list={list}/>, document.getElementById("container"))
+    });
+  }
+  urlPost(){
+    let list = []
+    let d
+    db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(snap => {
+      let for_saved_list = []
+      for(let i of snap.docs){
+        d = i.data()
+        d.id = i.id
+        if(d.aId === undefined){
+          d.aId = ""
+          d.aProfileImg = ""
+          d.aName = ""
+        }
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };
+      sessionStorage.url_list = for_saved_list.join("-@-");
+      history.pushState('','',"folder?id=" + this.props.id);
+      ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("container"))
     });
   }
   render(){
@@ -36,7 +76,7 @@ class Folder extends React.Component {
         </a>
         <h3>{this.props.name}</h3>
         <p className="account_name">{this.props.aName}</p>
-        <a className="rigidFolder" onClick={() => this.putShow()}></a>
+        <a className="rigidFolder" onClick={this.state.putShow.bind(this)}></a>
       </div>
     )
   }
@@ -45,15 +85,14 @@ class Folder extends React.Component {
 
 export default class Folders extends React.Component {
   constructor(props){
-    super()
-    this.state = {
-      list: props.list
-    };
+    super(props)
+    this.state = { list: props.list };
   }
   render(){
     var return_html = []
     for(let d of this.state.list){
-      return_html.push( <Folder key={d.id} name={d.name} aName={d.aName} aId={d.aId} aProfileImg={d.aProfileImg} id={d.id}/>);
+      return_html.push( <Folder key={d.id} name={d.name} aName={d.aName}
+        post={this.props.post}  aId={d.aId} aProfileImg={d.aProfileImg} id={d.id} kind={d.kind}/>);
     }
     return return_html;
   }

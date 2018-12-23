@@ -1,119 +1,91 @@
-.prof_img {
- display:inline-block;
+  .prof_img {
+ display:block;
+ float:left;
  height:200px;
  width:200px;
  margin:25px;
  margin-left:50px;
- margin-bottom:0px;
+ margin-bottom:50px;
  border-radius:100px;
 }
 
 .prof_name{
- display:inline-block;
+ display:block;
  width:350px;
  font-size:50px;
  margin:25px;
+ margin-top:100px;
  text-align:center;
+ float:left;
 }
 
 .button_follow{
- display:inline-block;
+ display:block;
  font-size:20px;
  text-align:center;
  width:150px;
  height:50px;
  margin:25px;
+ margin-top:100px;
  background-color:#FFFFFF;
  color:#4CAF50;
  border-radius:25px;
+ float:left;
 }
 
 .account_intro{
- display:inline-block;
- position:relative;
- top:-120px;
- left:300px;
- width:650px;
+ display:block;
+ float:left;
+ width:620px;
  height:200px;
  margin:25px;
- margin-top:0px;
  background:lightgray;
 }
 
-.num_follow{
- display:inline-block;
- font-size:30px;
- width:240px;
- height:30px;
- color:#4CAF50;
- font-weight:bold;
- text-align:center;
- margin-top:45px;
- margin-left:125px;
- margin-right:10px;
- position:relative;
- left:-800px;
- top:25px;
+.f{
+    float:left;
 }
 
-.num_follower{
- display:inline-block;
+.rf{
+    clear:both;
+}
+
+.num_follow{
+ display:block;
+ clear:left;
  font-size:30px;
  width:240px;
  height:30px;
  color:#4CAF50;
  font-weight:bold;
  text-align:center;
- margin-top:45px;
- margin-left:125px;
- margin-right:10px;
- position:relative;
- top:-150px;
- left:-90px;
+ margin-top:50px;
+ margin-left:50px;
+ margin-right:0px;
 }
 
 .copy_url_design{
-    position:relative;
-    top:-160px;
-    left:-50px;
-    width:75px;
-    height:75px;
-    background-color:rgba(0, 0, 0, 0);
-}
-
-.copy_url_img{
-    position:relative;
-    top:-3px;
-    left:-8px;
-    width:75px;
-    height:75px;
+    width:125px;
+    height:50px;
+    font-color:;
+    color:#4CAF50;
+    background-color:#FFFFFF;
+    border-radius:25px;
+    font-size:20px;
+    margin-left:300px;
 }
 
 .SNS_img{
- position:relative;
  display:inline-block;
- width:75px;
- height:75px;
- margin-left:25px;
- border-radius:3px;
- top:-160px;
- left:-50px;
+ width:50px;
+ height:50px;
+ margin-left:40px;
+ margin-top:10px;
+ border-radius:12px;
 }
 
 .container-title{
- position:relative;
- top:-150px;
+ display:block;
  font-size:50px;
  margin-left:75px;
-}
-
-.hr{
-    position:relative;
-    top:-160px;
-}
-
-.container_position{
-    position:relative;
-    top:-160px;
-    left:75px;
 }
