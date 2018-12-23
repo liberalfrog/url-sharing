@@ -64,7 +64,7 @@ class Folder extends React.Component {
         for_saved_list.push(JSON.stringify(d))
       };
       sessionStorage.url_list = for_saved_list.join("-@-");
-      history.pushState('','',"folder/?id=" + this.props.id);
+      history.pushState('','',"folder?id=" + this.props.id);
       ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("container"))
     });
   }

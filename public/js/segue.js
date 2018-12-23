@@ -119,12 +119,12 @@ class SegueAnyToFolderPost extends React.Component {
 class SegueAnyToUrlPostFolderChoice extends React.Component {
   constructor(props){
     super(props)
-    history.pushState('','',"folders/")
     this.state = { list: this.props.list }
   }
   render(){
     return(
       <div className="container__wrapper">
+        <h1>URLを登録するフォルダを選択</h1>
         <SideMenu />
         <Folders post={true} list={this.state.list} />
       </div>
@@ -145,5 +145,39 @@ class SegueAnyToUrlPost extends React.Component {
   }
 }
 
+
+function segueToFolders(){
+  history.pushState('','',"folders")
+  let list = []
+  let aId = localStorage.getItem("accountId")
+  db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
+    let d;
+    let for_saved_list = []
+    for(let i of snap1.docs){
+      d = i.data()
+      d.id = i.id
+      d.kind = "folders"
+      list.push(d)
+      for_saved_list.push(JSON.stringify(d))
+    };  
+    db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+      let d;
+      for(let i of snap2.docs){
+        d = i.data()
+        d.id = i.id
+        d.kind = "myfreefolders"
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };  
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); 
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"))
+      ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
+      for(let d of list){
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }   
+    })  
+  })
+}
+
 export {SegueAnyToUrlPostFolderChoice, SegueAnyToFolder, SegueAnyToFolderList, SegueAnyToFolderPost,
-  SegueAnyToUrl, SegueAnyToUrlPost}
+  SegueAnyToUrl, SegueAnyToUrlPost, segueToFolders}

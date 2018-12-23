@@ -2,7 +2,7 @@ import React from 'react';
 import Folders from '../js/folder';
 import Urls from '../js/url';
 import AccountRegister from '../js/account_register';
-import {SegueAnyToUrl, SegueAnyToFolder} from '../js/segue';
+import {SegueAnyToUrl, SegueAnyToFolder, segueToFolders} from '../js/segue';
 import {auth, storage, db} from "../js/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
@@ -10,10 +10,7 @@ import {auth, storage, db} from "../js/firebase";
 
 var blob;
 window.addEventListener('popstate', function(e) {
-  const pathname = location.pathname
-  if(pathname === "/feed" || pathname === "/feed/"){
-    init()
-  }
+  init()
 });
 
 
@@ -45,48 +42,31 @@ function accountRegisterSubmitValidation(){
 
 
 function init(){
-  auth.onAuthStateChanged(function(user) {
-    if (user) {
-      let query = location.search;
-      if(query!==""){
-        let hash = query.slice(1).split("&");
-        var parameters = [];
-        for(let i=0; i<hash.length; i++){
-          let array = hash[i].split("=")
-          parameters.push(array[0])
-          parameters[array[0]] = array[1]
-        }
-        let folderId = parameters["id"]
-        let list = [];
-        let d;
-        let folderQuery = db.collection("urlset").doc(folderId).collection("urlputs")
-        folderQuery.get().then(snap => {
-          for(let i of snap.docs){
-            d = i.data()
-            d.id = i.id
-            if(d.aId === undefined){
-              d.aId = ""
-              d.aProfileImg = ""
-              d.aName = ""
-            }
-            list.push(d)
-          };
-          ReactDOM.render(<SegueAnyToUrl list={list}/>, document.getElementById("container"))
-        });
-        return;
+  auth.onAuthStateChanged(user => {
+    if(user === undefined) {
+      var redirect_url = "/" + location.search;
+      localStorage.removeItem("accountId")
+      if (document.referrer) {
+        var referrer = "referrer=" + encodeURIComponent(document.referrer);
+        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
       }
-      else {
-        let aId = localStorage.accountId
-        if(aId === undefined){
-          getAccountId(user).then(a => {
-            if(a === undefined){
-              $("body").prepend('<div id="popover"></div>');
-              ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
-              return
-            }
-            localStorage.setItem("accountId", a);
-          });
+      location.href = redirect_url;
+    }
+
+    let aId = localStorage.accountId
+    if(aId === undefined){
+      getAccountId(user).then(a => {
+        if(a === undefined){
+          $("body").prepend('<div id="popover"></div>');
+          ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
+          return
         }
+        localStorage.setItem("accountId", a);
+        });
+    }
+
+    switch(location.pathname){
+      case "/feed":
         let list = []
         db.collection("urlset").get().then(snap => {
           let d;
@@ -103,19 +83,39 @@ function init(){
             $("#" + d.id ).css("background-image", "url(" + d.img + ")")
           }
         });
+        break
+      case "/folders":
+        let query = location.search;
+        if(query !== ""){
+          let hash = query.slice(1).split("&")
+          var parameters = []
+          hash.map(x => {
+            let array = x.split("=")
+            parameters.push(array[0])
+            parameters[array[0]] = array[1]
+          })
+          let folderId = parameters["id"]
+          let list = [];
+          let queryToURLs = db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls")
+          queryToURLs.get().then(snap => {
+            for(let i of snap.docs){
+              let d = i.data()
+              d.id = i.id
+              if(d.aId === undefined){
+                d.aId = ""
+                d.aProfileImg = ""
+                d.aName = ""
+              }
+              list.push(d)
+            };
+            ReactDOM.render(<SegueAnyToUrl list={list} id={folderId}/>, document.getElementById("container"))
+          });
+        }else{
+          segueToFolders()
+        }
+        break
       }
-    } else {
-      var redirect_url = "/" + location.search;
-      localStorage.removeItem("accountId")
-      if (document.referrer) {
-        var referrer = "referrer=" + encodeURIComponent(document.referrer);
-        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
-      }
-      location.href = redirect_url;
-    }
   });
-
-
 }
 
 

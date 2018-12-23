@@ -341,6 +341,7 @@ class UrlFolderPost extends React.Component{
           <form action="" name="urlset_form">
             <div className="post-folder__preview">
               <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
+              <span className="post-folder__upload-message">画像を選択する</span>
               <input id="ap_select_img"  className="post-folder__image" name="urlbook_img" type="file" onChange={this.fileChanged} />
               <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
             </div>

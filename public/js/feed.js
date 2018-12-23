@@ -33195,6 +33195,11 @@ var UrlFolderPost = (function (_React$Component4) {
               "div",
               { className: "post-folder__preview" },
               React.createElement("canvas", { id: "ap_preview", className: "post-folder__folder", width: "0", height: "0" }),
+              React.createElement(
+                "span",
+                { className: "post-folder__upload-message" },
+                "画像を選択する"
+              ),
               React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
               React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
             ),
@@ -33398,7 +33403,7 @@ var Folder = (function (_React$Component) {
 
         ;
         sessionStorage.url_list = for_saved_list.join("-@-");
-        history.pushState('', '', "folder/?id=" + _this2.props.id);
+        history.pushState('', '', "folder?id=" + _this2.props.id);
         ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("container"));
       });
     }
@@ -33736,7 +33741,6 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
     _classCallCheck(this, SegueAnyToUrlPostFolderChoice);
 
     _get(Object.getPrototypeOf(SegueAnyToUrlPostFolderChoice.prototype), "constructor", this).call(this, props);
-    history.pushState('', '', "folders/");
     this.state = { list: this.props.list };
   }
 
@@ -33746,6 +33750,11 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
+        _react2["default"].createElement(
+          "h1",
+          null,
+          "URLを登録するフォルダを選択"
+        ),
         _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list })
       );
@@ -33780,12 +33789,113 @@ var SegueAnyToUrlPost = (function (_React$Component7) {
   return SegueAnyToUrlPost;
 })(_react2["default"].Component);
 
+function segueToFolders() {
+  history.pushState('', '', "folders");
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
+    var d = undefined;
+    var for_saved_list = [];
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+      for (var _iterator3 = snap1.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        var i = _step3.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError3 = true;
+      _iteratorError3 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+          _iterator3["return"]();
+        }
+      } finally {
+        if (_didIteratorError3) {
+          throw _iteratorError3;
+        }
+      }
+    }
+
+    ;
+    _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
+      var d = undefined;
+      var _iteratorNormalCompletion4 = true;
+      var _didIteratorError4 = false;
+      var _iteratorError4 = undefined;
+
+      try {
+        for (var _iterator4 = snap2.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+          var i = _step4.value;
+
+          d = i.data();
+          d.id = i.id;
+          d.kind = "myfreefolders";
+          list.push(d);
+          for_saved_list.push(JSON.stringify(d));
+        }
+      } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+            _iterator4["return"]();
+          }
+        } finally {
+          if (_didIteratorError4) {
+            throw _iteratorError4;
+          }
+        }
+      }
+
+      ;
+      sessionStorage.urlset_list = for_saved_list.join("-@-");
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion5 = true;
+      var _didIteratorError5 = false;
+      var _iteratorError5 = undefined;
+
+      try {
+        for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+          var _d = _step5.value;
+
+          $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError5 = true;
+        _iteratorError5 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+            _iterator5["return"]();
+          }
+        } finally {
+          if (_didIteratorError5) {
+            throw _iteratorError5;
+          }
+        }
+      }
+    });
+  });
+}
+
 exports.SegueAnyToUrlPostFolderChoice = SegueAnyToUrlPostFolderChoice;
 exports.SegueAnyToFolder = SegueAnyToFolder;
 exports.SegueAnyToFolderList = SegueAnyToFolderList;
 exports.SegueAnyToFolderPost = SegueAnyToFolderPost;
 exports.SegueAnyToUrl = SegueAnyToUrl;
 exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
+exports.segueToFolders = segueToFolders;
 
 },{"./add_button":25,"./firebase":26,"./folder":27,"./side_menu":29,"./url":30,"react":22}],29:[function(require,module,exports){
 "use strict";
@@ -34214,10 +34324,7 @@ var _jsFirebase = require("../js/firebase");
 
 var blob;
 window.addEventListener('popstate', function (e) {
-  var pathname = location.pathname;
-  if (pathname === "/feed" || pathname === "/feed/") {
-    init();
-  }
+  init();
 });
 
 init();
@@ -34266,142 +34373,7 @@ function accountRegisterSubmitValidation() {
 
 function init() {
   _jsFirebase.auth.onAuthStateChanged(function (user) {
-    if (user) {
-      var query = location.search;
-      if (query !== "") {
-        var parameters;
-
-        var _ret = (function () {
-          var hash = query.slice(1).split("&");
-          parameters = [];
-
-          for (var i = 0; i < hash.length; i++) {
-            var array = hash[i].split("=");
-            parameters.push(array[0]);
-            parameters[array[0]] = array[1];
-          }
-          var folderId = parameters["id"];
-          var list = [];
-          var d = undefined;
-          var folderQuery = _jsFirebase.db.collection("urlset").doc(folderId).collection("urlputs");
-          folderQuery.get().then(function (snap) {
-            var _iteratorNormalCompletion2 = true;
-            var _didIteratorError2 = false;
-            var _iteratorError2 = undefined;
-
-            try {
-              for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                var i = _step2.value;
-
-                d = i.data();
-                d.id = i.id;
-                if (d.aId === undefined) {
-                  d.aId = "";
-                  d.aProfileImg = "";
-                  d.aName = "";
-                }
-                list.push(d);
-              }
-            } catch (err) {
-              _didIteratorError2 = true;
-              _iteratorError2 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-                  _iterator2['return']();
-                }
-              } finally {
-                if (_didIteratorError2) {
-                  throw _iteratorError2;
-                }
-              }
-            }
-
-            ;
-            ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToUrl, { list: list }), document.getElementById("container"));
-          });
-          return {
-            v: undefined
-          };
-        })();
-
-        if (typeof _ret === 'object') return _ret.v;
-      } else {
-        (function () {
-          var aId = localStorage.accountId;
-          if (aId === undefined) {
-            getAccountId(user).then(function (a) {
-              if (a === undefined) {
-                $("body").prepend('<div id="popover"></div>');
-                ReactDOM.render(_react2['default'].createElement(_jsAccount_register2['default'], null), document.getElementById("popover"));
-                return;
-              }
-              localStorage.setItem("accountId", a);
-            });
-          }
-          var list = [];
-          _jsFirebase.db.collection("urlset").get().then(function (snap) {
-            var d = undefined;
-            var for_saved_list = [];
-            var _iteratorNormalCompletion3 = true;
-            var _didIteratorError3 = false;
-            var _iteratorError3 = undefined;
-
-            try {
-              for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-                var i = _step3.value;
-
-                d = i.data();
-                d.id = i.id;
-                list.push(d);
-                for_saved_list.push(JSON.stringify(d));
-              }
-            } catch (err) {
-              _didIteratorError3 = true;
-              _iteratorError3 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion3 && _iterator3['return']) {
-                  _iterator3['return']();
-                }
-              } finally {
-                if (_didIteratorError3) {
-                  throw _iteratorError3;
-                }
-              }
-            }
-
-            ;
-            sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-            ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
-            var _iteratorNormalCompletion4 = true;
-            var _didIteratorError4 = false;
-            var _iteratorError4 = undefined;
-
-            try {
-              for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-                var _d = _step4.value;
-
-                $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-              }
-            } catch (err) {
-              _didIteratorError4 = true;
-              _iteratorError4 = err;
-            } finally {
-              try {
-                if (!_iteratorNormalCompletion4 && _iterator4['return']) {
-                  _iterator4['return']();
-                }
-              } finally {
-                if (_didIteratorError4) {
-                  throw _iteratorError4;
-                }
-              }
-            }
-          });
-        })();
-      }
-    } else {
+    if (user === undefined) {
       var redirect_url = "/" + location.search;
       localStorage.removeItem("accountId");
       if (document.referrer) {
@@ -34409,6 +34381,141 @@ function init() {
         redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
       }
       location.href = redirect_url;
+    }
+
+    var aId = localStorage.accountId;
+    if (aId === undefined) {
+      getAccountId(user).then(function (a) {
+        if (a === undefined) {
+          $("body").prepend('<div id="popover"></div>');
+          ReactDOM.render(_react2['default'].createElement(_jsAccount_register2['default'], null), document.getElementById("popover"));
+          return;
+        }
+        localStorage.setItem("accountId", a);
+      });
+    }
+
+    switch (location.pathname) {
+      case "/feed":
+        var list = [];
+        _jsFirebase.db.collection("urlset").get().then(function (snap) {
+          var d = undefined;
+          var for_saved_list = [];
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
+
+          try {
+            for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var i = _step2.value;
+
+              d = i.data();
+              d.id = i.id;
+              list.push(d);
+              for_saved_list.push(JSON.stringify(d));
+            }
+          } catch (err) {
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+                _iterator2['return']();
+              }
+            } finally {
+              if (_didIteratorError2) {
+                throw _iteratorError2;
+              }
+            }
+          }
+
+          ;
+          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+          ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var _d = _step3.value;
+
+              $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+                _iterator3['return']();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+        });
+        break;
+      case "/folders":
+        var query = location.search;
+        if (query !== "") {
+          var parameters;
+
+          (function () {
+            var hash = query.slice(1).split("&");
+            parameters = [];
+
+            hash.map(function (x) {
+              var array = x.split("=");
+              parameters.push(array[0]);
+              parameters[array[0]] = array[1];
+            });
+            var folderId = parameters["id"];
+            var list = [];
+            var queryToURLs = _jsFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls");
+            queryToURLs.get().then(function (snap) {
+              var _iteratorNormalCompletion4 = true;
+              var _didIteratorError4 = false;
+              var _iteratorError4 = undefined;
+
+              try {
+                for (var _iterator4 = snap.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+                  var i = _step4.value;
+
+                  var d = i.data();
+                  d.id = i.id;
+                  if (d.aId === undefined) {
+                    d.aId = "";
+                    d.aProfileImg = "";
+                    d.aName = "";
+                  }
+                  list.push(d);
+                }
+              } catch (err) {
+                _didIteratorError4 = true;
+                _iteratorError4 = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion4 && _iterator4['return']) {
+                    _iterator4['return']();
+                  }
+                } finally {
+                  if (_didIteratorError4) {
+                    throw _iteratorError4;
+                  }
+                }
+              }
+
+              ;
+              ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToUrl, { list: list, id: folderId }), document.getElementById("container"));
+            });
+          })();
+        } else {
+          (0, _jsSegue.segueToFolders)();
+        }
+        break;
     }
   });
 }
