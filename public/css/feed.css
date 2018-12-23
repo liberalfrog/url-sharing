@@ -4,7 +4,7 @@
   padding: 0;
 }
 
-form{
+form{d
   margin: 0;
   padding: 0;
 }
@@ -22,7 +22,7 @@ body{
 }
 
 .container__wrapper{
-  margin: 0 auto;
+  margin: 0 0 0 250px;
   width: 900px;
   display: flex;
   flex-wrap: wrap;
@@ -30,7 +30,7 @@ body{
 
 .urlset_panel, .post-folder__folder{
   border-radius: 5px;
-  height: 100px;
+  height: 110px;
 }
 
 /* @platong urlput outermost frame */
@@ -39,8 +39,7 @@ body{
   position: relative;
   width: 23.5%;
   background-size: cover;
-
-  margin: 10px 5px;
+  margin: 8px 9px;
 }
 
 .urlset_panel :hover :after{
