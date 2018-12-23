@@ -1,4 +1,4 @@
-import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPost} from "./segue";
+import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPostFolderChoice} from "./segue";
 import {db, storage, auth} from "./firebase";
 
 
@@ -32,8 +32,7 @@ function folderSubmitValidation(){
 function urlSubmitValidation(){
   let url = document.urlput_form.url.value;
   let title = document.urlput_form.title.value;
-  let index = document.getElementById("urlput_option").selectedIndex;
-  if(index !== 0 && url !== "" && title !== "")
+  if(url !== "" && title !== "")
     return true;
   return false;
 }
@@ -98,15 +97,63 @@ class AddButton extends React.Component{
 // @platong Appear if plus button is tapped or clicked.
 class AddPanel extends React.Component{
   folderCreate(){
-    ReactDOM.render(<SegueAnyToFolderPost/>, document.getElementById("container"));
+    let list = []
+    let aId = localStorage.getItem("accountId")
+    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
+      let d;
+      let for_saved_list = []
+      for(let i of snap1.docs){
+        d = i.data()
+        d.id = i.id
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };
+      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+        for(let i of snap2.docs){
+          d = i.data()
+          d.id = i.id
+          list.push(d)
+          for_saved_list.push(JSON.stringify(d))
+        };
+        sessionStorage.urlset_list = for_saved_list.join("-@-");
+        ReactDOM.render(<SegueAnyToFolderPost list={list}/>, document.getElementById("container"));
+        for(let d of list){
+          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+        }
+      })
+    })
   }
   urlCreate(){
-    ReactDOM.render(<SegueAnyToUrlPost />, document.getElementById("container"));
+    let list = []
+    let aId = localStorage.getItem("accountId")
+    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
+      let d;
+      let for_saved_list = []
+      for(let i of snap1.docs){
+        d = i.data()
+        d.id = i.id
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };
+      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+        for(let i of snap2.docs){
+          d = i.data()
+          d.id = i.id
+          list.push(d)
+          for_saved_list.push(JSON.stringify(d))
+        };
+        sessionStorage.urlset_list = for_saved_list.join("-@-");
+        ReactDOM.render(<SegueAnyToUrlPostFolderChoice list={list}/>, document.getElementById("container"));
+        for(let d of list){
+          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+        }
+      })
+    })
     optionChange();
   }
   render(){
     return(
-      <div>
+      <div className="add_view">
         <div className="add_panel" onClick={this.folderCreate}>
           <h3>Add folder</h3>
           <p>URLを管理するフォルダを作成</p>
@@ -123,12 +170,9 @@ class AddPanel extends React.Component{
 
 // @platong register URL
 class UrlPost extends React.Component{
-  getChangedOption(){
-    urlSubmitActiveSwitch();
-    var obj = document.getElementById("urlput_option");
-    let index = obj.selectedIndex;
-    if (index != 0 && obj.options[index].value === "新しいURLセットを作成")
-      ReactDOM.render(<UrlsetMainFrame></UrlsetMainFrame>, document.getElementById("urlput_post"));
+  constructor(props){
+    super(props)
+    this.state = { id: props.id }
   }
   // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
   urlConverter(){
@@ -146,12 +190,8 @@ class UrlPost extends React.Component{
   }
   getChanged(){ urlSubmitActiveSwitch(); }
   urlputSubmit(){
-    var obj = document.getElementById("urlput_option");
     let aId = localStorage.accountId
-    let index = obj.selectedIndex;
-    if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択")
-      return
-    let t_id = $("#urlput_option").val()
+    let t_id = this.state.id
     let user = auth.currentUser;
     db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
       title: document.urlput_form.title.value,
@@ -175,11 +215,8 @@ class UrlPost extends React.Component{
         <div className="post__container">
           <form name="urlput_form">
             <input name="url" type="text" onInput={this.urlConverter} placeholder="URLを入力" required/>
-            <select id="urlput_option" required onChange={this.getChangedOption}>
-              <option value="URLを登録するフォルダを選択">URLを登録するフォルダを選択</option>
-            </select>
             <input name="title" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
-            <input type="button" onClick={this.urlputSubmit} value="登録" className="submit_is_disactive" id="url_submit"/>
+            <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="submit_is_disactive" id="url_submit"/>
           </form>
         </div>
       </div>
@@ -240,10 +277,13 @@ class UrlFolderPost extends React.Component{
         }).catch(function(error) {
           console.error("Error adding document: ", error);
         });
-        ReactDOM.render(
-          <UrlPost></UrlPost>,
-          document.getElementById("urlput_post")
-        );
+        let listStr =  sessionStorage.urlset_list
+        let list 
+        if(listStr !== "")
+          list = listStr.split("-@-").map(x => JSON.parse(x))
+        else
+          list = []
+        ReactDOM.render(<SegueAnyToFolderList list={list}/>, document.getElementById("container"));
       });
     });
   };

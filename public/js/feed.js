@@ -32659,8 +32659,7 @@ function folderSubmitValidation() {
 function urlSubmitValidation() {
   var url = document.urlput_form.url.value;
   var title = document.urlput_form.title.value;
-  var index = document.getElementById("urlput_option").selectedIndex;
-  if (index !== 0 && url !== "" && title !== "") return true;
+  if (url !== "" && title !== "") return true;
   return false;
 }
 
@@ -32746,12 +32745,194 @@ var AddPanel = (function (_React$Component2) {
   _createClass(AddPanel, [{
     key: "folderCreate",
     value: function folderCreate() {
-      ReactDOM.render(React.createElement(_segue.SegueAnyToFolderPost, null), document.getElementById("container"));
+      var list = [];
+      var aId = localStorage.getItem("accountId");
+      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
+        var d = undefined;
+        var for_saved_list = [];
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = snap1.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var i = _step2.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+              _iterator2["return"]();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        ;
+        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
+
+          try {
+            for (var _iterator3 = snap2.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var i = _step3.value;
+
+              d = i.data();
+              d.id = i.id;
+              list.push(d);
+              for_saved_list.push(JSON.stringify(d));
+            }
+          } catch (err) {
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+                _iterator3["return"]();
+              }
+            } finally {
+              if (_didIteratorError3) {
+                throw _iteratorError3;
+              }
+            }
+          }
+
+          ;
+          sessionStorage.urlset_list = for_saved_list.join("-@-");
+          ReactDOM.render(React.createElement(_segue.SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
+          var _iteratorNormalCompletion4 = true;
+          var _didIteratorError4 = false;
+          var _iteratorError4 = undefined;
+
+          try {
+            for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+              var _d = _step4.value;
+
+              $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+            }
+          } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+                _iterator4["return"]();
+              }
+            } finally {
+              if (_didIteratorError4) {
+                throw _iteratorError4;
+              }
+            }
+          }
+        });
+      });
     }
   }, {
     key: "urlCreate",
     value: function urlCreate() {
-      ReactDOM.render(React.createElement(_segue.SegueAnyToUrlPost, null), document.getElementById("container"));
+      var list = [];
+      var aId = localStorage.getItem("accountId");
+      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
+        var d = undefined;
+        var for_saved_list = [];
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
+
+        try {
+          for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var i = _step5.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError5 = true;
+          _iteratorError5 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+              _iterator5["return"]();
+            }
+          } finally {
+            if (_didIteratorError5) {
+              throw _iteratorError5;
+            }
+          }
+        }
+
+        ;
+        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
+          var _iteratorNormalCompletion6 = true;
+          var _didIteratorError6 = false;
+          var _iteratorError6 = undefined;
+
+          try {
+            for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              var i = _step6.value;
+
+              d = i.data();
+              d.id = i.id;
+              list.push(d);
+              for_saved_list.push(JSON.stringify(d));
+            }
+          } catch (err) {
+            _didIteratorError6 = true;
+            _iteratorError6 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+                _iterator6["return"]();
+              }
+            } finally {
+              if (_didIteratorError6) {
+                throw _iteratorError6;
+              }
+            }
+          }
+
+          ;
+          sessionStorage.urlset_list = for_saved_list.join("-@-");
+          ReactDOM.render(React.createElement(_segue.SegueAnyToUrlPostFolderChoice, { list: list }), document.getElementById("container"));
+          var _iteratorNormalCompletion7 = true;
+          var _didIteratorError7 = false;
+          var _iteratorError7 = undefined;
+
+          try {
+            for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+              var _d2 = _step7.value;
+
+              $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+            }
+          } catch (err) {
+            _didIteratorError7 = true;
+            _iteratorError7 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+                _iterator7["return"]();
+              }
+            } finally {
+              if (_didIteratorError7) {
+                throw _iteratorError7;
+              }
+            }
+          }
+        });
+      });
       optionChange();
     }
   }, {
@@ -32759,7 +32940,7 @@ var AddPanel = (function (_React$Component2) {
     value: function render() {
       return React.createElement(
         "div",
-        null,
+        { className: "add_view" },
         React.createElement(
           "div",
           { className: "add_panel", onClick: this.folderCreate },
@@ -32798,23 +32979,16 @@ var AddPanel = (function (_React$Component2) {
 var UrlPost = (function (_React$Component3) {
   _inherits(UrlPost, _React$Component3);
 
-  function UrlPost() {
+  function UrlPost(props) {
     _classCallCheck(this, UrlPost);
 
-    _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
+    this.state = { id: props.id };
   }
 
-  _createClass(UrlPost, [{
-    key: "getChangedOption",
-    value: function getChangedOption() {
-      urlSubmitActiveSwitch();
-      var obj = document.getElementById("urlput_option");
-      var index = obj.selectedIndex;
-      if (index != 0 && obj.options[index].value === "新しいURLセットを作成") ReactDOM.render(React.createElement(UrlsetMainFrame, null), document.getElementById("urlput_post"));
-    }
+  // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
 
-    // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
-  }, {
+  _createClass(UrlPost, [{
     key: "urlConverter",
     value: function urlConverter() {
       var url = document.urlput_form.url.value;
@@ -32835,11 +33009,8 @@ var UrlPost = (function (_React$Component3) {
   }, {
     key: "urlputSubmit",
     value: function urlputSubmit() {
-      var obj = document.getElementById("urlput_option");
       var aId = localStorage.accountId;
-      var index = obj.selectedIndex;
-      if (index === 0 || obj.options[index].value === "URLを登録するフォルダを選択") return;
-      var t_id = $("#urlput_option").val();
+      var t_id = this.state.id;
       var user = _firebase.auth.currentUser;
       _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
         title: document.urlput_form.title.value,
@@ -32870,17 +33041,8 @@ var UrlPost = (function (_React$Component3) {
             "form",
             { name: "urlput_form" },
             React.createElement("input", { name: "url", type: "text", onInput: this.urlConverter, placeholder: "URLを入力", required: true }),
-            React.createElement(
-              "select",
-              { id: "urlput_option", required: true, onChange: this.getChangedOption },
-              React.createElement(
-                "option",
-                { value: "URLを登録するフォルダを選択" },
-                "URLを登録するフォルダを選択"
-              )
-            ),
             React.createElement("input", { name: "title", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true }),
-            React.createElement("input", { type: "button", onClick: this.urlputSubmit, value: "登録", className: "submit_is_disactive", id: "url_submit" })
+            React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "submit_is_disactive", id: "url_submit" })
           )
         )
       );
@@ -32954,7 +33116,12 @@ var UrlFolderPost = (function (_React$Component4) {
           })["catch"](function (error) {
             console.error("Error adding document: ", error);
           });
-          ReactDOM.render(React.createElement(UrlPost, null), document.getElementById("urlput_post"));
+          var listStr = sessionStorage.urlset_list;
+          var list = undefined;
+          if (listStr !== "") list = listStr.split("-@-").map(function (x) {
+            return JSON.parse(x);
+          });else list = [];
+          ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
         });
       });
     }
@@ -33116,10 +33283,15 @@ var _firebase = require("./firebase");
 var Folder = (function (_React$Component) {
   _inherits(Folder, _React$Component);
 
-  function Folder() {
+  function Folder(props) {
     _classCallCheck(this, Folder);
 
-    _get(Object.getPrototypeOf(Folder.prototype), 'constructor', this).apply(this, arguments);
+    _get(Object.getPrototypeOf(Folder.prototype), 'constructor', this).call(this, props);
+    this.state = {
+      putShow: props.post ? this.urlPost : this.putShow,
+      id: props.id,
+      kind: props.kind
+    };
   }
 
   _createClass(Folder, [{
@@ -33129,7 +33301,20 @@ var Folder = (function (_React$Component) {
 
       var list = [];
       var d = undefined;
-      _firebase.db.collection("urlset").doc(this.props.id).collection("urlputs").get().then(function (snap) {
+      var aId = localStorage.accountId;
+      var query = undefined;
+      switch (this.state.kind) {
+        case "folders":
+          query = _firebase.db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls");
+          break;
+        case "myfreefolders":
+          query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
+          break;
+        default:
+          query = _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs");
+          break;
+      }
+      query.get().then(function (snap) {
         var for_saved_list = [];
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
@@ -33166,15 +33351,60 @@ var Folder = (function (_React$Component) {
 
         ;
         sessionStorage.url_list = for_saved_list.join("-@-");
-        history.pushState('', '', "folder/?id=" + _this.props.id);
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { list: list }), document.getElementById("container"));
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, list: list }), document.getElementById("container"));
+      });
+    }
+  }, {
+    key: 'urlPost',
+    value: function urlPost() {
+      var _this2 = this;
+
+      var list = [];
+      var d = undefined;
+      _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(function (snap) {
+        var for_saved_list = [];
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var i = _step2.value;
+
+            d = i.data();
+            d.id = i.id;
+            if (d.aId === undefined) {
+              d.aId = "";
+              d.aProfileImg = "";
+              d.aName = "";
+            }
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+              _iterator2['return']();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.url_list = for_saved_list.join("-@-");
+        history.pushState('', '', "folder/?id=" + _this2.props.id);
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("container"));
       });
     }
   }, {
     key: 'render',
     value: function render() {
-      var _this2 = this;
-
       return _react2['default'].createElement(
         'div',
         { className: 'urlset_panel', id: this.props.id },
@@ -33193,9 +33423,7 @@ var Folder = (function (_React$Component) {
           { className: 'account_name' },
           this.props.aName
         ),
-        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: function () {
-            return _this2.putShow();
-          } })
+        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
       );
     }
   }]);
@@ -33209,37 +33437,36 @@ var Folders = (function (_React$Component2) {
   function Folders(props) {
     _classCallCheck(this, Folders);
 
-    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).call(this);
-    this.state = {
-      list: props.list
-    };
+    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).call(this, props);
+    this.state = { list: props.list };
   }
 
   _createClass(Folders, [{
     key: 'render',
     value: function render() {
       var return_html = [];
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
 
       try {
-        for (var _iterator2 = this.state.list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var d = _step2.value;
+        for (var _iterator3 = this.state.list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var d = _step3.value;
 
-          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id }));
+          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
+            post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
         }
       } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-            _iterator2['return']();
+          if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+            _iterator3['return']();
           }
         } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
+          if (_didIteratorError3) {
+            throw _iteratorError3;
           }
         }
       }
@@ -33294,20 +33521,25 @@ var _firebase = require("./firebase");
 var SegueAnyToUrl = (function (_React$Component) {
   _inherits(SegueAnyToUrl, _React$Component);
 
-  function SegueAnyToUrl() {
+  function SegueAnyToUrl(props) {
     _classCallCheck(this, SegueAnyToUrl);
 
-    _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
+    this.state = {
+      id: props.id
+    };
+    history.pushState('', '', "folders?id=" + this.props.id);
   }
 
   _createClass(SegueAnyToUrl, [{
     key: "openAddPanel",
     value: function openAddPanel() {
-      var list = sessionStorage.url_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list }), document.getElementById("container"));
+      var listStr = sessionStorage.url_list;
+      var list = undefined;
+      if (listStr !== "") list = listStr.split("-@-").map(function (x) {
+        return JSON.parse(x);
+      });else list = [];
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id }), document.getElementById("container"));
     }
   }, {
     key: "render",
@@ -33317,7 +33549,7 @@ var SegueAnyToUrl = (function (_React$Component) {
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel, icon: "url" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" })
       );
     }
   }]);
@@ -33328,56 +33560,26 @@ var SegueAnyToUrl = (function (_React$Component) {
 var SegueAnyToFolder = (function (_React$Component2) {
   _inherits(SegueAnyToFolder, _React$Component2);
 
-  function SegueAnyToFolder() {
+  function SegueAnyToFolder(props) {
     _classCallCheck(this, SegueAnyToFolder);
 
-    _get(Object.getPrototypeOf(SegueAnyToFolder.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(SegueAnyToFolder.prototype), "constructor", this).call(this, props);
+    this.state = {
+      list: props.list
+    };
   }
 
   _createClass(SegueAnyToFolder, [{
     key: "openAddPanel",
     value: function openAddPanel() {
-      ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("add_view"));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
-        _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel, icon: "+" })
-      );
-    }
-  }]);
-
-  return SegueAnyToFolder;
-})(_react2["default"].Component);
-
-var SegueAnyToFolderList = (function (_React$Component3) {
-  _inherits(SegueAnyToFolderList, _React$Component3);
-
-  function SegueAnyToFolderList() {
-    _classCallCheck(this, SegueAnyToFolderList);
-
-    _get(Object.getPrototypeOf(SegueAnyToFolderList.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SegueAnyToFolderList, [{
-    key: "openFolderPost",
-    value: function openFolderPost() {
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+      ReactDOM.render(_react2["default"].createElement(SegueFolderToAddPanel, { list: this.state.list }), document.getElementById("container"));
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var d = _step.value;
 
           $("#" + d.id).css("background-image", "url(" + d.img + ")");
@@ -33404,6 +33606,89 @@ var SegueAnyToFolderList = (function (_React$Component3) {
         "div",
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+      );
+    }
+  }]);
+
+  return SegueAnyToFolder;
+})(_react2["default"].Component);
+
+var SegueFolderToAddPanel = (function (_React$Component3) {
+  _inherits(SegueFolderToAddPanel, _React$Component3);
+
+  function SegueFolderToAddPanel() {
+    _classCallCheck(this, SegueFolderToAddPanel);
+
+    _get(Object.getPrototypeOf(SegueFolderToAddPanel.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueFolderToAddPanel, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.AddPanel, null)
+      );
+    }
+  }]);
+
+  return SegueFolderToAddPanel;
+})(_react2["default"].Component);
+
+var SegueAnyToFolderList = (function (_React$Component4) {
+  _inherits(SegueAnyToFolderList, _React$Component4);
+
+  function SegueAnyToFolderList() {
+    _classCallCheck(this, SegueAnyToFolderList);
+
+    _get(Object.getPrototypeOf(SegueAnyToFolderList.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueAnyToFolderList, [{
+    key: "openFolderPost",
+    value: function openFolderPost() {
+      var list = sessionStorage.urlset_list.split("-@-");
+      for (var i = 0; i < list.length; i++) {
+        list[i] = JSON.parse(list[i]);
+      }
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var d = _step2.value;
+
+          $("#" + d.id).css("background-image", "url(" + d.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+            _iterator2["return"]();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
         _react2["default"].createElement(
           "button",
@@ -33418,13 +33703,14 @@ var SegueAnyToFolderList = (function (_React$Component3) {
   return SegueAnyToFolderList;
 })(_react2["default"].Component);
 
-var SegueAnyToFolderPost = (function (_React$Component4) {
-  _inherits(SegueAnyToFolderPost, _React$Component4);
+var SegueAnyToFolderPost = (function (_React$Component5) {
+  _inherits(SegueAnyToFolderPost, _React$Component5);
 
-  function SegueAnyToFolderPost() {
+  function SegueAnyToFolderPost(props) {
     _classCallCheck(this, SegueAnyToFolderPost);
 
-    _get(Object.getPrototypeOf(SegueAnyToFolderPost.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(SegueAnyToFolderPost.prototype), "constructor", this).call(this, props);
+    this.state = { list: this.props.list };
   }
 
   _createClass(SegueAnyToFolderPost, [{
@@ -33435,7 +33721,7 @@ var SegueAnyToFolderPost = (function (_React$Component4) {
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_add_button.UrlFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.props.list })
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
       );
     }
   }]);
@@ -33443,8 +33729,34 @@ var SegueAnyToFolderPost = (function (_React$Component4) {
   return SegueAnyToFolderPost;
 })(_react2["default"].Component);
 
-var SegueAnyToUrlPost = (function (_React$Component5) {
-  _inherits(SegueAnyToUrlPost, _React$Component5);
+var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
+  _inherits(SegueAnyToUrlPostFolderChoice, _React$Component6);
+
+  function SegueAnyToUrlPostFolderChoice(props) {
+    _classCallCheck(this, SegueAnyToUrlPostFolderChoice);
+
+    _get(Object.getPrototypeOf(SegueAnyToUrlPostFolderChoice.prototype), "constructor", this).call(this, props);
+    history.pushState('', '', "folders/");
+    this.state = { list: this.props.list };
+  }
+
+  _createClass(SegueAnyToUrlPostFolderChoice, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_side_menu2["default"], null),
+        _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list })
+      );
+    }
+  }]);
+
+  return SegueAnyToUrlPostFolderChoice;
+})(_react2["default"].Component);
+
+var SegueAnyToUrlPost = (function (_React$Component7) {
+  _inherits(SegueAnyToUrlPost, _React$Component7);
 
   function SegueAnyToUrlPost() {
     _classCallCheck(this, SegueAnyToUrlPost);
@@ -33459,8 +33771,8 @@ var SegueAnyToUrlPost = (function (_React$Component5) {
         "div",
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
-        _react2["default"].createElement(_add_button.UrlPost, null),
-        _react2["default"].createElement(_url2["default"], { list: this.props.list })
+        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id })
       );
     }
   }]);
@@ -33468,10 +33780,12 @@ var SegueAnyToUrlPost = (function (_React$Component5) {
   return SegueAnyToUrlPost;
 })(_react2["default"].Component);
 
-exports.SegueAnyToUrl = SegueAnyToUrl;
+exports.SegueAnyToUrlPostFolderChoice = SegueAnyToUrlPostFolderChoice;
 exports.SegueAnyToFolder = SegueAnyToFolder;
 exports.SegueAnyToFolderList = SegueAnyToFolderList;
 exports.SegueAnyToFolderPost = SegueAnyToFolderPost;
+exports.SegueAnyToUrl = SegueAnyToUrl;
+exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
 
 },{"./add_button":25,"./firebase":26,"./folder":27,"./side_menu":29,"./url":30,"react":22}],29:[function(require,module,exports){
 "use strict";
@@ -33510,6 +33824,7 @@ var SideMenu = (function (_React$Component) {
   _createClass(SideMenu, [{
     key: "homeClicked",
     value: function homeClicked() {
+      history.pushState('', '', "feed");
       var list = [];
       _firebase.db.collection("urlset").get().then(function (snap) {
         var d = undefined;
@@ -33575,10 +33890,10 @@ var SideMenu = (function (_React$Component) {
   }, {
     key: "folderClicked",
     value: function folderClicked() {
-      history.pushState('', '', "folders/");
+      history.pushState('', '', "folders");
       var list = [];
       var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
         var d = undefined;
         var for_saved_list = [];
         var _iteratorNormalCompletion3 = true;
@@ -33586,11 +33901,12 @@ var SideMenu = (function (_React$Component) {
         var _iteratorError3 = undefined;
 
         try {
-          for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          for (var _iterator3 = snap1.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
             var i = _step3.value;
 
             d = i.data();
             d.id = i.id;
+            d.kind = "folders";
             list.push(d);
             for_saved_list.push(JSON.stringify(d));
           }
@@ -33610,34 +33926,66 @@ var SideMenu = (function (_React$Component) {
         }
 
         ;
-        // @platong save list at urlset_list
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-        ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
+        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
+          var d = undefined;
+          var _iteratorNormalCompletion4 = true;
+          var _didIteratorError4 = false;
+          var _iteratorError4 = undefined;
 
-        try {
-          for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var _d2 = _step4.value;
-
-            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError4 = true;
-          _iteratorError4 = err;
-        } finally {
           try {
-            if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-              _iterator4["return"]();
+            for (var _iterator4 = snap2.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+              var i = _step4.value;
+
+              d = i.data();
+              d.id = i.id;
+              d.kind = "myfreefolders";
+              list.push(d);
+              for_saved_list.push(JSON.stringify(d));
             }
+          } catch (err) {
+            _didIteratorError4 = true;
+            _iteratorError4 = err;
           } finally {
-            if (_didIteratorError4) {
-              throw _iteratorError4;
+            try {
+              if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+                _iterator4["return"]();
+              }
+            } finally {
+              if (_didIteratorError4) {
+                throw _iteratorError4;
+              }
             }
           }
-        }
+
+          ;
+          sessionStorage.urlset_list = for_saved_list.join("-@-");
+          ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+          ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+          var _iteratorNormalCompletion5 = true;
+          var _didIteratorError5 = false;
+          var _iteratorError5 = undefined;
+
+          try {
+            for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+              var _d2 = _step5.value;
+
+              $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+            }
+          } catch (err) {
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+                _iterator5["return"]();
+              }
+            } finally {
+              if (_didIteratorError5) {
+                throw _iteratorError5;
+              }
+            }
+          }
+        });
       });
     }
   }, {
@@ -33702,8 +34050,6 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var _firebase = require("./firebase");
 
-var _firebase2 = _interopRequireDefault(_firebase);
-
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
@@ -33711,32 +34057,47 @@ var _react2 = _interopRequireDefault(_react);
 var Url = (function (_React$Component) {
   _inherits(Url, _React$Component);
 
-  function Url() {
+  function Url(props) {
     _classCallCheck(this, Url);
 
-    _get(Object.getPrototypeOf(Url.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(Url.prototype), "constructor", this).call(this, props);
+    this.state = {
+      title: props.title,
+      href: props.href,
+      content: props.content
+    };
   }
 
   _createClass(Url, [{
+    key: "clickHandler",
+    value: function clickHandler() {
+      var aId = localStorage.getItem("accountId");
+      var data = {
+        href: this.state.href,
+        date: new Data()
+      };
+      _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
+    }
+  }, {
     key: "render",
     value: function render() {
       return _react2["default"].createElement(
         "div",
         { className: "urlput_panel" },
         _react2["default"].createElement(
-          "h3",
-          null,
-          this.props.title
-        ),
-        _react2["default"].createElement(
-          "p",
+          "div",
           { className: "text_overflow_url" },
-          _react2["default"].createElement("a", { href: this.props.href, target: "_blank" })
+          _react2["default"].createElement(
+            "h3",
+            null,
+            this.state.title
+          ),
+          _react2["default"].createElement("a", { href: this.state.href, target: "_blank", onClick: this.clickHandler.bind(this) })
         ),
         _react2["default"].createElement(
           "p",
           { className: "baloon" },
-          "[this.props.content]"
+          this.state.content
         )
       );
     }
@@ -33904,7 +34265,6 @@ function accountRegisterSubmitValidation() {
 }
 
 function init() {
-  console.log("Hello 2");
   _jsFirebase.auth.onAuthStateChanged(function (user) {
     if (user) {
       var query = location.search;

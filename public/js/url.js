@@ -3,6 +3,7 @@ import React from 'react';
 
 class Url extends React.Component {
   constructor(props){
+    super(props)
     this.state = {
       title: props.title,
       href: props.href,
@@ -20,10 +21,10 @@ class Url extends React.Component {
   render(){
     return (
       <div className="urlput_panel">
-        <h3>{this.state.title}</h3>
-        <p className="text_overflow_url">
-          <a href={this.state.href} target="_blank" onClick={this.clickHandler}></a>
-        </p>
+        <div className="text_overflow_url">
+          <h3>{this.state.title}</h3>
+          <a href={this.state.href} target="_blank" onClick={this.clickHandler.bind(this)}></a>
+        </div>
         <p className="baloon">{this.state.content}</p>
       </div>
     )

@@ -39,8 +39,12 @@ body{
   position: relative;
   width: 23.5%;
   background-size: cover;
-  background-color: #000;
+
   margin: 10px 5px;
+}
+
+.urlset_panel :hover :after{
+color:rgba(1, 1, 1, 0.3)
 }
 
 #container .urlset_panel:nth-child(4n){
@@ -58,7 +62,7 @@ body{
 
 
 /* Add Panel */
-#add_view{
+.add_view{
   position: fixed;
   bottom: 140px;
   right: 40px;
