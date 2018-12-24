@@ -14,7 +14,7 @@ class Url extends React.Component {
     let aId = localStorage.getItem("accountId")
     let data = {
       href: this.state.href,
-      date: new Data()
+      date: new Date()
     }
     db.collection("account").doc(aId).collection("page_trackings").add(data);
   }

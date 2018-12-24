@@ -10,6 +10,7 @@ class Folder extends React.Component {
     this.state = {
       putShow: props.post ? this.urlPost : this.putShow,
       id: props.id,
+      ownerAId: props.aId,
       kind: props.kind
     }
   }
@@ -25,6 +26,9 @@ class Folder extends React.Component {
       case "myfreefolders":
         query = db.collection("account").doc(aId).collection("myfreefolders")
                   .doc(this.state.id).collection("urls")
+        break
+      case "freefolder":
+        query = db.collection("freefolder").doc(this.state.id).collection("urls")
         break
       default:
         query = db.collection("urlset").doc(this.state.id).collection("urlputs")
@@ -44,7 +48,7 @@ class Folder extends React.Component {
         for_saved_list.push(JSON.stringify(d))
       };
       sessionStorage.url_list = for_saved_list.join("-@-");
-      ReactDOM.render(<SegueAnyToUrl id={this.state.id} list={list}/>, document.getElementById("container"))
+      ReactDOM.render(<SegueAnyToUrl id={this.state.id} ownerAId={this.state.ownerAId} list={list}/>, document.getElementById("container"))
     });
   }
   urlPost(){
