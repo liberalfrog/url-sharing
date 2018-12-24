@@ -2,7 +2,7 @@ import React from 'react';
 import Folders from '../js/folder';
 import Urls from '../js/url';
 import AccountRegister from '../js/account_register';
-import {SegueAnyToUrl, SegueAnyToFolder, segueToFolders} from '../js/segue';
+import {segueToGlobal, SegueAnyToUrl, SegueAnyToFolder, segueToFolders} from '../js/segue';
 import {auth, storage, db} from "../js/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
@@ -23,13 +23,6 @@ function blobToFile(theBlob, fileName){
 }
 
 
-function getAccountId(user){
-  return db.collection("account").where("uId", "==", user.uid).get().then(snap  => {
-    for(let i of snap.docs){
-      return i.id
-    }
-  });
-}
 
 
 function accountRegisterSubmitValidation(){
@@ -43,7 +36,7 @@ function accountRegisterSubmitValidation(){
 
 function init(){
   auth.onAuthStateChanged(user => {
-    if(user === undefined) {
+    if(user === null) {
       var redirect_url = "/" + location.search;
       localStorage.removeItem("accountId")
       if (document.referrer) {
@@ -53,68 +46,53 @@ function init(){
       location.href = redirect_url;
     }
 
-    let aId = localStorage.accountId
-    if(aId === undefined){
-      getAccountId(user).then(a => {
-        if(a === undefined){
-          $("body").prepend('<div id="popover"></div>');
-          ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
-          return
+    db.collection("account").where("uId", "==", user.uid).get().then(snap => {
+      if(!snap.empty){
+        for(let i of snap.docs){
+          localStorage.setItem("accountId", i.id);
+          return i.id
         }
-        localStorage.setItem("accountId", a);
-        });
-    }
-
-    switch(location.pathname){
-      case "/feed":
-        let list = []
-        db.collection("urlset").get().then(snap => {
-          let d;
-          let for_saved_list = []
-          for(let i of snap.docs){
-            d = i.data()
-            d.id = i.id
-            list.push(d)
-            for_saved_list.push(JSON.stringify(d))
-          };
-          sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-          ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
-          for(let d of list){
-            $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-          }
-        });
-        break
-      case "/folders":
-        let query = location.search;
-        if(query !== ""){
-          let hash = query.slice(1).split("&")
-          var parameters = []
-          hash.map(x => {
-            let array = x.split("=")
-            parameters.push(array[0])
-            parameters[array[0]] = array[1]
-          })
-          let folderId = parameters["id"]
-          let list = [];
-          let queryToURLs = db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls")
-          queryToURLs.get().then(snap => {
-            for(let i of snap.docs){
-              let d = i.data()
-              d.id = i.id
-              if(d.aId === undefined){
-                d.aId = ""
-                d.aProfileImg = ""
-                d.aName = ""
-              }
-              list.push(d)
-            };
-            ReactDOM.render(<SegueAnyToUrl list={list} id={folderId}/>, document.getElementById("container"))
-          });
-        }else{
-          segueToFolders()
-        }
-        break
       }
+      $("body").prepend('<div id="popover"></div>');
+      ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
+      return Promise.reject("Account doesn't exist.");
+    }).then(aId => {
+      switch(location.pathname){
+        case "/feed":
+          segueToGlobal()
+          break
+        case "/folders":
+          let query = location.search;
+          if(query !== ""){
+            let hash = query.slice(1).split("&")
+            var parameters = []
+            hash.map(x => {
+              let array = x.split("=")
+              parameters.push(array[0])
+              parameters[array[0]] = array[1]
+            })
+            let folderId = parameters["id"]
+            let list = [];
+            let queryToURLs = db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls")
+            queryToURLs.get().then(snap => {
+              for(let i of snap.docs){
+                let d = i.data()
+                d.id = i.id
+                if(d.aId === undefined){
+                  d.aId = ""
+                  d.aProfileImg = ""
+                  d.aName = ""
+                }
+                list.push(d)
+              };
+              ReactDOM.render(<SegueAnyToUrl list={list} id={folderId}/>, document.getElementById("container"))
+            });
+          }else{
+            segueToFolders()
+          }
+          break
+      }
+    });
   });
 }
 

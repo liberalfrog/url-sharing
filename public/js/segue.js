@@ -179,5 +179,34 @@ function segueToFolders(){
   })
 }
 
+
+function segueToGlobal(){
+  let list = []
+  db.collection("urlset").get().then(snap => {
+    let d;
+    let for_saved_list = []
+    for(let i of snap.docs){
+      d = i.data()
+      d.id = i.id
+      list.push(d)
+      for_saved_list.push(JSON.stringify(d))
+    };  
+    db.collection("freefolder").get().then(snap => {
+      for(let j of snap.docs){
+        d = j.data()
+        d.id = j.id
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };  
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+      ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
+      for(let d of list){
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }   
+    })
+  });
+}
+
+
 export {SegueAnyToUrlPostFolderChoice, SegueAnyToFolder, SegueAnyToFolderList, SegueAnyToFolderPost,
-  SegueAnyToUrl, SegueAnyToUrlPost, segueToFolders}
+  SegueAnyToUrl, SegueAnyToUrlPost, segueToFolders, segueToGlobal}
