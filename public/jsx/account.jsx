@@ -2,19 +2,34 @@ import React from 'react';
 import Folders from '../js/folder';
 import {storage, db} from "../js/firebase";
 
+var isFollow
+
 init()
 
 function init(){
-  let aId = location.search.substring(1).split('=')[1];
-  db.collection("account").doc(aId).get().then(snap => {
+  let targetAId = location.search.substring(1).split('=')[1];
+  let aId = localStorage.getItem("accountId")
+  let queryToFollow = db.collection("account").doc(aId).collection("followees").doc(targetAId)
+
+  db.collection("account").doc(targetAId).get().then(snap => {
     let d = snap.data();
     document.getElementById("account_profile_img").src =  d.img;
     document.getElementById("account_name").innerHTML= d.name;
     document.getElementById("account_intro").innerHTML= d.intro;
   });
 
+  queryToFollow.get().then(snap => {
+    if(snap.exists){
+      isFollow = true
+      document.getElementById("button_follow").innerHTML = "フォロー中"
+    }else{
+      isFollow = false
+      document.getElementById("button_follow").innerHTML = "フォロー"
+    }
+  })
+
   // @platong  アカウントのURLフォルダを表示
-  db.collection("account").doc(aId).collection("folders").get().then(snap => {
+  db.collection("account").doc(targetAId).collection("folders").get().then(snap => {
     let d;
     let list = []
     let for_saved_list = []
@@ -33,26 +48,41 @@ function init(){
 
 // @platong Follow button
 $("#button_follow").on("click", function(){
-  let aId = location.search.substring(1).split('=')[1];
+  let targetAId = location.search.substring(1).split('=')[1];
+  let aId = localStorage.getItem("accountId")
+  let queryToFollow = db.collection("account").doc(aId).collection("followees").doc(targetAId)
 
-  db.collection("account").doc(aId).get().then((querysnapShot) => {
-    let d = querysnapShot.data()
-    let myAId = localStorage.getItem("accountId")
-
-    db.collection("account").doc(myAId).collection("followees").doc(aId).set({
-      name: d.name,
-      profile_img: d.img
+  if(isFollow){
+    queryToFollow.delete().then(() => {
+      return db.collection("account").doc(aId).get()
+    }).then(snap => {
+      let data = snap.data()
+      data.followee =  data.followee - 1
+      return db.collection("account").doc(aId).set(data)
     }).then(() => {
-      db.collection("account").doc(myAId).get().then(snap => {
-        return snap.data()
-      }).then(data => {
+      document.getElementById("button_follow").innerHTML = "フォロー"
+      isFollow = false
+    }).catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+  }else{
+    db.collection("account").doc(targetAId).get().then(snap => {
+      let d = snap.data()
+      queryToFollow.set({
+        name: d.name,
+        profile_img: d.img
+      }).then(() => {
+        return db.collection("account").doc(aId).get()
+      }).then(snap => {
+        let data = snap.data()
         data.followee =  data.followee + 1
-        db.collection("account").doc(myAId).set(data).then(() => {
-          console.log("フォロー後の処理は、here. ");
-        }).catch(function(error) {
-          console.error("Error adding document: ", error);
-        });
+        return db.collection("account").doc(aId).set(data)
+      }).then(() => {
+        document.getElementById("button_follow").innerHTML = "フォロー中"
+        isFollow = true
+      }).catch(function(error) {
+        console.error("Error adding document: ", error);
       });
     });
-  });
+  }
 });

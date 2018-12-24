@@ -39,7 +39,7 @@ function raButtonActiveSwitch(){
 }
 
 
-class AccountRegister extends React.Component{
+export default class AccountRegister extends React.Component{
   // @platong If file is changed, file will be compressed.
   fileChanged(){
     let file = document.getElementById("ra_profile_img").files[0]

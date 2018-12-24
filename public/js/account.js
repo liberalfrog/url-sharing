@@ -32963,6 +32963,11 @@ var UrlFolderPost = (function (_React$Component4) {
               "div",
               { className: "post-folder__preview" },
               React.createElement("canvas", { id: "ap_preview", className: "post-folder__folder", width: "0", height: "0" }),
+              React.createElement(
+                "span",
+                { className: "post-folder__upload-message" },
+                "画像を選択する"
+              ),
               React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
               React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
             ),
@@ -33166,7 +33171,7 @@ var Folder = (function (_React$Component) {
 
         ;
         sessionStorage.url_list = for_saved_list.join("-@-");
-        history.pushState('', '', "folder/?id=" + _this2.props.id);
+        history.pushState('', '', "folder?id=" + _this2.props.id);
         ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("container"));
       });
     }
@@ -33504,7 +33509,6 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
     _classCallCheck(this, SegueAnyToUrlPostFolderChoice);
 
     _get(Object.getPrototypeOf(SegueAnyToUrlPostFolderChoice.prototype), "constructor", this).call(this, props);
-    history.pushState('', '', "folders/");
     this.state = { list: this.props.list };
   }
 
@@ -33653,6 +33657,100 @@ function segueToFolders() {
   });
 }
 
+function segueToGlobal() {
+  var list = [];
+  _firebase.db.collection("urlset").get().then(function (snap) {
+    var d = undefined;
+    var for_saved_list = [];
+    var _iteratorNormalCompletion6 = true;
+    var _didIteratorError6 = false;
+    var _iteratorError6 = undefined;
+
+    try {
+      for (var _iterator6 = snap.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+        var i = _step6.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError6 = true;
+      _iteratorError6 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+          _iterator6["return"]();
+        }
+      } finally {
+        if (_didIteratorError6) {
+          throw _iteratorError6;
+        }
+      }
+    }
+
+    ;
+    _firebase.db.collection("freefolder").get().then(function (snap) {
+      var _iteratorNormalCompletion7 = true;
+      var _didIteratorError7 = false;
+      var _iteratorError7 = undefined;
+
+      try {
+        for (var _iterator7 = snap.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+          var j = _step7.value;
+
+          d = j.data();
+          d.id = j.id;
+          list.push(d);
+          for_saved_list.push(JSON.stringify(d));
+        }
+      } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+            _iterator7["return"]();
+          }
+        } finally {
+          if (_didIteratorError7) {
+            throw _iteratorError7;
+          }
+        }
+      }
+
+      ;
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolder, { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion8 = true;
+      var _didIteratorError8 = false;
+      var _iteratorError8 = undefined;
+
+      try {
+        for (var _iterator8 = list[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+          var _d2 = _step8.value;
+
+          $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
+            _iterator8["return"]();
+          }
+        } finally {
+          if (_didIteratorError8) {
+            throw _iteratorError8;
+          }
+        }
+      }
+    });
+  });
+}
+
 exports.SegueAnyToUrlPostFolderChoice = SegueAnyToUrlPostFolderChoice;
 exports.SegueAnyToFolder = SegueAnyToFolder;
 exports.SegueAnyToFolderList = SegueAnyToFolderList;
@@ -33660,6 +33758,7 @@ exports.SegueAnyToFolderPost = SegueAnyToFolderPost;
 exports.SegueAnyToUrl = SegueAnyToUrl;
 exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
 exports.segueToFolders = segueToFolders;
+exports.segueToGlobal = segueToGlobal;
 
 },{"./add_button":24,"./firebase":25,"./folder":26,"./side_menu":28,"./url":29,"react":22}],28:[function(require,module,exports){
 "use strict";
@@ -33699,8 +33798,15 @@ var SideMenu = (function (_React$Component) {
     key: "homeClicked",
     value: function homeClicked() {
       history.pushState('', '', "feed");
+      (0, _segue.segueToGlobal)();
+    }
+  }, {
+    key: "folderClicked",
+    value: function folderClicked() {
+      history.pushState('', '', "folders");
       var list = [];
-      _firebase.db.collection("urlset").get().then(function (snap) {
+      var aId = localStorage.getItem("accountId");
+      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
         var d = undefined;
         var for_saved_list = [];
         var _iteratorNormalCompletion = true;
@@ -33708,11 +33814,12 @@ var SideMenu = (function (_React$Component) {
         var _iteratorError = undefined;
 
         try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          for (var _iterator = snap1.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
             var i = _step.value;
 
             d = i.data();
             d.id = i.id;
+            d.kind = "folders";
             list.push(d);
             for_saved_list.push(JSON.stringify(d));
           }
@@ -33732,83 +33839,15 @@ var SideMenu = (function (_React$Component) {
         }
 
         ;
-        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-        ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-        ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolder, { list: list }), document.getElementById("container"));
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var _d = _step2.value;
-
-            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-      });
-    }
-  }, {
-    key: "folderClicked",
-    value: function folderClicked() {
-      history.pushState('', '', "folders");
-      var list = [];
-      var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = snap1.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var i = _step3.value;
-
-            d = i.data();
-            d.id = i.id;
-            d.kind = "folders";
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-              _iterator3["return"]();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-
-        ;
         _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
           var d = undefined;
-          var _iteratorNormalCompletion4 = true;
-          var _didIteratorError4 = false;
-          var _iteratorError4 = undefined;
+          var _iteratorNormalCompletion2 = true;
+          var _didIteratorError2 = false;
+          var _iteratorError2 = undefined;
 
           try {
-            for (var _iterator4 = snap2.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-              var i = _step4.value;
+            for (var _iterator2 = snap2.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+              var i = _step2.value;
 
               d = i.data();
               d.id = i.id;
@@ -33817,16 +33856,16 @@ var SideMenu = (function (_React$Component) {
               for_saved_list.push(JSON.stringify(d));
             }
           } catch (err) {
-            _didIteratorError4 = true;
-            _iteratorError4 = err;
+            _didIteratorError2 = true;
+            _iteratorError2 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-                _iterator4["return"]();
+              if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+                _iterator2["return"]();
               }
             } finally {
-              if (_didIteratorError4) {
-                throw _iteratorError4;
+              if (_didIteratorError2) {
+                throw _iteratorError2;
               }
             }
           }
@@ -33835,27 +33874,27 @@ var SideMenu = (function (_React$Component) {
           sessionStorage.urlset_list = for_saved_list.join("-@-");
           ReactDOM.unmountComponentAtNode(document.getElementById("container"));
           ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-          var _iteratorNormalCompletion5 = true;
-          var _didIteratorError5 = false;
-          var _iteratorError5 = undefined;
+          var _iteratorNormalCompletion3 = true;
+          var _didIteratorError3 = false;
+          var _iteratorError3 = undefined;
 
           try {
-            for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-              var _d2 = _step5.value;
+            for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+              var _d = _step3.value;
 
-              $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+              $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
             }
           } catch (err) {
-            _didIteratorError5 = true;
-            _iteratorError5 = err;
+            _didIteratorError3 = true;
+            _iteratorError3 = err;
           } finally {
             try {
-              if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-                _iterator5["return"]();
+              if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+                _iterator3["return"]();
               }
             } finally {
-              if (_didIteratorError5) {
-                throw _iteratorError5;
+              if (_didIteratorError3) {
+                throw _iteratorError3;
               }
             }
           }
@@ -34073,19 +34112,34 @@ var _jsFolder2 = _interopRequireDefault(_jsFolder);
 
 var _jsFirebase = require("../js/firebase");
 
+var isFollow;
+
 init();
 
 function init() {
-  var aId = location.search.substring(1).split('=')[1];
-  _jsFirebase.db.collection("account").doc(aId).get().then(function (snap) {
+  var targetAId = location.search.substring(1).split('=')[1];
+  var aId = localStorage.getItem("accountId");
+  var queryToFollow = _jsFirebase.db.collection("account").doc(aId).collection("followees").doc(targetAId);
+
+  _jsFirebase.db.collection("account").doc(targetAId).get().then(function (snap) {
     var d = snap.data();
     document.getElementById("account_profile_img").src = d.img;
     document.getElementById("account_name").innerHTML = d.name;
     document.getElementById("account_intro").innerHTML = d.intro;
   });
 
+  queryToFollow.get().then(function (snap) {
+    if (snap.exists) {
+      isFollow = true;
+      document.getElementById("button_follow").innerHTML = "フォロー中";
+    } else {
+      isFollow = false;
+      document.getElementById("button_follow").innerHTML = "フォロー";
+    }
+  });
+
   // @platong  アカウントのURLフォルダを表示
-  _jsFirebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+  _jsFirebase.db.collection("account").doc(targetAId).collection("folders").get().then(function (snap) {
     var d = undefined;
     var list = [];
     var for_saved_list = [];
@@ -34146,28 +34200,43 @@ function init() {
 
 // @platong Follow button
 $("#button_follow").on("click", function () {
-  var aId = location.search.substring(1).split('=')[1];
+  var targetAId = location.search.substring(1).split('=')[1];
+  var aId = localStorage.getItem("accountId");
+  var queryToFollow = _jsFirebase.db.collection("account").doc(aId).collection("followees").doc(targetAId);
 
-  _jsFirebase.db.collection("account").doc(aId).get().then(function (querysnapShot) {
-    var d = querysnapShot.data();
-    var myAId = localStorage.getItem("accountId");
-
-    _jsFirebase.db.collection("account").doc(myAId).collection("followees").doc(aId).set({
-      name: d.name,
-      profile_img: d.img
+  if (isFollow) {
+    queryToFollow['delete']().then(function () {
+      return _jsFirebase.db.collection("account").doc(aId).get();
+    }).then(function (snap) {
+      var data = snap.data();
+      data.followee = data.followee - 1;
+      return _jsFirebase.db.collection("account").doc(aId).set(data);
     }).then(function () {
-      _jsFirebase.db.collection("account").doc(myAId).get().then(function (snap) {
-        return snap.data();
-      }).then(function (data) {
+      document.getElementById("button_follow").innerHTML = "フォロー";
+      isFollow = false;
+    })['catch'](function (error) {
+      console.error("Error adding document: ", error);
+    });
+  } else {
+    _jsFirebase.db.collection("account").doc(targetAId).get().then(function (snap) {
+      var d = snap.data();
+      queryToFollow.set({
+        name: d.name,
+        profile_img: d.img
+      }).then(function () {
+        return _jsFirebase.db.collection("account").doc(aId).get();
+      }).then(function (snap) {
+        var data = snap.data();
         data.followee = data.followee + 1;
-        _jsFirebase.db.collection("account").doc(myAId).set(data).then(function () {
-          console.log("フォロー後の処理は、here. ");
-        })['catch'](function (error) {
-          console.error("Error adding document: ", error);
-        });
+        return _jsFirebase.db.collection("account").doc(aId).set(data);
+      }).then(function () {
+        document.getElementById("button_follow").innerHTML = "フォロー中";
+        isFollow = true;
+      })['catch'](function (error) {
+        console.error("Error adding document: ", error);
       });
     });
-  });
+  }
 });
 
 },{"../js/firebase":25,"../js/folder":26,"react":22}]},{},[30]);
