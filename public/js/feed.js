@@ -32990,7 +32990,10 @@ var UrlPost = (function (_React$Component3) {
     _classCallCheck(this, UrlPost);
 
     _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
-    this.state = { id: props.id };
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId
+    };
   }
 
   // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
@@ -33019,20 +33022,39 @@ var UrlPost = (function (_React$Component3) {
       var aId = localStorage.accountId;
       var t_id = this.state.id;
       var user = _firebase.auth.currentUser;
-      _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
-        title: document.urlput_form.title.value,
-        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-        href: document.urlput_form.url.value,
-        aId: localStorage.getItem("accountId"),
-        aProfileImg: user.photoURL,
-        aName: user.displayName,
-        dateTime: new Date()
-      }).then(function (docRef) {
-        console.log("Document written with ID: ", docRef.id);
-        closePostView();
-      })["catch"](function (error) {
-        console.error("Error adding document: ", error);
-      });
+      var ownerAId = this.state.ownerAId;
+
+      if (ownerAId === aId) {
+        _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
+          title: document.urlput_form.title.value,
+          content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+          href: document.urlput_form.url.value,
+          aId: localStorage.getItem("accountId"),
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        }).then(function (docRef) {
+          console.log("Document written with ID: ", docRef.id);
+          closePostView();
+        })["catch"](function (error) {
+          console.error("Error adding document: ", error);
+        });
+      } else {
+        _firebase.db.collection("account").doc(ownerAId).collection("myfreefolders").doc(t_id).collection("urls").add({
+          title: document.urlput_form.title.value,
+          content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+          href: document.urlput_form.url.value,
+          aId: localStorage.getItem("accountId"),
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        }).then(function (docRef) {
+          console.log("Document written with ID: ", docRef.id);
+          closePostView();
+        })["catch"](function (error) {
+          console.error("Error adding document: ", error);
+        });
+      }
     }
   }, {
     key: "render",
@@ -33302,6 +33324,7 @@ var Folder = (function (_React$Component) {
     this.state = {
       putShow: props.post ? this.urlPost : this.putShow,
       id: props.id,
+      ownerAId: props.aId,
       kind: props.kind
     };
   }
@@ -33321,6 +33344,9 @@ var Folder = (function (_React$Component) {
           break;
         case "myfreefolders":
           query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
+          break;
+        case "freefolder":
+          query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
           break;
         default:
           query = _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs");
@@ -33363,7 +33389,7 @@ var Folder = (function (_React$Component) {
 
         ;
         sessionStorage.url_list = for_saved_list.join("-@-");
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, list: list }), document.getElementById("container"));
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, ownerAId: _this.state.ownerAId, list: list }), document.getElementById("container"));
       });
     }
   }, {
@@ -33538,7 +33564,8 @@ var SegueAnyToUrl = (function (_React$Component) {
 
     _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
     this.state = {
-      id: props.id
+      id: props.id,
+      ownerAId: props.ownerAId
     };
     history.pushState('', '', "folders?id=" + this.props.id);
   }
@@ -33551,7 +33578,7 @@ var SegueAnyToUrl = (function (_React$Component) {
       if (listStr !== "") list = listStr.split("-@-").map(function (x) {
         return JSON.parse(x);
       });else list = [];
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id }), document.getElementById("container"));
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id, ownerAId: this.state.ownerAId }), document.getElementById("container"));
     }
   }, {
     key: "render",
@@ -33788,7 +33815,7 @@ var SegueAnyToUrlPost = (function (_React$Component7) {
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id })
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId })
       );
     }
   }]);
@@ -33941,6 +33968,7 @@ function segueToGlobal() {
 
           d = j.data();
           d.id = j.id;
+          d.kind = "freefolder";
           list.push(d);
           for_saved_list.push(JSON.stringify(d));
         }
@@ -34226,7 +34254,7 @@ var Url = (function (_React$Component) {
       var aId = localStorage.getItem("accountId");
       var data = {
         href: this.state.href,
-        date: new Data()
+        date: new Date()
       };
       _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
     }
@@ -34407,7 +34435,6 @@ function init() {
             var i = _step.value;
 
             localStorage.setItem("accountId", i.id);
-            console.log("He;lo");
             return i.id;
           }
         } catch (err) {
@@ -34429,7 +34456,6 @@ function init() {
       ReactDOM.render(_react2['default'].createElement(_jsAccount_register2['default'], null), document.getElementById("popover"));
       return Promise.reject("Account doesn't exist.");
     }).then(function (aId) {
-      console.log("Helo");
       switch (location.pathname) {
         case "/feed":
           (0, _jsSegue.segueToGlobal)();

@@ -11,7 +11,8 @@ class SegueAnyToUrl extends React.Component {
   constructor(props){
     super(props)
     this.state = {
-      id: props.id
+      id: props.id,
+      ownerAId: props.ownerAId
     }
     history.pushState('','',"folders?id=" + this.props.id);
   }
@@ -22,7 +23,7 @@ class SegueAnyToUrl extends React.Component {
       list = listStr.split("-@-").map(x => JSON.parse(x))
     else
       list = []
-    ReactDOM.render(<SegueAnyToUrlPost list={list} id={this.state.id}/>, document.getElementById("container"))
+    ReactDOM.render(<SegueAnyToUrlPost list={list} id={this.state.id} ownerAId={this.state.ownerAId}/>, document.getElementById("container"))
   }
   render(){
     return(
@@ -139,7 +140,7 @@ class SegueAnyToUrlPost extends React.Component {
       <div className="container__wrapper">
         <SideMenu />
         <Urls list={this.props.list} />
-        <UrlPost id={this.props.id} />
+        <UrlPost id={this.props.id} ownerAId={this.props.ownerAId}/>
       </div>
     );
   }
@@ -195,6 +196,7 @@ function segueToGlobal(){
       for(let j of snap.docs){
         d = j.data()
         d.id = j.id
+        d.kind = "freefolder"
         list.push(d)
         for_saved_list.push(JSON.stringify(d))
       };  

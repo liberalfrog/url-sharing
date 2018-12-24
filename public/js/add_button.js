@@ -172,7 +172,10 @@ class AddPanel extends React.Component{
 class UrlPost extends React.Component{
   constructor(props){
     super(props)
-    this.state = { id: props.id }
+    this.state = { 
+      id: props.id,
+      ownerAId: props.ownerAId
+    }
   }
   // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
   urlConverter(){
@@ -193,20 +196,39 @@ class UrlPost extends React.Component{
     let aId = localStorage.accountId
     let t_id = this.state.id
     let user = auth.currentUser;
-    db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
-      title: document.urlput_form.title.value,
-      content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-      href: document.urlput_form.url.value,
-      aId: localStorage.getItem("accountId"),
-      aProfileImg: user.photoURL,
-      aName: user.displayName,
-      dateTime: new Date()
-    }).then(function(docRef) {
-      console.log("Document written with ID: ", docRef.id);
-      closePostView()
-    }).catch(function(error) {
-      console.error("Error adding document: ", error);
-    });
+    let ownerAId = this.state.ownerAId
+
+    if(ownerAId === aId){
+      db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
+        title: document.urlput_form.title.value,
+        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+        href: document.urlput_form.url.value,
+        aId: localStorage.getItem("accountId"),
+        aProfileImg: user.photoURL,
+        aName: user.displayName,
+        dateTime: new Date()
+      }).then(function(docRef) {
+        console.log("Document written with ID: ", docRef.id);
+        closePostView()
+      }).catch(function(error) {
+        console.error("Error adding document: ", error);
+      });
+    }else{
+      db.collection("account").doc(ownerAId).collection("myfreefolders").doc(t_id).collection("urls").add({
+        title: document.urlput_form.title.value,
+        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+        href: document.urlput_form.url.value,
+        aId: localStorage.getItem("accountId"),
+        aProfileImg: user.photoURL,
+        aName: user.displayName,
+        dateTime: new Date()
+      }).then(function(docRef) {
+        console.log("Document written with ID: ", docRef.id);
+        closePostView()
+      }).catch(function(error) {
+        console.error("Error adding document: ", error);
+      });
+    }
   }
   render(){
     return (
