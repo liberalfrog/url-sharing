@@ -69,27 +69,9 @@ function blobToFile(theBlob, fileName){
 }
 
 
-// @platong option change from folder which is got from Firebase.
-function optionChange(){
-  let list = sessionStorage.urlset_list.split("-@-")
-  list = list.map(value => {
-    return JSON.parse(value)
-  })
-  let select = $("#urlput_option")
-  let options = $.map(list, (d) => {
-    let option = $('<option>', { value: d.id, text: d.name });
-    return option;
-  });
-  options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成"}));
-  select.append(options);
-}
-
-
 class AddButton extends React.Component{
   render(){
-    return(
-      <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>
-    );
+    return( <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>);
   }
 }
 
@@ -149,7 +131,6 @@ class AddPanel extends React.Component{
         }
       })
     })
-    optionChange();
   }
   render(){
     return(
@@ -174,20 +155,21 @@ class UrlPost extends React.Component{
     super(props)
     this.state = { 
       id: props.id,
-      ownerAId: props.ownerAId
+      ownerAId: props.ownerAId,
+      count: 0
     }
   }
-  // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
-  urlConverter(){
-    const url = document.urlput_form.url.value
+  urlConverter(num){
+    let selector1 = 'input[name="url' + num + '"]'
+    let url = $(selector1).val()
     $.ajax({
       url:"/api_v1/url_to_title",
       type:'GET',
       data:{ "url": url }
     })
-    .done( (data) => {
-      $('.result').html(data); 
-      document.urlput_form.title.value = data.title
+    .done(data => {
+      let selector = 'input[name="title' + num + '"]'
+      $(selector).val(data.title)
     })
     .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
@@ -198,37 +180,67 @@ class UrlPost extends React.Component{
     let user = auth.currentUser;
     let ownerAId = this.state.ownerAId
 
-    if(ownerAId === aId){
-      db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
-        title: document.urlput_form.title.value,
+    for(let i=0; i<=this.state.count; i++){
+      let url = $('input[name="url' + i + '"]').val()
+      let title = $('input[name="title' + i + '"]').val()
+
+      if(url === "" || title === "")
+        continue
+
+      let data = {
+        title: title,
         content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-        href: document.urlput_form.url.value,
-        aId: localStorage.getItem("accountId"),
+        href: url,
+        aId: aId,
         aProfileImg: user.photoURL,
         aName: user.displayName,
         dateTime: new Date()
-      }).then(function(docRef) {
-        console.log("Document written with ID: ", docRef.id);
-        closePostView()
-      }).catch(function(error) {
-        console.error("Error adding document: ", error);
-      });
-    }else{
-      db.collection("account").doc(ownerAId).collection("myfreefolders").doc(t_id).collection("urls").add({
-        title: document.urlput_form.title.value,
-        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-        href: document.urlput_form.url.value,
-        aId: localStorage.getItem("accountId"),
-        aProfileImg: user.photoURL,
-        aName: user.displayName,
-        dateTime: new Date()
-      }).then(function(docRef) {
-        console.log("Document written with ID: ", docRef.id);
-        closePostView()
-      }).catch(function(error) {
-        console.error("Error adding document: ", error);
-      });
+      }
+
+      if(ownerAId === aId){
+        db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
+        .then(function(docRef) {
+          console.log("Document written with ID: ", docRef.id);
+          closePostView()
+        }).catch(function(error) {
+          console.error("Error adding document: ", error);
+        });
+      }else{
+        let myfolderRef = db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
+  
+        myfolderRef.get().then(snap => {
+          if(snap.exists){
+            return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
+          }else{
+            return db.collection("freefolder").doc(t_id).get().then(snap => {
+              return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data())
+            }).then(docRef => {
+              return db.collection("freefolder").doc(t_id).collection("urls").get()
+            }).then(snaps => {
+              return snaps.forEach(x => {
+                db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
+                  .collection("urls").doc(x.id).set(x.data())
+              })
+            }).then(res => {
+              return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
+            })
+          }
+        }).then(docRef => {
+          console.log("Document written with ID: ", docRef.id);
+        }).catch(error => {
+          console.error("Error adding document: ", error);
+        });
+      }
+      closePostView()
     }
+    this.state.count = 0
+  }
+  morePost(){
+    ++this.state.count
+    let element = document.createElement("div")
+    element.setAttribute("id", "url_input" + this.state.count)
+    document.getElementById("url_input").appendChild(element)
+    ReactDOM.render(<UrlInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
   }
   render(){
     return (
@@ -236,16 +248,53 @@ class UrlPost extends React.Component{
         <div className="window-overlay" onClick={closePostView}></div>
         <div className="post__container">
           <form name="urlput_form">
-            <input name="url" type="text" onInput={this.urlConverter} placeholder="URLを入力" required/>
-            <input name="title" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
+            <div id="url_input">
+              <div id="url_input0">
+                <input name="url0" type="text" onInput={this.urlConverter.bind(this, 0)} placeholder="URLを入力" required/>
+                <input name="title0" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
+              </div>
+            </div>
             <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="submit_is_disactive" id="url_submit"/>
           </form>
+          <input type="button" onClick={this.morePost.bind(this)} value="さらにURLを登録" className="" />
         </div>
       </div>
     );
   }
 }
 
+
+class UrlInput extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {
+      urlName: "url" + this.props.num,
+      titleName: "title" + this.props.num
+    }
+  }
+  urlConverter(num){
+    let selector1 = 'input[name="url' + num + '"]'
+    let url = $(selector1).val()
+    $.ajax({
+      url:"/api_v1/url_to_title",
+      type:'GET',
+      data:{ "url": url }
+    })
+    .done(data => {
+      let selector = 'input[name="title' + num + '"]'
+      $(selector).val(data.title)
+    })
+    .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
+  }
+  render(){
+    return(
+      <div>
+        <input name={this.state.urlName} type="text" onInput={this.urlConverter.bind(this, this.props.num)} placeholder="URLを入力" required/>
+        <input name={this.state.titleName} type="text" placeholder="タイトル（自動入力）" required/>
+      </div>
+    )
+  }
+}
 
 
 var blob = null;

@@ -32698,21 +32698,6 @@ function blobToFile(theBlob, fileName) {
   return theBlob;
 }
 
-// @platong option change from folder which is got from Firebase.
-function optionChange() {
-  var list = sessionStorage.urlset_list.split("-@-");
-  list = list.map(function (value) {
-    return JSON.parse(value);
-  });
-  var select = $("#urlput_option");
-  var options = $.map(list, function (d) {
-    var option = $('<option>', { value: d.id, text: d.name });
-    return option;
-  });
-  options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成" }));
-  select.append(options);
-}
-
 var AddButton = (function (_React$Component) {
   _inherits(AddButton, _React$Component);
 
@@ -32940,7 +32925,6 @@ var AddPanel = (function (_React$Component2) {
           }
         });
       });
-      optionChange();
     }
   }, {
     key: "render",
@@ -32992,23 +32976,23 @@ var UrlPost = (function (_React$Component3) {
     _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
     this.state = {
       id: props.id,
-      ownerAId: props.ownerAId
+      ownerAId: props.ownerAId,
+      count: 0
     };
   }
 
-  // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
-
   _createClass(UrlPost, [{
     key: "urlConverter",
-    value: function urlConverter() {
-      var url = document.urlput_form.url.value;
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
       $.ajax({
         url: "/api_v1/url_to_title",
         type: 'GET',
         data: { "url": url }
       }).done(function (data) {
-        $('.result').html(data);
-        document.urlput_form.title.value = data.title;
+        var selector = 'input[name="title' + num + '"]';
+        $(selector).val(data.title);
       }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
     }
   }, {
@@ -33024,37 +33008,72 @@ var UrlPost = (function (_React$Component3) {
       var user = _firebase.auth.currentUser;
       var ownerAId = this.state.ownerAId;
 
-      if (ownerAId === aId) {
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
-          title: document.urlput_form.title.value,
+      var _loop = function (i) {
+        var url = $('input[name="url' + i + '"]').val();
+        var title = $('input[name="title' + i + '"]').val();
+
+        if (url === "" || title === "") return "continue";
+
+        var data = {
+          title: title,
           content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-          href: document.urlput_form.url.value,
-          aId: localStorage.getItem("accountId"),
+          href: url,
+          aId: aId,
           aProfileImg: user.photoURL,
           aName: user.displayName,
           dateTime: new Date()
-        }).then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
-          closePostView();
-        })["catch"](function (error) {
-          console.error("Error adding document: ", error);
-        });
-      } else {
-        _firebase.db.collection("account").doc(ownerAId).collection("myfreefolders").doc(t_id).collection("urls").add({
-          title: document.urlput_form.title.value,
-          content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-          href: document.urlput_form.url.value,
-          aId: localStorage.getItem("accountId"),
-          aProfileImg: user.photoURL,
-          aName: user.displayName,
-          dateTime: new Date()
-        }).then(function (docRef) {
-          console.log("Document written with ID: ", docRef.id);
-          closePostView();
-        })["catch"](function (error) {
-          console.error("Error adding document: ", error);
-        });
+        };
+
+        if (ownerAId === aId) {
+          _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+            closePostView();
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        } else {
+          var myfolderRef = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id);
+
+          myfolderRef.get().then(function (snap) {
+            if (snap.exists) {
+              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+            } else {
+              return _firebase.db.collection("freefolder").doc(t_id).get().then(function (snap) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data());
+              }).then(function (docRef) {
+                return _firebase.db.collection("freefolder").doc(t_id).collection("urls").get();
+              }).then(function (snaps) {
+                return snaps.forEach(function (x) {
+                  _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").doc(x.id).set(x.data());
+                });
+              }).then(function (res) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+              });
+            }
+          }).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        }
+        closePostView();
+      };
+
+      for (var i = 0; i <= this.state.count; i++) {
+        var _ret = _loop(i);
+
+        if (_ret === "continue") continue;
       }
+      this.state.count = 0;
+    }
+  }, {
+    key: "morePost",
+    value: function morePost() {
+      ++this.state.count;
+      var element = document.createElement("div");
+      element.setAttribute("id", "url_input" + this.state.count);
+      document.getElementById("url_input").appendChild(element);
+      ReactDOM.render(React.createElement(UrlInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
     }
   }, {
     key: "render",
@@ -33069,10 +33088,19 @@ var UrlPost = (function (_React$Component3) {
           React.createElement(
             "form",
             { name: "urlput_form" },
-            React.createElement("input", { name: "url", type: "text", onInput: this.urlConverter, placeholder: "URLを入力", required: true }),
-            React.createElement("input", { name: "title", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true }),
+            React.createElement(
+              "div",
+              { id: "url_input" },
+              React.createElement(
+                "div",
+                { id: "url_input0" },
+                React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
+                React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
+              )
+            ),
             React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "submit_is_disactive", id: "url_submit" })
-          )
+          ),
+          React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
         )
       );
     }
@@ -33081,10 +33109,52 @@ var UrlPost = (function (_React$Component3) {
   return UrlPost;
 })(React.Component);
 
+var UrlInput = (function (_React$Component4) {
+  _inherits(UrlInput, _React$Component4);
+
+  function UrlInput(props) {
+    _classCallCheck(this, UrlInput);
+
+    _get(Object.getPrototypeOf(UrlInput.prototype), "constructor", this).call(this, props);
+    this.state = {
+      urlName: "url" + this.props.num,
+      titleName: "title" + this.props.num
+    };
+  }
+
+  _createClass(UrlInput, [{
+    key: "urlConverter",
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
+      $.ajax({
+        url: "/api_v1/url_to_title",
+        type: 'GET',
+        data: { "url": url }
+      }).done(function (data) {
+        var selector = 'input[name="title' + num + '"]';
+        $(selector).val(data.title);
+      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        null,
+        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
+        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
+      );
+    }
+  }]);
+
+  return UrlInput;
+})(React.Component);
+
 var blob = null;
 
-var UrlFolderPost = (function (_React$Component4) {
-  _inherits(UrlFolderPost, _React$Component4);
+var UrlFolderPost = (function (_React$Component5) {
+  _inherits(UrlFolderPost, _React$Component5);
 
   function UrlFolderPost() {
     _classCallCheck(this, UrlFolderPost);
