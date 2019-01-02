@@ -1,91 +1,281 @@
-  .prof_img {
- display:block;
- float:left;
- height:200px;
- width:200px;
- margin:25px;
- margin-left:50px;
- margin-bottom:50px;
- border-radius:100px;
+*{
+  margin: 0;
+  padding: 0;
 }
 
-.prof_name{
- display:block;
- width:350px;
- font-size:50px;
- margin:25px;
- margin-top:100px;
- text-align:center;
- float:left;
-}
-
-.button_follow{
- display:block;
- font-size:20px;
- text-align:center;
- width:150px;
- height:50px;
- margin:25px;
- margin-top:100px;
- background-color:#FFFFFF;
- color:#4CAF50;
- border-radius:25px;
- float:left;
-}
-
-.account_intro{
- display:block;
- float:left;
- width:620px;
- height:200px;
- margin:25px;
- background:lightgray;
-}
-
-.f{
+@media(min-width: 1024px){
+  
+  #main-container{
+    max-width: 1024px;
+    margin: 10vh auto;
+  }
+  
+  .profile-img__container{
     float:left;
-}
-
-.rf{
-    clear:left;
-}
-
-.num_follow{
- display:block;
- clear:left;
- font-size:30px;
- width:240px;
- height:30px;
- color:#4CAF50;
- font-weight:bold;
- text-align:center;
- margin-top:50px;
- margin-left:50px;
- margin-right:0px;
-}
-
-.copy_url_design{
+    position: relative;
+    margin: 0 40px 0 50px;
+    height: 192px;
+    width: 192px;
+  }
+    
+  .profile-img, #changer__profile-img{
+   display:block;
+   border-radius: 50%;
+   height: 100%;
+   width: 100%;
+  }
+  
+  
+  #changer__profile-img, #preview{
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    left: 0;
+  }
+  
+  
+  .profile__eximg{
+    float: left;
+    width: 700px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  
+  .profile-name{
+    display:block;
+    width: 300px;
+    font-size: 24px;
+    line-height: 24px;
+    margin: 36px 0 25px 0;
+    text-align:center;
+  }
+  
+  .button__follow{
+   display:block;
+   font-size:20px;
+   text-align:center;
+   width:150px;
+   height:50px;
+   margin: 23px 25px;
+   color:#4CAF50;
+   border-radius:25px;
+  }
+  
+  .profile__intro{
+   width: 100%;
+   height: 160px;
+   margin-right: 20px;
+  }
+  
+  .f{
+    float:left;
+  }
+  
+  .rf{
+      clear:left;
+  }
+  
+  .num-follow{
+   display:block;
+   font-size:30px;
+   height:30px;
+   color:#4CAF50;
+   font-weight:bold;
+   text-align:center;
+   margin-right: 20px;
+  }
+  
+  .copy_url_design{
     width:125px;
     height:50px;
-    font-color:;
     color:#4CAF50;
-    background-color:#FFFFFF;
     border-radius:25px;
     font-size:20px;
-    margin-left:300px;
+    display: none;
+  }
+  
+  .sns__container{
+    margin: 20px 0;
+    width: 100%;
+    float: left;
+  }
+  
+  .SNS_img{
+   display: inline-block;
+   width: 36px;
+   height: 36px;
+   border-radius: 25%;
+  }
+  
+  
+  .follow__container{
+    width: 100%;
+    display: flex;
+  }
+  
+  .clearfix::after{
+    content: "";
+    clear: both;
+    display: block;
+  }
+  
+  
+  .url-folders__container{
+    margin: 60px 0;
+  }
+  
+  
+  .url-folders__title{
+   display:block;
+   font-size: 32px;
+  }
+  
+  
+  .container__wrapper{
+    margin: 0;
+  }
 }
 
-.SNS_img{
- display:inline-block;
- width:50px;
- height:50px;
- margin-left:40px;
- margin-top:10px;
- border-radius:12px;
-}
 
-.container-title{
- display:block;
- font-size:50px;
- margin-left:75px;
+@media(max-width: 1023px){
+  
+  #main-container{ margin: 5vh 0 0 0; }
+  
+  .profile__container{
+    height: 30vh;
+    margin: 0 9px;
+  }
+
+  .profile-img__container{
+    position: relative;
+    height: 24vw;
+    width: 24vw;
+  }
+    
+  .profile-img, #changer__profile-img{
+   display:block;
+   border-radius: 50%;
+   height: 100%;
+   width: 100%;
+  }
+  
+  #changer__profile-img, #preview{
+    position: absolute;
+    opacity: 0;
+    top: 0;
+    left: 0;
+  }
+  
+  .profile__eximg{
+    position: relative;
+    top: -24vw;
+    height: 30vh;
+  }
+  
+  .profile-name{
+    position: absolute;
+    top: 24vw;
+    width: 24vw;
+    text-align: center;
+  }
+
+  .profile__eximg .button__follow:nth-child(2){
+    top: 5vh;
+    left: 30vw;
+  }
+
+  .profile__eximg .button__follow:nth-child(3){
+    top: 5vh;
+    left: 50vw;
+  }
+  
+  .button__follow{
+    position: absolute;
+    display:block;
+    font-size:20px;
+    text-align:center;
+    width:150px;
+    height:50px;
+    color:#4CAF50;
+    border-radius:25px;
+  }
+  
+  .profile__intro{
+    position: absolute;
+    top: 30vw;
+    width: 100%;
+    height: 4vw;
+  }
+  
+  .f{
+    float:left;
+  }
+  
+  .rf{
+    clear:left;
+  }
+  
+  .num-follow{
+    display: block;
+    font-size:30px;
+    color:#4CAF50;
+    font-weight:bold;
+    width: 25vw;
+    text-align: center;
+  }
+  
+  .copy_url_design{
+    width:125px;
+    height:50px;
+    color:#4CAF50;
+    border-radius:25px;
+    font-size:20px;
+    display: none;
+  }
+  
+  .sns__container{
+    position: absolute;
+    top: 40vw;
+    width: 90vw;
+    height: 4vw;
+  }
+  
+  .SNS_img{
+   display: inline-block;
+   width: 36px;
+   height: 36px;
+   border-radius: 25%;
+  }
+  
+  
+  .follow__container{
+    display: flex;
+    position: absolute;
+    top: 45vw;
+    width: 100%;
+    height: 5vw;
+  }
+  
+  .clearfix::after{
+    content: "";
+    clear: both;
+    display: block;
+  }
+  
+  
+  .url-folders__container{
+    margin: 60px 0;
+  }
+  
+  
+  .url-folders__title{
+   display:block;
+   font-size: 32px;
+  }
+  
+  
+  .container__wrapper{
+    margin: 0;
+  }
 }

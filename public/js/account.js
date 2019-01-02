@@ -32459,21 +32459,6 @@ function blobToFile(theBlob, fileName) {
   return theBlob;
 }
 
-// @platong option change from folder which is got from Firebase.
-function optionChange() {
-  var list = sessionStorage.urlset_list.split("-@-");
-  list = list.map(function (value) {
-    return JSON.parse(value);
-  });
-  var select = $("#urlput_option");
-  var options = $.map(list, function (d) {
-    var option = $('<option>', { value: d.id, text: d.name });
-    return option;
-  });
-  options.push($('<option>', { value: "新しいURLセットを作成", text: "新しいURLセットを作成" }));
-  select.append(options);
-}
-
 var AddButton = (function (_React$Component) {
   _inherits(AddButton, _React$Component);
 
@@ -32701,7 +32686,6 @@ var AddPanel = (function (_React$Component2) {
           }
         });
       });
-      optionChange();
     }
   }, {
     key: "render",
@@ -32751,22 +32735,25 @@ var UrlPost = (function (_React$Component3) {
     _classCallCheck(this, UrlPost);
 
     _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
-    this.state = { id: props.id };
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId,
+      count: 0
+    };
   }
-
-  // @platong When URL is changed, XMLObject is created and send Ajax to get information about URL.
 
   _createClass(UrlPost, [{
     key: "urlConverter",
-    value: function urlConverter() {
-      var url = document.urlput_form.url.value;
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
       $.ajax({
         url: "/api_v1/url_to_title",
         type: 'GET',
         data: { "url": url }
       }).done(function (data) {
-        $('.result').html(data);
-        document.urlput_form.title.value = data.title;
+        var selector = 'input[name="title' + num + '"]';
+        $(selector).val(data.title);
       }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
     }
   }, {
@@ -32780,20 +32767,74 @@ var UrlPost = (function (_React$Component3) {
       var aId = localStorage.accountId;
       var t_id = this.state.id;
       var user = _firebase.auth.currentUser;
-      _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add({
-        title: document.urlput_form.title.value,
-        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-        href: document.urlput_form.url.value,
-        aId: localStorage.getItem("accountId"),
-        aProfileImg: user.photoURL,
-        aName: user.displayName,
-        dateTime: new Date()
-      }).then(function (docRef) {
-        console.log("Document written with ID: ", docRef.id);
+      var ownerAId = this.state.ownerAId;
+
+      var _loop = function (i) {
+        var url = $('input[name="url' + i + '"]').val();
+        var title = $('input[name="title' + i + '"]').val();
+
+        if (url === "" || title === "") return "continue";
+
+        var data = {
+          title: title,
+          content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+          href: url,
+          aId: aId,
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        };
+
+        if (ownerAId === aId) {
+          _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+            closePostView();
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        } else {
+          var myfolderRef = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id);
+
+          myfolderRef.get().then(function (snap) {
+            if (snap.exists) {
+              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+            } else {
+              return _firebase.db.collection("freefolder").doc(t_id).get().then(function (snap) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data());
+              }).then(function (docRef) {
+                return _firebase.db.collection("freefolder").doc(t_id).collection("urls").get();
+              }).then(function (snaps) {
+                return snaps.forEach(function (x) {
+                  _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").doc(x.id).set(x.data());
+                });
+              }).then(function (res) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+              });
+            }
+          }).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        }
         closePostView();
-      })["catch"](function (error) {
-        console.error("Error adding document: ", error);
-      });
+      };
+
+      for (var i = 0; i <= this.state.count; i++) {
+        var _ret = _loop(i);
+
+        if (_ret === "continue") continue;
+      }
+      this.state.count = 0;
+    }
+  }, {
+    key: "morePost",
+    value: function morePost() {
+      ++this.state.count;
+      var element = document.createElement("div");
+      element.setAttribute("id", "url_input" + this.state.count);
+      document.getElementById("url_input").appendChild(element);
+      ReactDOM.render(React.createElement(UrlInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
     }
   }, {
     key: "render",
@@ -32808,10 +32849,19 @@ var UrlPost = (function (_React$Component3) {
           React.createElement(
             "form",
             { name: "urlput_form" },
-            React.createElement("input", { name: "url", type: "text", onInput: this.urlConverter, placeholder: "URLを入力", required: true }),
-            React.createElement("input", { name: "title", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true }),
+            React.createElement(
+              "div",
+              { id: "url_input" },
+              React.createElement(
+                "div",
+                { id: "url_input0" },
+                React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
+                React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
+              )
+            ),
             React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "submit_is_disactive", id: "url_submit" })
-          )
+          ),
+          React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
         )
       );
     }
@@ -32820,10 +32870,52 @@ var UrlPost = (function (_React$Component3) {
   return UrlPost;
 })(React.Component);
 
+var UrlInput = (function (_React$Component4) {
+  _inherits(UrlInput, _React$Component4);
+
+  function UrlInput(props) {
+    _classCallCheck(this, UrlInput);
+
+    _get(Object.getPrototypeOf(UrlInput.prototype), "constructor", this).call(this, props);
+    this.state = {
+      urlName: "url" + this.props.num,
+      titleName: "title" + this.props.num
+    };
+  }
+
+  _createClass(UrlInput, [{
+    key: "urlConverter",
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
+      $.ajax({
+        url: "/api_v1/url_to_title",
+        type: 'GET',
+        data: { "url": url }
+      }).done(function (data) {
+        var selector = 'input[name="title' + num + '"]';
+        $(selector).val(data.title);
+      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        null,
+        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
+        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
+      );
+    }
+  }]);
+
+  return UrlInput;
+})(React.Component);
+
 var blob = null;
 
-var UrlFolderPost = (function (_React$Component4) {
-  _inherits(UrlFolderPost, _React$Component4);
+var UrlFolderPost = (function (_React$Component5) {
+  _inherits(UrlFolderPost, _React$Component5);
 
   function UrlFolderPost() {
     _classCallCheck(this, UrlFolderPost);
@@ -33002,7 +33094,7 @@ exports.AddPanel = AddPanel;
 exports.UrlFolderPost = UrlFolderPost;
 exports.UrlPost = UrlPost;
 
-},{"./firebase":25,"./segue":27}],25:[function(require,module,exports){
+},{"./firebase":25,"./segue":28}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -33063,6 +33155,7 @@ var Folder = (function (_React$Component) {
     this.state = {
       putShow: props.post ? this.urlPost : this.putShow,
       id: props.id,
+      ownerAId: props.aId,
       kind: props.kind
     };
   }
@@ -33082,6 +33175,9 @@ var Folder = (function (_React$Component) {
           break;
         case "myfreefolders":
           query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
+          break;
+        case "freefolder":
+          query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
           break;
         default:
           query = _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs");
@@ -33124,7 +33220,7 @@ var Folder = (function (_React$Component) {
 
         ;
         sessionStorage.url_list = for_saved_list.join("-@-");
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, list: list }), document.getElementById("container"));
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, ownerAId: _this.state.ownerAId, list: list }), document.getElementById("container"));
       });
     }
   }, {
@@ -33254,7 +33350,121 @@ var Folders = (function (_React$Component2) {
 exports['default'] = Folders;
 module.exports = exports['default'];
 
-},{"./firebase":25,"./segue":27,"./url":29,"react":22}],27:[function(require,module,exports){
+},{"./firebase":25,"./segue":28,"./url":30,"react":22}],27:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+var blob;
+
+function blobToFile(theBlob, fileName) {
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
+
+// @platong If file is changed, file will be compressed.
+// document.getElementById("ra_profile_img")
+function fileChanged(event) {
+  var fileDomObj = event.target.fileDomObj;
+  var canvasDomObj = event.target.canvasDomObj;
+  var file = fileDomObj.files[0];
+  if (file.type != 'image/jpeg' && file.type != 'image/png') {
+    file = null;
+    blob = null;
+    return;
+    alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+  }
+  var image = new Image();
+  var reader = new FileReader();
+  var IMG_MAX_WIDTH = 96;
+
+  reader.onload = function (e) {
+    image.onload = function () {
+      var width, height, ratio;
+      if (image.width > image.height) {
+        ratio = image.height / image.width;
+        width = IMG_MAX_WIDTH;
+        height = IMG_MAX_WIDTH * ratio;
+      } else {
+        ratio = image.width / image.height;
+        width = IMG_MAX_WIDTH * ratio;
+        height = IMG_MAX_WIDTH;
+      }
+      var canvas = canvasDomObj.attr('width', width).attr('height', height);
+      var ctx = canvas[0].getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+
+      var base64 = canvas.get(0).toDataURL('image/jpeg');
+      var barr, bin, i, len;
+      bin = atob(base64.split('base64,')[1]);
+      len = bin.length;
+      barr = new Uint8Array(len);
+      i = 0;
+      while (i < len) {
+        barr[i] = bin.charCodeAt(i);
+        i++;
+      }
+      blob = new Blob([barr], { type: 'image/jpeg' });
+    };
+    image.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  submit(fileDomObj);
+}
+
+function submit(fileDomObj) {
+  var file = fileDomObj.files[0];
+  if (!blob) return; // validation
+  var storage = firebase.storage();
+  var storageRef = storage.ref();
+  var imagesRef = storageRef.child('account_profile_imgs');
+  var file_name = file.name;
+  file = blobToFile(blob);
+  var ref = storageRef.child('account_profile_imgs/' + file_name);
+  var uploadTask = ref.put(file);
+  // Listen for state changes, errors, and completion of the upload.
+  uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+  function (snapshot) {
+    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+    var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
+    console.log('Upload is ' + progress + '% done');
+    switch (snapshot.state) {
+      case firebase.storage.TaskState.PAUSED:
+        // or 'paused'
+        console.log('Upload is paused');
+        break;
+      case firebase.storage.TaskState.RUNNING:
+        // or 'running'
+        console.log('Upload is running');
+        break;
+    }
+  }, function (error) {
+    // https://firebase.google.com/docs/storage/web/handle-errors
+    switch (error.code) {
+      case 'storage/unauthorized':
+        // User doesn't have permission to access the object
+        break;
+      case 'storage/canceled':
+        // User canceled the upload
+        break;
+      case 'storage/unknown':
+        // Unknown error occurred, inspect error.serverResponse
+        break;
+    }
+  }, function () {
+    // Upload completed successfully, now we can get the download URL
+    uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+      console.log('File available at', downloadURL);
+    });
+  });
+};
+
+exports.fileChanged = fileChanged;
+
+},{}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33299,7 +33509,8 @@ var SegueAnyToUrl = (function (_React$Component) {
 
     _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
     this.state = {
-      id: props.id
+      id: props.id,
+      ownerAId: props.ownerAId
     };
     history.pushState('', '', "folders?id=" + this.props.id);
   }
@@ -33312,7 +33523,7 @@ var SegueAnyToUrl = (function (_React$Component) {
       if (listStr !== "") list = listStr.split("-@-").map(function (x) {
         return JSON.parse(x);
       });else list = [];
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id }), document.getElementById("container"));
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id, ownerAId: this.state.ownerAId }), document.getElementById("container"));
     }
   }, {
     key: "render",
@@ -33549,7 +33760,7 @@ var SegueAnyToUrlPost = (function (_React$Component7) {
         { className: "container__wrapper" },
         _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id })
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId })
       );
     }
   }]);
@@ -33659,19 +33870,20 @@ function segueToFolders() {
 
 function segueToGlobal() {
   var list = [];
-  _firebase.db.collection("urlset").get().then(function (snap) {
-    var d = undefined;
-    var for_saved_list = [];
+  var d = undefined;
+  var for_saved_list = [];
+  _firebase.db.collection("freefolder").get().then(function (snap) {
     var _iteratorNormalCompletion6 = true;
     var _didIteratorError6 = false;
     var _iteratorError6 = undefined;
 
     try {
       for (var _iterator6 = snap.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-        var i = _step6.value;
+        var j = _step6.value;
 
-        d = i.data();
-        d.id = i.id;
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
@@ -33691,63 +33903,32 @@ function segueToGlobal() {
     }
 
     ;
-    _firebase.db.collection("freefolder").get().then(function (snap) {
-      var _iteratorNormalCompletion7 = true;
-      var _didIteratorError7 = false;
-      var _iteratorError7 = undefined;
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+    ReactDOM.render(_react2["default"].createElement(SegueAnyToFolder, { list: list }), document.getElementById("container"));
+    var _iteratorNormalCompletion7 = true;
+    var _didIteratorError7 = false;
+    var _iteratorError7 = undefined;
 
+    try {
+      for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+        var _d2 = _step7.value;
+
+        $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError7 = true;
+      _iteratorError7 = err;
+    } finally {
       try {
-        for (var _iterator7 = snap.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-          var j = _step7.value;
-
-          d = j.data();
-          d.id = j.id;
-          list.push(d);
-          for_saved_list.push(JSON.stringify(d));
+        if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+          _iterator7["return"]();
         }
-      } catch (err) {
-        _didIteratorError7 = true;
-        _iteratorError7 = err;
       } finally {
-        try {
-          if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-            _iterator7["return"]();
-          }
-        } finally {
-          if (_didIteratorError7) {
-            throw _iteratorError7;
-          }
+        if (_didIteratorError7) {
+          throw _iteratorError7;
         }
       }
-
-      ;
-      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolder, { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion8 = true;
-      var _didIteratorError8 = false;
-      var _iteratorError8 = undefined;
-
-      try {
-        for (var _iterator8 = list[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-          var _d2 = _step8.value;
-
-          $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-        }
-      } catch (err) {
-        _didIteratorError8 = true;
-        _iteratorError8 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-            _iterator8["return"]();
-          }
-        } finally {
-          if (_didIteratorError8) {
-            throw _iteratorError8;
-          }
-        }
-      }
-    });
+    }
   });
 }
 
@@ -33760,7 +33941,7 @@ exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
 exports.segueToFolders = segueToFolders;
 exports.segueToGlobal = segueToGlobal;
 
-},{"./add_button":24,"./firebase":25,"./folder":26,"./side_menu":28,"./url":29,"react":22}],28:[function(require,module,exports){
+},{"./add_button":24,"./firebase":25,"./folder":26,"./side_menu":29,"./url":30,"react":22}],29:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33942,7 +34123,7 @@ var SideMenu = (function (_React$Component) {
 exports["default"] = SideMenu;
 module.exports = exports["default"];
 
-},{"./firebase":25,"./segue":27,"react":22}],29:[function(require,module,exports){
+},{"./firebase":25,"./segue":28,"react":22}],30:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33987,7 +34168,7 @@ var Url = (function (_React$Component) {
       var aId = localStorage.getItem("accountId");
       var data = {
         href: this.state.href,
-        date: new Data()
+        date: new Date()
       };
       _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
     }
@@ -34097,7 +34278,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"./firebase":25,"react":22}],30:[function(require,module,exports){
+},{"./firebase":25,"react":22}],31:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -34111,6 +34292,8 @@ var _jsFolder = require('../js/folder');
 var _jsFolder2 = _interopRequireDefault(_jsFolder);
 
 var _jsFirebase = require("../js/firebase");
+
+var _jsImg_compresser = require("../js/img_compresser");
 
 var isFollow;
 
@@ -34139,7 +34322,7 @@ function init() {
   });
 
   // @platong  アカウントのURLフォルダを表示
-  _jsFirebase.db.collection("account").doc(targetAId).collection("folders").get().then(function (snap) {
+  _jsFirebase.db.collection("account").doc(targetAId).collection("myfreefolders").get().then(function (snap) {
     var d = undefined;
     var list = [];
     var for_saved_list = [];
@@ -34170,7 +34353,11 @@ function init() {
       }
     }
 
-    ReactDOM.render(_react2['default'].createElement(_jsFolder2['default'], { list: list }), document.getElementById("container"));
+    ReactDOM.render(_react2['default'].createElement(
+      'div',
+      { className: 'container__wrapper' },
+      _react2['default'].createElement(_jsFolder2['default'], { list: list })
+    ), document.getElementById("container"));
     var _iteratorNormalCompletion2 = true;
     var _didIteratorError2 = false;
     var _iteratorError2 = undefined;
@@ -34239,4 +34426,9 @@ $("#button_follow").on("click", function () {
   }
 });
 
-},{"../js/firebase":25,"../js/folder":26,"react":22}]},{},[30]);
+var inputElement = document.getElementById("changer__profile-img");
+inputElement.addEventListener("change", _jsImg_compresser.fileChanged, false);
+inputElement.fileDomObj = document.getElementById("changer__profile-img");
+inputElement.canvasDomObj = $("#preview");
+
+},{"../js/firebase":25,"../js/folder":26,"../js/img_compresser":27,"react":22}]},{},[31]);

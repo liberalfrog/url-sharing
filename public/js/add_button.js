@@ -247,6 +247,7 @@ class UrlPost extends React.Component{
       <div>
         <div className="window-overlay" onClick={closePostView}></div>
         <div className="post__container">
+          <h1 className="view-title">URLを登録</h1>
           <form name="urlput_form">
             <div id="url_input">
               <div id="url_input0">
@@ -254,7 +255,7 @@ class UrlPost extends React.Component{
                 <input name="title0" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
               </div>
             </div>
-            <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="submit_is_disactive" id="url_submit"/>
+            <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="post__submit submit_is_disactive" id="url_submit"/>
           </form>
           <input type="button" onClick={this.morePost.bind(this)} value="さらにURLを登録" className="" />
         </div>
@@ -408,7 +409,7 @@ class UrlFolderPost extends React.Component{
       <div>
         <div className="window-overlay" onClick={closePostView}></div>
         <div className="post__container">
-          <h1>URLを入れるフォルダを作成</h1>
+          <h1 className="view-title">URLを入れるフォルダを作成</h1>
           <form action="" name="urlset_form">
             <div className="post-folder__preview">
               <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
@@ -416,7 +417,9 @@ class UrlFolderPost extends React.Component{
               <input id="ap_select_img"  className="post-folder__image" name="urlbook_img" type="file" onChange={this.fileChanged} />
               <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
             </div>
-            <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+            <div className="post-folder__sub">
+              <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+            </div>
             <div className="sell__section">
               <input type="text" name="price" /><label htmlFor="price">円</label>
             </div>
