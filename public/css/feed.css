@@ -31,19 +31,21 @@ input[type="text"]{
     border-radius: 5px;
     height: 110px;
   }
-  
-  /* @platong urlput outermost frame */
-  .urlset_panel{
-    color:black;
-    position: relative;
-    width: 48.5%;
-    background-size: cover;
-    height: 180px;
-    margin-bottom: 2vh;
+
+  .title__folder-choice{
+    position: fixed;
+    top: 0;
+    left: 0; 
+    height: 10vh;
+    width: 100vw;
+    background: #F0F0F0;
+    text-align: center;
+    font-size: 16px;
+    line-height: 10vh;
   }
   
-  #container .urlset_panel:nth-child(-n+3){ margin-top: 5vh; }
-  #container .urlset_panel:nth-child(2n){ margin-right: 3%; }
+  #container .urlset_panel:nth-child(-n+2){ margin-top: 5vh; }
+  #container .urlset_panel:nth-child(2n){ margin-left: 3%; }
   
   .urlset_panel a.rigidFolder{
     position: absolute;
@@ -175,10 +177,15 @@ input[type="text"]{
     top: 5vh;
     left: 10px;
     transform: translateY(-50%);
-    width: 10vw;
+    width: 20vw;
     height: 24px;
-    background: yellow;
     z-index: 30;
+  }
+
+  .window-overlay:before{
+    display: block;
+    content: "キャンセル";
+    color: #007AFF;
   }
 
   .post-folder__sub{

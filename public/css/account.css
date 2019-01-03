@@ -10,7 +10,7 @@
     margin: 10vh auto;
   }
   
-  .profile-img__container{
+  .ap__profile-img__container{
     float:left;
     position: relative;
     margin: 0 40px 0 50px;
@@ -18,7 +18,7 @@
     width: 192px;
   }
     
-  .profile-img, #changer__profile-img{
+  .ap__profile-img, #changer__ap__profile-img{
    display:block;
    border-radius: 50%;
    height: 100%;
@@ -26,7 +26,7 @@
   }
   
   
-  #changer__profile-img, #preview{
+  #changer__ap__profile-img, #preview{
     position: absolute;
     opacity: 0;
     top: 0;
@@ -140,33 +140,41 @@
 
 @media(max-width: 1023px){
   
-  #main-container{ margin: 5vh 0 0 0; }
+  #main-container{ margin: 2vh 0 0 0; }
   
   .profile__container{
     height: 30vh;
     margin: 0 9px;
   }
 
-  .profile-img__container{
+  .ap__profile-img__container{
     position: relative;
     height: 24vw;
     width: 24vw;
   }
     
-  .profile-img, #changer__profile-img{
+  .ap__profile-img, #changer__ap__profile-img{
    display:block;
    border-radius: 50%;
    height: 100%;
    width: 100%;
   }
   
-  #changer__profile-img, #preview{
+  #changer__ap__profile-img{
     position: absolute;
     opacity: 0;
     top: 0;
     left: 0;
   }
+
+  #preview{
+    display: none;
+  }
   
+  .ap__profile-img{
+    position: relative;
+  }
+
   .profile__eximg{
     position: relative;
     top: -24vw;
@@ -176,36 +184,37 @@
   .profile-name{
     position: absolute;
     top: 24vw;
-    width: 24vw;
-    text-align: center;
+    font-size: 3vh;
+    line-height: 4vh;
   }
 
   .profile__eximg .button__follow:nth-child(2){
+    position: absolute;
     top: 5vh;
     left: 30vw;
   }
 
   .profile__eximg .button__follow:nth-child(3){
+    position: absolute;
     top: 5vh;
-    left: 50vw;
+    left: 60vw;
   }
   
   .button__follow{
-    position: absolute;
     display:block;
-    font-size:20px;
-    text-align:center;
-    width:150px;
-    height:50px;
-    color:#4CAF50;
-    border-radius:25px;
+    font-size: 16px;
+    text-align: center;
+    width: 120px;
+    height: 36px;
+    color: #4CAF50;
+    border-radius: 18px;
   }
   
   .profile__intro{
     position: absolute;
-    top: 30vw;
     width: 100%;
     height: 4vw;
+    top: 30vw;
   }
   
   .f{
@@ -217,11 +226,9 @@
   }
   
   .num-follow{
-    display: block;
-    font-size:30px;
+    font-size: 14px;
     color:#4CAF50;
     font-weight:bold;
-    width: 25vw;
     text-align: center;
   }
   
@@ -236,9 +243,8 @@
   
   .sns__container{
     position: absolute;
-    top: 40vw;
+    top: 24vh;
     width: 90vw;
-    height: 4vw;
   }
   
   .SNS_img{
@@ -248,13 +254,13 @@
    border-radius: 25%;
   }
   
-  
   .follow__container{
     display: flex;
     position: absolute;
-    top: 45vw;
-    width: 100%;
-    height: 5vw;
+    top: 24vw;
+    right: 0;
+    width: 50%;
+    line-height: 4vh;
   }
   
   .clearfix::after{
@@ -265,17 +271,12 @@
   
   
   .url-folders__container{
-    margin: 60px 0;
+    margin: 4vh 0;
   }
   
   
   .url-folders__title{
-   display:block;
-   font-size: 32px;
-  }
-  
-  
-  .container__wrapper{
-    margin: 0;
+    font-size: 24px;
+    margin: 0 2vw;
   }
 }

@@ -30,9 +30,7 @@ class Folder extends React.Component {
       case "freefolder":
         query = db.collection("freefolder").doc(this.state.id).collection("urls")
         break
-      default:
-        query = db.collection("urlset").doc(this.state.id).collection("urlputs")
-        break
+      default: break
     }
     query.get().then(snap => {
       let for_saved_list = []
@@ -75,8 +73,8 @@ class Folder extends React.Component {
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
-        <a href={"/account?aId=" + this.props.aId}>
-          <img src={this.props.aProfileImg} className="account_profile_img" />
+        <a href={"/account?aId=" + this.props.aId} className="profile-img__link">
+          <img src={this.props.aProfileImg} className="profile-img" />
         </a>
         <h3>{this.props.name}</h3>
         <p className="account_name">{this.props.aName}</p>

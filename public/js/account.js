@@ -32847,6 +32847,11 @@ var UrlPost = (function (_React$Component3) {
           "div",
           { className: "post__container" },
           React.createElement(
+            "h1",
+            { className: "view-title" },
+            "URLを登録"
+          ),
+          React.createElement(
             "form",
             { name: "urlput_form" },
             React.createElement(
@@ -32859,7 +32864,7 @@ var UrlPost = (function (_React$Component3) {
                 React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
               )
             ),
-            React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "submit_is_disactive", id: "url_submit" })
+            React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "post__submit submit_is_disactive", id: "url_submit" })
           ),
           React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
         )
@@ -33045,7 +33050,7 @@ var UrlFolderPost = (function (_React$Component5) {
           { className: "post__container" },
           React.createElement(
             "h1",
-            null,
+            { className: "view-title" },
             "URLを入れるフォルダを作成"
           ),
           React.createElement(
@@ -33063,11 +33068,15 @@ var UrlFolderPost = (function (_React$Component5) {
               React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
               React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
             ),
-            React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
             React.createElement(
-              "label",
-              { htmlFor: "paid" },
-              "販売する"
+              "div",
+              { className: "post-folder__sub" },
+              React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
+              React.createElement(
+                "label",
+                { htmlFor: "paid" },
+                "販売する"
+              )
             ),
             React.createElement(
               "div",
@@ -33180,7 +33189,6 @@ var Folder = (function (_React$Component) {
           query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
           break;
         default:
-          query = _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs");
           break;
       }
       query.get().then(function (snap) {
@@ -33279,8 +33287,8 @@ var Folder = (function (_React$Component) {
         { className: 'urlset_panel', id: this.props.id },
         _react2['default'].createElement(
           'a',
-          { href: "/account?aId=" + this.props.aId },
-          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'account_profile_img' })
+          { href: "/account?aId=" + this.props.aId, className: 'profile-img__link' },
+          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' })
         ),
         _react2['default'].createElement(
           'h3',
@@ -33531,9 +33539,9 @@ var SegueAnyToUrl = (function (_React$Component) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33589,9 +33597,9 @@ var SegueAnyToFolder = (function (_React$Component2) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33614,9 +33622,9 @@ var SegueFolderToAddPanel = (function (_React$Component3) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddPanel, null)
+        _react2["default"].createElement(_add_button.AddPanel, null),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33672,14 +33680,14 @@ var SegueAnyToFolderList = (function (_React$Component4) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
         _react2["default"].createElement(
           "button",
           { id: "later_button" },
           "Watch later"
         ),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33703,9 +33711,9 @@ var SegueAnyToFolderPost = (function (_React$Component5) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_add_button.UrlFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33734,8 +33742,8 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
           null,
           "URLを登録するフォルダを選択"
         ),
-        _react2["default"].createElement(_side_menu2["default"], null),
-        _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list })
+        _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33758,9 +33766,9 @@ var SegueAnyToUrlPost = (function (_React$Component7) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId })
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);

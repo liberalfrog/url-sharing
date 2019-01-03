@@ -32623,11 +32623,13 @@ var _firebase = require("./firebase");
 var THUMBNAIL_HEIGHT = 100;
 
 function closePostView() {
+  ReactDOM.unmountComponentAtNode(document.getElementById("container"));
   var list = sessionStorage.urlset_list.split("-@-");
   for (var i = 0; i < list.length; i++) {
     list[i] = JSON.parse(list[i]);
   }
   ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+  console.log(list);
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
@@ -33428,7 +33430,6 @@ var Folder = (function (_React$Component) {
           query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
           break;
         default:
-          query = _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs");
           break;
       }
       query.get().then(function (snap) {
@@ -33527,8 +33528,8 @@ var Folder = (function (_React$Component) {
         { className: 'urlset_panel', id: this.props.id },
         _react2['default'].createElement(
           'a',
-          { href: "/account?aId=" + this.props.aId },
-          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'account_profile_img' })
+          { href: "/account?aId=" + this.props.aId, className: 'profile-img__link' },
+          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' })
         ),
         _react2['default'].createElement(
           'h3',
@@ -33665,9 +33666,9 @@ var SegueAnyToUrl = (function (_React$Component) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33723,9 +33724,9 @@ var SegueAnyToFolder = (function (_React$Component2) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33748,9 +33749,9 @@ var SegueFolderToAddPanel = (function (_React$Component3) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddPanel, null)
+        _react2["default"].createElement(_add_button.AddPanel, null),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33806,14 +33807,14 @@ var SegueAnyToFolderList = (function (_React$Component4) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
         _react2["default"].createElement(
           "button",
           { id: "later_button" },
           "Watch later"
         ),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33837,9 +33838,9 @@ var SegueAnyToFolderPost = (function (_React$Component5) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_add_button.UrlFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
@@ -33862,14 +33863,18 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
     value: function render() {
       return _react2["default"].createElement(
         "div",
-        { className: "container__wrapper" },
+        null,
         _react2["default"].createElement(
           "h1",
-          null,
+          { className: "title__folder-choice" },
           "URLを登録するフォルダを選択"
         ),
-        _react2["default"].createElement(_side_menu2["default"], null),
-        _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list })
+        _react2["default"].createElement(
+          "div",
+          { className: "container__wrapper" },
+          _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list }),
+          _react2["default"].createElement(_side_menu2["default"], null)
+        )
       );
     }
   }]);
@@ -33892,9 +33897,9 @@ var SegueAnyToUrlPost = (function (_React$Component7) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_side_menu2["default"], null),
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId })
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);

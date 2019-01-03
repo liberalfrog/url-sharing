@@ -7,11 +7,13 @@ const THUMBNAIL_HEIGHT = 100;
 
 
 function closePostView(){ 
+  ReactDOM.unmountComponentAtNode(document.getElementById("container"))
   let list = sessionStorage.urlset_list.split("-@-")
   for(let i=0; i<list.length; i++){
     list[i] = JSON.parse(list[i])
   }
-  ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"));
+  ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
+  console.log(list)
   for(let d of list){
     $("#" + d.id ).css("background-image", "url(" + d.img + ")")
   }
