@@ -1,7 +1,38 @@
-.account_profile_img{
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  z-index: 2;
+@media screen and (max-width: 767px){
+
+  .urlset_panel h3{
+    font-size: 20px;
+  }
+
+  .profile-img{
+    position: relative;
+    top: 10px;
+    left: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    z-index: 2;
+  }
+
+  /* @platong urlput outermost frame */
+  .urlset_panel{
+    color:black;
+    position: relative;
+    width: 48.5%;
+    background-size: cover;
+    height: 120px;
+    margin-bottom: 2vh;
+  }
+
+}
+
+@media(min-width: 768px){
+  .profile-img{
+    position: relative;
+    width: 56px;
+    height: 56px;
+    margin: 10px;
+    border-radius: 50%;
+    z-index: 2;
+  }
 }

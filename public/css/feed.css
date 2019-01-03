@@ -17,227 +17,465 @@ input[type="text"]{
   background: none;
 }
 
-body{
-  background-color:white;
+
+/* For smart phone */
+@media screen and (max-width: 1023px) {
+
+  .container__wrapper{
+    margin: 0 4vw;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .urlset_panel, .post-folder__folder{
+    border-radius: 5px;
+    height: 110px;
+  }
+
+  .title__folder-choice{
+    position: fixed;
+    top: 0;
+    left: 0; 
+    height: 10vh;
+    width: 100vw;
+    background: #F0F0F0;
+    text-align: center;
+    font-size: 16px;
+    line-height: 10vh;
+    z-index: 100;
+  }
+  
+  #container .urlset_panel:nth-child(-n+2){ margin-top: 5vh; }
+  #container .urlset_panel:nth-child(2n){ margin-left: 3%; }
+  
+  .urlset_panel a.rigidFolder{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-indent: -999px;
+  }
+  
+  /* Add Panel */
+  .add_view{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10;
+    background: white;
+  }
+  
+  #later_button{
+    position: fixed;
+    bottom: 28vh;
+    right: 0px;
+    background:	#00AA00;
+    color: white;
+    width: 17vh;
+    height: 8vh;
+    border-radius:20% 0 0 20%;
+    font-size: 20px;
+    z-index: 20;
+  }
+  
+  #add_button{
+    position: fixed;
+    bottom: 12vh;
+    right: 25px;
+    background: #00AA00;
+    color: white;
+    width: 14vh;
+    height: 14vh;
+    border-radius: 50%;
+    font-size: 60px;
+    z-index: 20;
+  }
+
+  form[name="urlset_form"], form[name="urlput_form"]{
+    width: 100%;
+    height: 82vh;
+  }
+  
+  .add_panel{
+    height: 30vh;
+    font-size: 24px;
+    margin: 4vh 5vw;
+    border-radius: 5px;
+    border:solid 2px silver;
+  }
+  
+  /* fake navigation */
+
+  .view-title{
+    width: 100vw;
+    height: 10vh;
+    background: #F0F0F0;
+    text-align: center;
+    line-height: 10vh;
+    font-size: 16px;
+  }
+  
+  .post__container{
+    position: fixed;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: white;
+  }
+  
+  .post-folder__preview{
+    position: relative;
+    margin: auto;
+    background: darkorange;
+  }
+  
+  .post-folder__title{
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    font-size: 24px;
+    background: gray;
+  }
+  
+  .post-folder__upload-message{
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .post-folder__preview, .post-folder__image{
+    top: 40vh;
+    width: 90vw;
+    height: 200px;
+    transform: translateY(-50%);
+  }
+  
+  .post-folder__image{
+    opacity: 0;
+  }
+  
+  .post-folder__folder{
+    position: relative;
+    background: green;
+  }
+  
+  .post__submit{
+    position: absolute;
+    display: block;
+    top: 5vh;
+    right: 10px;
+    width: 10vw;
+    transform: translateY(-50%);
+  }
+
+  .window-overlay{
+    position: fixed;
+    top: 5vh;
+    left: 10px;
+    transform: translateY(-50%);
+    width: 20vw;
+    height: 24px;
+    z-index: 30;
+  }
+
+  .window-overlay:before{
+    display: block;
+    content: "キャンセル";
+    color: #007AFF;
+  }
+
+  .post-folder__sub{
+    position: absolute;
+    top: 70vh;
+    width: 90vw;
+    left: 5vw;
+  }
+  
+  .sell__section{ display: none; }
+
+  .submit_is_active{
+    background: green;
+    color: white;
+  }
+  
+  .submit_is_disactive{
+    background: white;
+    color: gray;
+  }
+  
+  .list-nav:after {
+    content: "";
+    clear: both;
+    display: block;
+  }
+  
+  .list-nav{
+    position: fixed;
+    display: flex;
+    background-color: white;
+    width: 100vw;
+    bottom: 0;
+    left: 0;
+    height: 8vh;
+    z-index: 999;
+    border-top: 1px solid;
+  }
+  
+  .list-nav a{
+    text-align: center;
+    width: 20vw;
+    color:#BBB;
+    line-height: 8vh;
+    font-size:19px;
+    text-decoration: none;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+  }
+  
+  
+  /* Begin Register Account */
+  .centering_popover{
+    position: fixed;
+    z-index: 30;
+    background: silver;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  
+  }
+  
+  footer{
+   position:absolute;
+   left:50%;
+   transform:translateX(-50%);
+   color:silver;
+   font-size:1.6em;
+   margin:0 0 0.2em 0;
+  }
+  /* End Register Account */
 }
 
-.container__wrapper{
-  margin: 0 0 0 250px;
-  width: 900px;
-  display: flex;
-  flex-wrap: wrap;
+
+@media(min-width: 1024px){
+
+  .container__wrapper{
+    margin: 0 0 0 250px;
+    width: 900px;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .urlset_panel, .post-folder__folder{
+    border-radius: 5px;
+    height: 110px;
+  }
+  
+  /* @platong urlput outermost frame */
+  .urlset_panel{
+    color:black;
+    position: relative;
+    width: 23.5%;
+    background-size: cover;
+    margin: 8px 6px;
+  }
+  
+  #container .urlset_panel:nth-child(4n){
+    margin: 10px 0 0 0;
+  }
+  
+  .urlset_panel a.rigidFolder{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    text-indent:-999px;
+  }
+  
+  
+  /* Add Panel */
+  .add_view{
+    position: fixed;
+    bottom: 140px;
+    right: 40px;
+    width: 240px;
+    height: 195px;
+  }
+  
+  
+  #later_button{
+    position: fixed;
+    bottom: 350px;
+    right: 0px;
+    background:	#00AA00;
+    color: white;
+    width: 130px;
+    height: 100px;
+    border-radius:50% 0 0 50%;
+    font-size: 20px;
+    z-index: 20;
+  }
+  
+  #add_button{
+    position: fixed;
+    bottom: 50px;
+    right: 25px;
+    background: #00AA00;
+    color: white;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    font-size: 60px;
+    z-index: 20;
+  }
+  
+  .add_panel{
+    color:black;
+    height: 70px;
+    margin: 5px 0;
+    padding:6px;
+    border-radius: 5px;
+    border:solid 2px silver;
+  }
+  
+  .window-overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 20;
+  }
+  
+  .post__container{
+    position: fixed;
+    z-index: 30;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 46vw;
+    height: 76vh;
+    background: pink;
+    padding: 2vh 2vw;
+  }
+  
+  .post-folder__preview{
+    position: relative;
+  }
+  
+  .post-folder__title{
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    font-size: 24px;
+    background: gray;
+  }
+  
+  .post-folder__upload-message{
+    display: block;
+    position: absolute;
+    top: 50%;
+    right: 50%;
+    transform: translate(-50%, -50%);
+  }
+  
+  .post-folder__folder, .post-folder__image{
+    width: 423px;
+    height: 200px;
+  }
+  
+  .post-folder__image{
+    opacity: 0;
+  }
+  
+  .post-folder__folder{
+    position: relative;
+    background: green;
+  }
+  
+  .post-folder__image{
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+  
+  .post__submit{
+    position: absolute;
+    display: block;
+    bottom: 10px;
+    right: 10px;
+    width: 140px;
+  }
+  
+  .sell__section{ display: none; }
+  
+  .submit_is_active{
+    background: green;
+    color: white;
+  }
+  
+  .submit_is_disactive{
+    background: white;
+    color: gray;
+  }
+  
+  .list-nav:after {
+    content: "";
+    clear: both;
+    display: block;
+  }
+  
+  .list-nav{
+    position: fixed;
+    left: 0;
+    height: 0;
+    display: flex;
+    flex-direction: column;
+    max-width: 220px;
+    background-color: #220000;
+    height: 100vh;
+  }
+  
+  .list-nav a{
+    color:#BBB;
+    line-height:90px;
+    font-size:19px;
+    text-decoration: none;
+    margin-left:20px;
+   
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-weight: 400;
+  }
+  
+  
+  /* Begin Register Account */
+  .centering_popover{
+    position: fixed;
+    z-index: 30;
+    background: silver;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+  
+  }
+
+  .list-nav{ width:1024px; }
+  
+  footer{
+   position:absolute;
+   left:50%;
+   transform:translateX(-50%);
+   color:silver;
+   font-size:1.6em;
+   margin:0 0 0.2em 0;
+  }
+  /* End Register Account */
 }
-
-.urlset_panel, .post-folder__folder{
-  border-radius: 5px;
-  height: 110px;
-}
-
-/* @platong urlput outermost frame */
-.urlset_panel{
-  color:black;
-  position: relative;
-  width: 23.5%;
-  background-size: cover;
-  margin: 8px 6px;
-}
-
-#container .urlset_panel:nth-child(4n){
-  margin: 10px 0 0 0;
-}
-
-.urlset_panel a.rigidFolder{
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  text-indent:-999px;
-}
-
-
-/* Add Panel */
-.add_view{
-  position: fixed;
-  bottom: 140px;
-  right: 40px;
-  width: 240px;
-  height: 195px;
-}
-
-
-#later_button{
-  position: fixed;
-  bottom: 350px;
-  right: 0px;
-  background:	#00AA00;
-  color: white;
-  width: 130px;
-  height: 100px;
-  border-radius:50% 0 0 50%;
-  font-size: 20px;
-  z-index: 20;
-}
-
-#add_button{
-  position: fixed;
-  bottom: 50px;
-  right: 25px;
-  background: #00AA00;
-  color: white;
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  font-size: 60px;
-  z-index: 20;
-}
-
-.add_panel{
-  color:black;
-  height: 70px;
-  margin: 5px 0;
-  padding:6px;
-  border-radius: 5px;
-  border:solid 2px silver;
-}
-
-.window-overlay{
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  z-index: 20;
-}
-
-.post__container{
-  position: fixed;
-  z-index: 30;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 46vw;
-  height: 76vh;
-  background: pink;
-  padding: 2vh 2vw;
-}
-
-.post-folder__preview{
-  position: relative;
-}
-
-.post-folder__title{
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  font-size: 24px;
-  background: gray;
-}
-
-.post-folder__upload-message{
-  display: block;
-  position: absolute;
-  top: 50%;
-  right: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.post-folder__folder, .post-folder__image{
-  width: 423px;
-  height: 200px;
-}
-
-.post-folder__image{
-  opacity: 0;
-}
-
-.post-folder__folder{
-  position: relative;
-  background: green;
-}
-
-.post-folder__image{
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.post__submit{
-  position: absolute;
-  display: block;
-  bottom: 10px;
-  right: 10px;
-  width: 140px;
-}
-
-.sell__section{ display: none; }
-
-.submit_is_active{
-  background: green;
-  color: white;
-}
-
-.submit_is_disactive{
-  background: white;
-  color: gray;
-}
-
-
-@media screen and (max-width:1023px) {
-  .list-nav{ width:100%; }
-}
-
-@media screen and (min-width:1024px) {
- .list-nav{ width:1024px; }
-}
-
-.list-nav:after {
-  content: "";
-  clear: both;
-  display: block;
-}
-
-.list-nav{
-  position: fixed;
-  left: 0;
-  height: 0;
-  display: flex;
-  flex-direction: column;
-  max-width: 220px;
-  background-color: #220000;
-  height: 100vh;
-}
-
-.list-nav a{
-  color:#BBB;
-  line-height:90px;
-  font-size:19px;
-  text-decoration: none;
-  margin-left:20px;
- 
-  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-  font-weight: 400;
-}
-
-
-/* Begin Register Account */
-.centering_popover{
-  position: fixed;
-  z-index: 30;
-  background: silver;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-
-}
-
-footer{
- position:absolute;
- left:50%;
- transform:translateX(-50%);
- color:silver;
- font-size:1.6em;
- margin:0 0 0.2em 0;
-}
-/* End Register Account */

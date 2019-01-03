@@ -1,6 +1,7 @@
 import React from 'react';
 import Folders from '../js/folder';
 import {storage, db} from "../js/firebase";
+import {fileChanged} from "../js/img_compresser";
 
 var isFollow
 
@@ -29,7 +30,7 @@ function init(){
   })
 
   // @platong  アカウントのURLフォルダを表示
-  db.collection("account").doc(targetAId).collection("folders").get().then(snap => {
+  db.collection("account").doc(targetAId).collection("myfreefolders").get().then(snap => {
     let d;
     let list = []
     let for_saved_list = []
@@ -38,7 +39,7 @@ function init(){
       d.id = i.id
       list.push(d)
     }
-    ReactDOM.render( <Folders list={list}/>, document.getElementById("container"));
+    ReactDOM.render( <div className="container__wrapper"><Folders list={list}/></div>, document.getElementById("container"));
     for(let d of list){
       $("#" + d.id ).css("background-image", "url(" + d.img + ")")
     }
@@ -86,3 +87,9 @@ $("#button_follow").on("click", function(){
     });
   }
 });
+
+
+var inputElement = document.getElementById("changer__profile-img");
+inputElement.addEventListener("change", fileChanged, false);
+inputElement.fileDomObj = document.getElementById("changer__profile-img");
+inputElement.canvasDomObj = $("#preview");

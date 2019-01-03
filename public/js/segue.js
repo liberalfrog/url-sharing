@@ -6,7 +6,6 @@ import SideMenu from "./side_menu";
 import {db} from "./firebase";
 
 
-
 class SegueAnyToUrl extends React.Component {
   constructor(props){
     super(props)
@@ -28,9 +27,9 @@ class SegueAnyToUrl extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <Urls list={this.props.list} />
         <AddButton func={this.openAddPanel.bind(this)} icon={"url"} />
+        <SideMenu />
       </div>
     );
   }
@@ -54,9 +53,9 @@ class SegueAnyToFolder extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <Folders list={this.state.list} />
         <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
+        <SideMenu />
       </div>
     );
   }
@@ -67,9 +66,9 @@ class SegueFolderToAddPanel extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <Folders list={this.props.list} />
         <AddPanel />
+        <SideMenu />
       </div>
     );
   }
@@ -90,10 +89,10 @@ class SegueAnyToFolderList extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <Folders list={this.props.list} />
         <button id="later_button">Watch later</button>
         <AddButton func={this.openFolderPost} icon={"folder"} />
+        <SideMenu />
       </div>
     );
   }
@@ -108,9 +107,9 @@ class SegueAnyToFolderPost extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <UrlFolderPost />
         <Folders list={this.state.list} />
+        <SideMenu />
       </div>
     );
   }
@@ -124,10 +123,12 @@ class SegueAnyToUrlPostFolderChoice extends React.Component {
   }
   render(){
     return(
-      <div className="container__wrapper">
-        <h1>URLを登録するフォルダを選択</h1>
-        <SideMenu />
-        <Folders post={true} list={this.state.list} />
+      <div>
+        <h1 className="title__folder-choice">URLを登録するフォルダを選択</h1>
+        <div className="container__wrapper">
+          <Folders post={true} list={this.state.list} />
+          <SideMenu />
+        </div>
       </div>
     );
   }
@@ -138,9 +139,9 @@ class SegueAnyToUrlPost extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <SideMenu />
         <Urls list={this.props.list} />
         <UrlPost id={this.props.id} ownerAId={this.props.ownerAId}/>
+        <SideMenu />
       </div>
     );
   }
@@ -183,30 +184,22 @@ function segueToFolders(){
 
 function segueToGlobal(){
   let list = []
-  db.collection("urlset").get().then(snap => {
-    let d;
-    let for_saved_list = []
-    for(let i of snap.docs){
-      d = i.data()
-      d.id = i.id
+  let d;
+  let for_saved_list = []
+  db.collection("freefolder").get().then(snap => {
+    for(let j of snap.docs){
+      d = j.data()
+      d.id = j.id
+      d.kind = "freefolder"
       list.push(d)
       for_saved_list.push(JSON.stringify(d))
     };  
-    db.collection("freefolder").get().then(snap => {
-      for(let j of snap.docs){
-        d = j.data()
-        d.id = j.id
-        d.kind = "freefolder"
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };  
-      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-      ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
-      for(let d of list){
-        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      }   
-    })
-  });
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+    ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
+    for(let d of list){
+      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+    }   
+  })
 }
 
 

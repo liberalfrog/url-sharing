@@ -10,40 +10,53 @@
   <link rel="stylesheet" href="/css/urlput.css" media="all">
   <link rel="stylesheet" href="/css/feed.css" media="all">
   <link rel="stylesheet" href="/css/account.css" media="all">
+  <link rel="stylesheet" href="/css/folder.css" media="all">
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-131300251-1"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-131300251-1');
   </script>
-
 </head>
 <body>
-  <img id="account_profile_img" src="" alt="" class="prof_img">
-  <h2 id="account_name" class="prof_name"></h2>
-  <button id="button_follow" class="button_follow">フォローする</button>
-  <p class="rf"></p>
-    <p class="f">
-      <a href="#" class="num_follow">????Follow</a>
-      <a href="#" class="num_follow">????Follower</a>
-    </p>
-  <p class="account_intro">
-    <span id="account_intro"></span>
-  </p>
-  <p class="rf"></p>
-  <button onclick="copyURL()" class="copy_url_design">Copy URL</button>
-  <a href="#"><img src="/img/Twitter.png" class="SNS_img"></a>
-  <a href="#"><img src="/img/facebook.png" class="SNS_img"></a>
-  <a href="#"><img src="/img/github.jpg" class="SNS_img"></a>
-  <a href="#"><img src="/img/instagram.png" class="SNS_img"></a>
-  <a href="#"><img src="/img/other.jpg" class="SNS_img"></a> 
-  <h2 class="container-title">URLs</h2>
-  <hr width="1150" class="hr">
-  <div id="container"></div>
-
+  <div id="main-container">
+    <main>
+      <div class="profile__container clearfix">
+        <div class="ap__profile-img__container">
+          <img id="account_profile_img" src="" alt="" class="ap__profile-img">
+          <canvas id="preview" width="192" height="192"></canvas>
+          <input type="file" accept="image/*" id="changer__ap__profile-img">
+        </div>
+        <div class="profile__eximg">
+          <h2 id="account_name" class="profile-name"></h2>
+          <button id="button_follow" class="button__follow">フォローする</button>
+          <button id="button_follow" class="button__follow">詳細を見る</button>
+          <p class="profile__intro clearfix">
+            <span id="account_intro"></span>
+          </p>
+          <button onclick="copyURL()" class="copy_url_design">Copy URL</button>
+          <div class="sns__container">
+            <a href="#"><img src="/img/Twitter.png" class="SNS_img"></a>
+            <a href="#"><img src="/img/facebook.png" class="SNS_img"></a>
+            <a href="#"><img src="/img/github.jpg" class="SNS_img"></a>
+            <a href="#"><img src="/img/instagram.png" class="SNS_img"></a>
+            <a href="#"><img src="/img/other.jpg" class="SNS_img"></a> 
+          </div>
+          <div class="follow__container">
+            <a href="#" class="num-follow">10 フォロー</a>
+            <a href="#" class="num-follow">24 フォロワー</a>
+          </div>
+        </div>
+      </div>
+      <div class="url-folders__container">
+        <h2 class="url-folders__title">URLs</h2>
+        <div id="container">
+        </div>
+      </div>
+    </main>
+  </div>
   <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-storage.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-auth.js"></script>
