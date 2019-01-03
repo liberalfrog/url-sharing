@@ -78,6 +78,7 @@ input[type="text"]{
     height: 8vh;
     border-radius:20% 0 0 20%;
     font-size: 20px;
+    z-index: 20;
   }
   
   #add_button{
@@ -90,6 +91,7 @@ input[type="text"]{
     height: 14vh;
     border-radius: 50%;
     font-size: 60px;
+    z-index: 20;
   }
 
   form[name="urlset_form"], form[name="urlput_form"]{
@@ -318,6 +320,7 @@ input[type="text"]{
     height: 100px;
     border-radius:50% 0 0 50%;
     font-size: 20px;
+    z-index: 20;
   }
   
   #add_button{
@@ -330,6 +333,7 @@ input[type="text"]{
     height: 100px;
     border-radius: 50%;
     font-size: 60px;
+    z-index: 20;
   }
   
   .add_panel{
