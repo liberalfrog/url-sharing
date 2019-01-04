@@ -60,6 +60,7 @@ function init(){
           segueToGlobal()
           break
         case "/folders":
+          ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"))
           let query = location.search;
           if(query !== ""){
             let hash = query.slice(1).split("&")

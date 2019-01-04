@@ -9,6 +9,7 @@ export default class SideMenu extends React.Component{
     segueToGlobal()
   }
   folderClicked(){
+    ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"))
     history.pushState('','',"folders")
     let list = []
     let aId = localStorage.getItem("accountId")
