@@ -26,7 +26,9 @@ input[type="text"]{
     display: flex;
     flex-wrap: wrap;
   }
-  
+
+  .latest-container__title, .recommend-container__title{ margin: 0 0 0 20px; }
+
   .post-folder__folder{
     border-radius: 5px;
     height: 110px;
@@ -46,7 +48,7 @@ input[type="text"]{
   }
   
   #container .urlset_panel:nth-child(-n+2){ margin-top: 5vh; }
-  #container .urlset_panel:nth-child(2n){ margin-left: 3%; }
+  .container__wrapper .urlset_panel:nth-child(2n){ margin-left: 3%; }
   
   /* Add Panel */
   .add_view{
@@ -247,7 +249,7 @@ input[type="text"]{
    left:50%;
    transform:translateX(-50%);
    color:silver;
-   font-size:1.6em;
+   font-size: 12px;
    margin:0 0 0.2em 0;
   }
   /* End Register Account */
@@ -262,6 +264,8 @@ input[type="text"]{
     display: flex;
     flex-wrap: wrap;
   }
+
+  .latest-container__title, .recommend-container__title{ margin: 0 0 0 250px; }
   
   .urlset_panel, .post-folder__folder{
     border-radius: 5px;
@@ -427,7 +431,7 @@ input[type="text"]{
   .list-nav{
     position: fixed;
     left: 0;
-    height: 0;
+    top: 0;
     display: flex;
     flex-direction: column;
     max-width: 220px;

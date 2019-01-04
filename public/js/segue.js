@@ -186,7 +186,8 @@ function segueToGlobal(){
   let list = []
   let d;
   let for_saved_list = []
-  db.collection("freefolder").get().then(snap => {
+  let aId = localStorage.accountId
+  db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(snap => {
     for(let j of snap.docs){
       d = j.data()
       d.id = j.id
@@ -195,10 +196,42 @@ function segueToGlobal(){
       for_saved_list.push(JSON.stringify(d))
     };  
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(<SegueAnyToFolder list={list}/>, document.getElementById("container"));
+    ReactDOM.render(
+      <div>
+        <h1 className="latest-container__title">新着情報</h1>
+        <div className="container__wrapper">
+          <Folders list={list}/>
+        </div>
+      </div>
+    , document.getElementById("container__latest"));
     for(let d of list){
       $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-    }   
+    }
+    return true
+  }).then(() => {
+    list = []
+    d = []
+    for_saved_list = []
+    return db.collection("freefolder").orderBy("dateTime").limit(8).get().then(snap => {
+      for(let j of snap.docs){
+        d = j.data()
+        d.id = j.id
+        d.kind = "freefolder"
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };  
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+      ReactDOM.render(
+        <div>
+          <h1 className="recommend-container__title">評価されている情報</h1>
+          <SegueAnyToFolder list={list}/>
+        </div>
+      , document.getElementById("container"));
+      for(let d of list){
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }
+      return true
+    })
   })
 }
 

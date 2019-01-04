@@ -34011,7 +34011,8 @@ function segueToGlobal() {
   var list = [];
   var d = undefined;
   var for_saved_list = [];
-  _firebase.db.collection("freefolder").get().then(function (snap) {
+  var aId = localStorage.accountId;
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
     var _iteratorNormalCompletion6 = true;
     var _didIteratorError6 = false;
     var _iteratorError6 = undefined;
@@ -34043,7 +34044,20 @@ function segueToGlobal() {
 
     ;
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(_react2["default"].createElement(SegueAnyToFolder, { list: list }), document.getElementById("container"));
+    ReactDOM.render(_react2["default"].createElement(
+      "div",
+      null,
+      _react2["default"].createElement(
+        "h1",
+        { className: "latest-container__title" },
+        "新着情報"
+      ),
+      _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_folder2["default"], { list: list })
+      )
+    ), document.getElementById("container__latest"));
     var _iteratorNormalCompletion7 = true;
     var _didIteratorError7 = false;
     var _iteratorError7 = undefined;
@@ -34068,6 +34082,81 @@ function segueToGlobal() {
         }
       }
     }
+
+    return true;
+  }).then(function () {
+    list = [];
+    d = [];
+    for_saved_list = [];
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get().then(function (snap) {
+      var _iteratorNormalCompletion8 = true;
+      var _didIteratorError8 = false;
+      var _iteratorError8 = undefined;
+
+      try {
+        for (var _iterator8 = snap.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+          var j = _step8.value;
+
+          d = j.data();
+          d.id = j.id;
+          d.kind = "freefolder";
+          list.push(d);
+          for_saved_list.push(JSON.stringify(d));
+        }
+      } catch (err) {
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
+            _iterator8["return"]();
+          }
+        } finally {
+          if (_didIteratorError8) {
+            throw _iteratorError8;
+          }
+        }
+      }
+
+      ;
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+      ReactDOM.render(_react2["default"].createElement(
+        "div",
+        null,
+        _react2["default"].createElement(
+          "h1",
+          { className: "recommend-container__title" },
+          "評価されている情報"
+        ),
+        _react2["default"].createElement(SegueAnyToFolder, { list: list })
+      ), document.getElementById("container"));
+      var _iteratorNormalCompletion9 = true;
+      var _didIteratorError9 = false;
+      var _iteratorError9 = undefined;
+
+      try {
+        for (var _iterator9 = list[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+          var _d3 = _step9.value;
+
+          $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError9 = true;
+        _iteratorError9 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+            _iterator9["return"]();
+          }
+        } finally {
+          if (_didIteratorError9) {
+            throw _iteratorError9;
+          }
+        }
+      }
+
+      return true;
+    });
   });
 }
 
@@ -34123,6 +34212,7 @@ var SideMenu = (function (_React$Component) {
   }, {
     key: "folderClicked",
     value: function folderClicked() {
+      ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"));
       history.pushState('', '', "folders");
       var list = [];
       var aId = localStorage.getItem("accountId");
@@ -34514,6 +34604,7 @@ function init() {
           (0, _jsSegue.segueToGlobal)();
           break;
         case "/folders":
+          ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"));
           var query = location.search;
           if (query !== "") {
             var parameters;
