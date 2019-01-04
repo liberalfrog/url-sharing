@@ -20,8 +20,9 @@
     position: relative;
     width: 48.5%;
     background-size: cover;
-    height: 120px;
     margin-bottom: 2vh;
+    border-radius: 5px;
+    height: 110px;
   }
 
 }
