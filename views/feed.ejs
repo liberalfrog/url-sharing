@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>URL Sharing</title>
   <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
   <script src="/common/js/react.development.js" crossorigin></script>
@@ -16,17 +17,13 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'UA-131300251-1');
   </script>
-
 </head>
 <body>
   <div id="container__latest"></div>
   <div id="container"></div>
-  <footer>
-    <p>&copy; Real OZ Project org. | 2018</p>
-  </footer>
+  <footer> &copy; Real OZ Project org. | 2018 </footer>
   <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-storage.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-auth.js"></script>

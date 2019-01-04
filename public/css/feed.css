@@ -19,7 +19,7 @@ input[type="text"]{
 
 
 /* For smart phone */
-@media screen and (max-width: 1023px) {
+@media screen and (max-width: 767px) {
 
   .container__wrapper{
     margin: 0 4vw;
@@ -27,7 +27,7 @@ input[type="text"]{
     flex-wrap: wrap;
   }
   
-  .urlset_panel, .post-folder__folder{
+  .post-folder__folder{
     border-radius: 5px;
     height: 110px;
   }
@@ -263,7 +263,7 @@ input[type="text"]{
 }
 
 
-@media(min-width: 1024px){
+@media(min-width: 768px){
 
   .container__wrapper{
     margin: 0 0 0 250px;
