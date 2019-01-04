@@ -23,8 +23,6 @@ function blobToFile(theBlob, fileName){
 }
 
 
-
-
 function accountRegisterSubmitValidation(){
   let name = document.getElementById("ra_name").value;
   let file = document.getElementById("ra_profile_img").files[0];

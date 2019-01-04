@@ -48,15 +48,6 @@ input[type="text"]{
   #container .urlset_panel:nth-child(-n+2){ margin-top: 5vh; }
   #container .urlset_panel:nth-child(2n){ margin-left: 3%; }
   
-  .urlset_panel a.rigidFolder{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    text-indent: -999px;
-  }
-  
   /* Add Panel */
   .add_view{
     position: fixed;

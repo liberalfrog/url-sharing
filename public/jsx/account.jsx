@@ -1,7 +1,7 @@
 import React from 'react';
 import Folders from '../js/folder';
 import {storage, db} from "../js/firebase";
-import {fileChanged} from "../js/img_compresser";
+import fileChanged from "../js/img_compresser";
 
 var isFollow
 
@@ -18,6 +18,13 @@ function init(){
     document.getElementById("account_name").innerHTML= d.name;
     document.getElementById("account_intro").innerHTML= d.intro;
   });
+
+  if(aId === targetAId){
+    $("#button_follow").css("display","none");
+    $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
+    $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
+    $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
+  }
 
   queryToFollow.get().then(snap => {
     if(snap.exists){
@@ -37,6 +44,7 @@ function init(){
     for(let i of snap.docs){
       d = i.data()
       d.id = i.id
+      d.kind = "myfreefolders"
       list.push(d)
     }
     ReactDOM.render( <div className="container__wrapper"><Folders list={list}/></div>, document.getElementById("container"));
@@ -88,8 +96,7 @@ $("#button_follow").on("click", function(){
   }
 });
 
-
-var inputElement = document.getElementById("changer__profile-img");
+var inputElement = document.getElementById("changer__ap__profile-img");
 inputElement.addEventListener("change", fileChanged, false);
-inputElement.fileDomObj = document.getElementById("changer__profile-img");
+inputElement.fileDomObj = document.getElementById("changer__ap__profile-img");
 inputElement.canvasDomObj = $("#preview");

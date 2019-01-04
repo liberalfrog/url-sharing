@@ -1,22 +1,24 @@
+require("firebase/app")
+import {db, storage, auth} from "./firebase"
+
 var blob;
 
 function blobToFile(theBlob, fileName){
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
+  theBlob.lastModifiedDate = new Date()
+  theBlob.name = fileName
+  return theBlob
 }
 
 // @platong If file is changed, file will be compressed.
-// document.getElementById("ra_profile_img")
-function fileChanged(event){
+export default function fileChanged(event){
   let fileDomObj = event.target.fileDomObj
   let canvasDomObj = event.target.canvasDomObj
   let file = fileDomObj.files[0]
   if (file.type != 'image/jpeg' && file.type != 'image/png') {
-    file = null;
-    blob = null;
-    return;
-    alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+    file = null
+    blob = null
+    return
+    alert("画像でないものはアップロードできません。対応形式はjpegかpngです。")
   }
   var image = new Image();
   var reader = new FileReader();
@@ -39,6 +41,8 @@ function fileChanged(event){
       ctx.clearRect(0,0,width,height);
       ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
 
+      canvasDomObj.css("display", "block");
+
       var base64 = canvas.get(0).toDataURL('image/jpeg');
       var barr, bin, i, len;
       bin = atob(base64.split('base64,')[1]);
@@ -50,17 +54,16 @@ function fileChanged(event){
         i++;
       }
       blob = new Blob([barr], {type: 'image/jpeg'});
+      submit(fileDomObj)
     }
     image.src = e.target.result;
   }
   reader.readAsDataURL(file);
-  submit(fileDomObj)
 }
 
 function submit(fileDomObj){
   let file = fileDomObj.files[0]
   if(!blob) return; // validation
-  let storage = firebase.storage();
   let storageRef = storage.ref();
   let imagesRef = storageRef.child('account_profile_imgs');
   const file_name = file.name
@@ -92,10 +95,19 @@ function submit(fileDomObj){
     }
   }, function() { // Upload completed successfully, now we can get the download URL
     uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-      console.log('File available at', downloadURL);
+      let aId = localStorage.accountId
+      let user = auth.currentUser
+      return db.collection("account").doc(aId).update({
+        img: downloadURL,
+      }).then(docRef => {
+        user.updateProfile({ photoURL: downloadURL }).then(() => {
+          console.log("All process is done");
+        }).catch(err => {
+          console.error("Error: Register account: ", err);
+        }); 
+      }).catch(function(error) {
+        console.error("Error adding document: ", error);
+      });
     });
   });
 };
-
-
-export {fileChanged}
