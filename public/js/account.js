@@ -32384,11 +32384,13 @@ var _firebase = require("./firebase");
 var THUMBNAIL_HEIGHT = 100;
 
 function closePostView() {
+  ReactDOM.unmountComponentAtNode(document.getElementById("container"));
   var list = sessionStorage.urlset_list.split("-@-");
   for (var i = 0; i < list.length; i++) {
     list[i] = JSON.parse(list[i]);
   }
   ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
+  console.log(list);
   var _iteratorNormalCompletion = true;
   var _didIteratorError = false;
   var _iteratorError = undefined;
@@ -33359,11 +33361,17 @@ exports['default'] = Folders;
 module.exports = exports['default'];
 
 },{"./firebase":25,"./segue":28,"./url":30,"react":22}],27:[function(require,module,exports){
-'use strict';
+"use strict";
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = fileChanged;
+
+var _firebase = require("./firebase");
+
+require("firebase/app");
+
 var blob;
 
 function blobToFile(theBlob, fileName) {
@@ -33373,7 +33381,7 @@ function blobToFile(theBlob, fileName) {
 }
 
 // @platong If file is changed, file will be compressed.
-// document.getElementById("ra_profile_img")
+
 function fileChanged(event) {
   var fileDomObj = event.target.fileDomObj;
   var canvasDomObj = event.target.canvasDomObj;
@@ -33405,6 +33413,8 @@ function fileChanged(event) {
       ctx.clearRect(0, 0, width, height);
       ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
 
+      canvasDomObj.css("display", "block");
+
       var base64 = canvas.get(0).toDataURL('image/jpeg');
       var barr, bin, i, len;
       bin = atob(base64.split('base64,')[1]);
@@ -33416,18 +33426,17 @@ function fileChanged(event) {
         i++;
       }
       blob = new Blob([barr], { type: 'image/jpeg' });
+      submit(fileDomObj);
     };
     image.src = e.target.result;
   };
   reader.readAsDataURL(file);
-  submit(fileDomObj);
 }
 
 function submit(fileDomObj) {
   var file = fileDomObj.files[0];
   if (!blob) return; // validation
-  var storage = firebase.storage();
-  var storageRef = storage.ref();
+  var storageRef = _firebase.storage.ref();
   var imagesRef = storageRef.child('account_profile_imgs');
   var file_name = file.name;
   file = blobToFile(blob);
@@ -33465,14 +33474,25 @@ function submit(fileDomObj) {
   }, function () {
     // Upload completed successfully, now we can get the download URL
     uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-      console.log('File available at', downloadURL);
+      var aId = localStorage.accountId;
+      var user = _firebase.auth.currentUser;
+      return _firebase.db.collection("account").doc(aId).update({
+        img: downloadURL
+      }).then(function (docRef) {
+        user.updateProfile({ photoURL: downloadURL }).then(function () {
+          console.log("All process is done");
+        })["catch"](function (err) {
+          console.error("Error: Register account: ", err);
+        });
+      })["catch"](function (error) {
+        console.error("Error adding document: ", error);
+      });
     });
   });
 };
+module.exports = exports["default"];
 
-exports.fileChanged = fileChanged;
-
-},{}],28:[function(require,module,exports){
+},{"./firebase":25,"firebase/app":11}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -33736,14 +33756,18 @@ var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
     value: function render() {
       return _react2["default"].createElement(
         "div",
-        { className: "container__wrapper" },
+        null,
         _react2["default"].createElement(
           "h1",
-          null,
+          { className: "title__folder-choice" },
           "URLを登録するフォルダを選択"
         ),
-        _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list }),
-        _react2["default"].createElement(_side_menu2["default"], null)
+        _react2["default"].createElement(
+          "div",
+          { className: "container__wrapper" },
+          _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list }),
+          _react2["default"].createElement(_side_menu2["default"], null)
+        )
       );
     }
   }]);
@@ -34303,6 +34327,8 @@ var _jsFirebase = require("../js/firebase");
 
 var _jsImg_compresser = require("../js/img_compresser");
 
+var _jsImg_compresser2 = _interopRequireDefault(_jsImg_compresser);
+
 var isFollow;
 
 init();
@@ -34318,6 +34344,13 @@ function init() {
     document.getElementById("account_name").innerHTML = d.name;
     document.getElementById("account_intro").innerHTML = d.intro;
   });
+
+  if (aId === targetAId) {
+    $("#button_follow").css("display", "none");
+    $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
+    $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
+    $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
+  }
 
   queryToFollow.get().then(function (snap) {
     if (snap.exists) {
@@ -34344,6 +34377,7 @@ function init() {
 
         d = i.data();
         d.id = i.id;
+        d.kind = "myfreefolders";
         list.push(d);
       }
     } catch (err) {
@@ -34434,9 +34468,9 @@ $("#button_follow").on("click", function () {
   }
 });
 
-var inputElement = document.getElementById("changer__profile-img");
-inputElement.addEventListener("change", _jsImg_compresser.fileChanged, false);
-inputElement.fileDomObj = document.getElementById("changer__profile-img");
+var inputElement = document.getElementById("changer__ap__profile-img");
+inputElement.addEventListener("change", _jsImg_compresser2['default'], false);
+inputElement.fileDomObj = document.getElementById("changer__ap__profile-img");
 inputElement.canvasDomObj = $("#preview");
 
 },{"../js/firebase":25,"../js/folder":26,"../js/img_compresser":27,"react":22}]},{},[31]);

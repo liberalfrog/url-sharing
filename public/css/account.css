@@ -19,12 +19,13 @@
   }
     
   .ap__profile-img, #changer__ap__profile-img{
-   display:block;
    border-radius: 50%;
    height: 100%;
    width: 100%;
   }
-  
+
+  .ap__profile-img{ display:block; }
+  .changer__ap__profile-img{ display: none; }
   
   #changer__ap__profile-img, #preview{
     position: absolute;
@@ -32,15 +33,32 @@
     top: 0;
     left: 0;
   }
-  
-  
+
+  .edit-active__ap__profile-img{ display: block; }
+  .edit-active__ap__profile-img__container:before{
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    display: block;
+    content: '画像を変更';
+    width: 80%;
+    height: 5vw;
+    background: black;
+    color: white;
+    opacity: 0.8;
+    font-size: 10px;
+    line-height: 5vw;
+    border-radius: 0 0 100% 100%;
+    z-index: 2;
+    text-align: center;
+  }
+
   .profile__eximg{
     float: left;
     width: 700px;
     display: flex;
     flex-wrap: wrap;
   }
-  
   
   .profile-name{
     display:block;
@@ -154,10 +172,34 @@
   }
     
   .ap__profile-img, #changer__ap__profile-img{
-   display:block;
    border-radius: 50%;
    height: 100%;
    width: 100%;
+  }
+
+  .ap__profile-img{ 
+    display:block;
+    border: 1px solid;
+  }
+  .changer__ap__profile-img{ display: none; }
+
+  .edit-active__ap__profile-img{ display: block; }
+  .edit-active__ap__profile-img__container:before{
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    display: block;
+    content: '画像を変更';
+    width: 80%;
+    height: 5vw;
+    background: black;
+    color: white;
+    opacity: 0.8;
+    font-size: 10px;
+    line-height: 5vw;
+    border-radius: 0 0 100% 100%;
+    z-index: 2;
+    text-align: center;
   }
   
   #changer__ap__profile-img{
@@ -165,10 +207,16 @@
     opacity: 0;
     top: 0;
     left: 0;
+    z-index: 1;
   }
 
   #preview{
+    position: absolute;
+    top: 0;
     display: none;
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
   }
   
   .ap__profile-img{
