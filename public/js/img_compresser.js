@@ -1,4 +1,5 @@
 require("firebase/app")
+import generateUuid fron "./uuid"
 import {db, storage, auth} from "./firebase"
 
 var blob;
@@ -66,7 +67,8 @@ function submit(fileDomObj){
   if(!blob) return; // validation
   let storageRef = storage.ref();
   let imagesRef = storageRef.child('account_profile_imgs');
-  const file_name = file.name
+  let extension = file.name.split(".").slice(-1)[0];
+  const file_name = generateUuid() + "." + extension
   file = blobToFile(blob)
   var ref = storageRef.child('account_profile_imgs/' + file_name);
   var uploadTask = ref.put(file)

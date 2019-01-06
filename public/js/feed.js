@@ -32611,11 +32611,17 @@ var _createClass = (function () { function defineProperties(target, props) { for
 
 var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _segue = require("./segue");
+
+var _uuid = require("./uuid");
+
+var _uuid2 = _interopRequireDefault(_uuid);
 
 var _firebase = require("./firebase");
 
@@ -33176,7 +33182,8 @@ var UrlFolderPost = (function (_React$Component5) {
       if (!folderSubmitValidation() && !blob) return; // validation
       var storageRef = _firebase.storage.ref();
       var imagesRef = storageRef.child('urlset_images');
-      var file_name = file.name;
+      var extension = file.name.split(".").slice(-1)[0];
+      var file_name = (0, _uuid2["default"])() + "." + extension;
       file = blobToFile(blob);
       var ref = storageRef.child('urlset_images/' + file_name);
       var uploadTask = ref.put(file);
@@ -33344,7 +33351,7 @@ exports.AddPanel = AddPanel;
 exports.UrlFolderPost = UrlFolderPost;
 exports.UrlPost = UrlPost;
 
-},{"./firebase":26,"./segue":28}],26:[function(require,module,exports){
+},{"./firebase":26,"./segue":28,"./uuid":31}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -33604,7 +33611,7 @@ var Folders = (function (_React$Component2) {
 exports['default'] = Folders;
 module.exports = exports['default'];
 
-},{"./firebase":26,"./segue":28,"./url":30,"./view":31,"react":22}],28:[function(require,module,exports){
+},{"./firebase":26,"./segue":28,"./url":30,"./view":32,"react":22}],28:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34548,6 +34555,33 @@ module.exports = exports["default"];
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = generateUuid;
+
+function generateUuid() {
+  // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
+  // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+  var chars = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".split("");
+  for (var i = 0, len = chars.length; i < len; i++) {
+    switch (chars[i]) {
+      case "x":
+        chars[i] = Math.floor(Math.random() * 16).toString(16);
+        break;
+      case "y":
+        chars[i] = (Math.floor(Math.random() * 4) + 8).toString(16);
+        break;
+    }
+  }
+  return chars.join("");
+}
+
+module.exports = exports["default"];
+
+},{}],32:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 
 var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -34745,7 +34779,7 @@ var ViewFolderEdit = (function (_React$Component2) {
 exports.TemplateViewNavTab = TemplateViewNavTab;
 exports.ViewFolderEdit = ViewFolderEdit;
 
-},{"./add_button":25,"./firebase":26,"./folder":27,"./segue":28,"./side_menu":29,"./url":30,"react":22}],32:[function(require,module,exports){
+},{"./add_button":25,"./firebase":26,"./folder":27,"./segue":28,"./side_menu":29,"./url":30,"react":22}],33:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -34915,4 +34949,4 @@ function raButtonActiveSwitch() {
   }
 }
 
-},{"../js/account_register":24,"../js/firebase":26,"../js/folder":27,"../js/segue":28,"../js/url":30,"react":22}]},{},[32]);
+},{"../js/account_register":24,"../js/firebase":26,"../js/folder":27,"../js/segue":28,"../js/url":30,"react":22}]},{},[33]);
