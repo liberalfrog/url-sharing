@@ -40,6 +40,14 @@
     z-index: 1;
   }
 
+  .edit__folder{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+    display: none;
+  }
+
 }
 
 @media(min-width: 768px){
@@ -50,5 +58,13 @@
     margin: 10px;
     border-radius: 50%;
     z-index: 2;
+  }
+
+  .edit__folder{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 3;
+    display: none;
   }
 }
