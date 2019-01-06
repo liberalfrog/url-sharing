@@ -1,4 +1,5 @@
 import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPostFolderChoice} from "./segue";
+import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
 
 
@@ -307,7 +308,8 @@ class UrlFolderPost extends React.Component{
     if(!folderSubmitValidation() && !blob) return; // validation
     let storageRef = storage.ref();
     let imagesRef = storageRef.child('urlset_images');
-    const file_name = file.name
+    let extension = file.name.split(".").slice(-1)[0];
+    const file_name = generateUuid() + "." + extension
     file = blobToFile(blob)
     var ref = storageRef.child('urlset_images/' + file_name);
     var uploadTask = ref.put(file)
