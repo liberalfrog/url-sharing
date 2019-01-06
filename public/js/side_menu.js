@@ -36,6 +36,11 @@ export default class SideMenu extends React.Component{
         ReactDOM.unmountComponentAtNode(document.getElementById("container"))
         ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
         for(let d of list){
+          let aId = localStorage.accountId
+          if(d.aId === aId){
+            let selector = "#" + d.id + " .edit__folder"
+            $(selector).css("display", "block")
+          }
           $("#" + d.id ).css("background-image", "url(" + d.img + ")")
         }
       })

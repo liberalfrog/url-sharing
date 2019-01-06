@@ -2,7 +2,7 @@ import React from 'react';
 import Urls from './url';
 import {SegueAnyToUrl, SegueAnyToUrlPost} from "./segue";
 import {db, storage} from "./firebase";
-
+import {ViewFolderEdit} from "./view";
 
 class Folder extends React.Component {
   constructor(props){
@@ -15,6 +15,7 @@ class Folder extends React.Component {
     }
   }
   putShow(){
+    ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"))
     let list = []
     let d
     let aId = localStorage.accountId
@@ -37,11 +38,6 @@ class Folder extends React.Component {
       for(let i of snap.docs){
         d = i.data()
         d.id = i.id
-        if(d.aId === undefined){
-          d.aId = ""
-          d.aProfileImg = ""
-          d.aName = ""
-        }
         list.push(d)
         for_saved_list.push(JSON.stringify(d))
       };
@@ -57,11 +53,6 @@ class Folder extends React.Component {
       for(let i of snap.docs){
         d = i.data()
         d.id = i.id
-        if(d.aId === undefined){
-          d.aId = ""
-          d.aProfileImg = ""
-          d.aName = ""
-        }
         list.push(d)
         for_saved_list.push(JSON.stringify(d))
       };
@@ -70,10 +61,16 @@ class Folder extends React.Component {
       ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("container"))
     });
   }
+  edit(){
+    if(localStorage.accountId === this.state.ownerAId){
+      ReactDOM.render(<ViewFolderEdit ownerAId={this.state.ownerAId} id={this.state.id} />, document.getElementById("container"))
+    }
+  }
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
-        <a href={"/account?aId=" + this.props.aId} className="profile-img__link">
+        <button className="edit__folder" onClick={this.edit.bind(this)}>…</button>
+        <a href={"/account?aId=" + this.state.ownerAId} className="profile-img__link">
           <img src={this.props.aProfileImg} className="profile-img" />
         </a>
         <h3>{this.props.name}</h3>
