@@ -14,7 +14,9 @@ input[type="text"]{
   border: none;
   border-radius: 0;
   outline: none;
-  background: non;
+  background: #EEEEEE;
+  padding: 1.5px 1.5px 0 1em;
+  border-radius: 2px;
 }
 
 button{
@@ -25,13 +27,6 @@ button{
   padding: 0;
   appearance: none;
 }
-"
-button:before{
- content: '\f067';
- font-family:"Font Awesome 5 Free"; 
- font-weight: 900;
-}
-"
 
 /* For smart phone */
 @media screen and (max-width: 767px) {
@@ -373,9 +368,9 @@ button:before{
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50vw;
+    width: 40vw;
     height: 55vh;
-    background: pink;
+    background: #FFD5EC;
     padding: 2vh 4vw;
     border-radius: 8px;
   }
@@ -389,7 +384,6 @@ button:before{
     top: 24px;
     left: 24px;
     font-size: 24px;
-    
   }
   
   .post-folder__upload-message{
@@ -397,7 +391,7 @@ button:before{
     color: gray;
     position: absolute;
     top: 55%;
-    right: 53%;
+    left: 33%;
     transform: translate(-50%, -50%);
   }
   
