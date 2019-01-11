@@ -14,7 +14,7 @@ input[type="text"]{
   border: none;
   border-radius: 0;
   outline: none;
-  background: none;
+  background: non;
 }
 
 button{
@@ -25,7 +25,13 @@ button{
   padding: 0;
   appearance: none;
 }
-
+"
+button:before{
+ content: '\f067';
+ font-family:"Font Awesome 5 Free"; 
+ font-weight: 900;
+}
+"
 
 /* For smart phone */
 @media screen and (max-width: 767px) {
@@ -134,6 +140,7 @@ button{
     position: relative;
     margin: auto;
     background: darkorange;
+
   }
   
   .post-folder__title{
@@ -147,6 +154,7 @@ button{
   .post-folder__upload-message{
     display: block;
     position: absolute;
+    color: gray;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
@@ -165,7 +173,7 @@ button{
   
   .post-folder__folder{
     position: relative;
-    background: green;
+    background: limegreen;
   }
   
   .post__submit{
@@ -365,10 +373,11 @@ button{
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 46vw;
-    height: 76vh;
+    width: 50vw;
+    height: 55vh;
     background: pink;
-    padding: 2vh 2vw;
+    padding: 2vh 4vw;
+    border-radius: 8px;
   }
   
   .post-folder__preview{
@@ -380,20 +389,21 @@ button{
     top: 24px;
     left: 24px;
     font-size: 24px;
-    background: gray;
+    
   }
   
   .post-folder__upload-message{
     display: block;
+    color: gray;
     position: absolute;
-    top: 50%;
-    right: 50%;
+    top: 55%;
+    right: 53%;
     transform: translate(-50%, -50%);
   }
   
   .post-folder__folder, .post-folder__image{
-    width: 423px;
-    height: 200px;
+    width: 450px;
+    height: 220px;
   }
   
   .post-folder__image{
@@ -402,7 +412,8 @@ button{
   
   .post-folder__folder{
     position: relative;
-    background: green;
+    background: white;
+    border: 1px solid black;
   }
   
   .post-folder__image{
@@ -414,9 +425,18 @@ button{
   .post__submit{
     position: absolute;
     display: block;
-    bottom: 10px;
-    right: 10px;
+    bottom: 13px;
+    right: 15px;
+    padding: 0  0.25em;
     width: 140px;
+    text-decoration: none;
+    color: #00BCD4;
+    background: #ECECEC;
+    transition: .4s;
+  }
+  .post__submit:hover {
+    background:#00bcd4;
+    color: white;
   }
   
   .sell__section{ display: none; }
