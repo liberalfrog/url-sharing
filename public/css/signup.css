@@ -1,0 +1,30 @@
+@media(min-width: 1024px){
+
+  #container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 36px 40px 48px 40px;
+    margin: auto;
+    width: 448px;
+    border: 1px solid #dadce0;
+  }
+
+  .accountbox h1{
+    font-size: 24px;
+    text-align: center;
+  }
+}
+
+@media(max-width: 1023px){
+
+  #container{
+    margin: 31px 0;
+  }
+
+  .accountbox h1{
+    font-size: 24px;
+    text-align: center;
+  }
+}
