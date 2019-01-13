@@ -1,0 +1,146 @@
+/* CSS RESET */
+
+*{
+  margin: 0;
+  padding: 0;
+}
+
+ol, ul {
+  list-style: none;
+  list-style-type: none;
+}
+
+a:link {
+  text-decoration: none;
+}
+
+/* END of CSS RESET */
+
+body{
+ font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+header{
+ border-bottom:1px black solid;
+}
+
+header p{
+ float:right;
+ font-size:4.7em;
+ font-family:impact;
+ margin: 0.5em 1em 0;
+}
+
+header img{
+ float:left;
+ height:400px;
+ width:400px;
+ margin:0 0 0 3em;
+}
+
+
+@media(max-width: 1023px){
+
+  #globalnav{
+    position: fixed;
+    z-index: 10;
+    top: 0;
+    background: #333;
+    width: 100vw;
+    height: 48px;
+  }
+
+  #globalnav .gn-header{
+    display: flex;
+    justify-content: space-between;
+  }
+
+  #globalnav .gn-header{
+    width: 100%;
+    line-height: 48px;
+  }
+
+  #globalnav .gn-list{
+    display: flex;
+    width: auto;
+    height: 44px;
+    margin: -10px;
+    justify-content: space-between;
+    display: none;
+  }
+
+  #globalnav .gn-container{
+    padding: 0 22px;
+    display: flex;
+    height: 100%;
+  }
+
+  #globalnav .gn-link-rop{
+    background-image: url("/img/OZ.png");
+    display: inline-block;
+    height: 44px;
+    width: 44px;
+    background-size: cover;
+  }
+
+  .footer-container{
+    width: auto;
+    background: #f2f2f2;
+    padding: 22px;
+  }
+
+  #copyright{
+    display: block;
+    text-align: center;
+    color: silver;
+    font-size: 1em;
+  }
+
+}
+
+@media(min-width: 1024px){
+
+  #globalnav{
+    background: #333;
+    width: auto;
+    height: 44px;
+  }
+
+  #globalnav .gn-header{
+    display: none;
+  }
+
+  #globalnav .gn-list{
+    display: flex;
+    width: auto;
+    height: 44px;
+    margin: -10px;
+    justify-content: space-between;
+  }
+
+  #globalnav .gn-container{
+    padding: 0 22px;
+  }
+
+  #globalnav .gn-link-rop{
+    background-image: url("/img/OZ.png");
+    display: inline-block;
+    height: 44px;
+    width: 44px;
+    background-size: cover;
+  }
+
+  .footer-container{
+    width: auto;
+    background: #f2f2f2;
+    padding: 22px;
+  }
+
+  #copyright{
+    display: block;
+    text-align: center;
+    color: silver;
+    font-size: 1em;
+  }
+
+}

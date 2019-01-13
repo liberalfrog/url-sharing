@@ -6,6 +6,7 @@
   <title>URL Sharing</title>
   <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" /> 
   <link rel="stylesheet" href="/css/top_page.css">
+  <link rel="stylesheet" href="/css/basic_component.css">
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-131300251-1"></script>
   <script>
@@ -16,46 +17,66 @@
  </script>
 </head>
 <body>
-  <header>
-    <img src="/img/OZ.png">
-    <p>URL-Sharing<br>情報を一瞬<br>共有しよう<br></p>
-    <div class="clear"></div>
-  </header>
+  <nav id="globalnav">
+    <div class="gn-container"><!-- global navigation container -->
+      <ul class="gn-header">
+        <li class="gn-header-item gn-menuicon">humber menu</li>
+        <li class="gn-header-item gn-rop">
+          <a class="gn-link" href="/signup">ログイン</a>
+        </li>
+      </ul>
+      <ul class="gn-list">
+        <li class="gn-header-item gn-rop">
+          <a class="gn-link-rop" href=""></a>
+        </li>
+      </ul>
+    </div>
+  </nav>
   <main>
-    <h1 class="main-logo">まとめるのやめませんか？</h1>
-    <div class="clear"></div>
-    <div class="contents">
-      情報を発信するためにブログやQiita,noteに記事を書く時間はもったいない。<br>
-      なぜなら発信したい情報は既にWebにあるから。<br>
-      <img src="/img/pc_img.jpeg">
-    </div><!-- contents -->
-
-    <h1 class="main-logo">チームで知識を共有</h1>
-    <div class="clear"></div>
-    <div class="contents">
-      「これはどういう意味で実装したの？」「どうやってこんな綺麗なレイアウトどうやったの？」など<br>
-      相手が自分より力を持っている時、直接相手の知識を覗けたらチームの成長スピードは格段に上がるはず。<br>
-      <img src="/img/share_img.jpeg">
-    </div><!-- contents -->
-  
-    <h1 class="main-logo">有益な知識を売る</h1>
-    <div class="clear"></div>
-    <div class="contents"> 
-      アイデアには絶対的金銭的価値があります。<br>
-      SoftBankや、ARMなど知識人が実装作業よりも重要になる例はたくさんあります。<br>
-      テーマに沿ってURLをまとめ、価格を決めて販売しましょう。<br>
-      これはコンサルティングよりも圧倒的に少ない手間で、<br>
-      買う側は安く、売る側は高い収益を上げることができます。<br>
-      <img src="/img/pay_img.jpeg">
-    </div><!-- contents -->
+    <section>
+      <div class="key-container">
+        <div class="key-img"></div>
+        <div class="key-message">
+          <h1 class="product-title">URL Sharing</h1>
+          <h1 class="product-subtitle">version beta</h1>
+          <p class="product-description">情報を次の世界へ</p>
+          <a class="signup-button" href="/signup">今すぐ始める</a>
+        </div>
+      </div>
+    </section>
+    </div>
+    <section>
+      <div class="unit-container" id="product-value">
+        <ul class="product-value">
+          <li class="product-value-item">
+            <img src="/img/time-icon.png">
+            <h2 class="product-value-title">作る時間を１秒に</h2>
+            <p class="product-value-paragraph"> 情報を発信するためにブログやQiita,noteに記事を作る時間はもったいない。<br>
+            なぜなら発信したい情報は既にWebにあるから。</p>
+          </li>
+          <li class="product-value-item">
+            <img src="/img/social-icon.png">
+            <h2 class="product-value-title">チームやスペシャリストと知識を共有</h2>
+            <p class="product-value-paragraph">これはどういう意味で実装したの？」「どうやってこんな綺麗なレイアウトどうやったの？」など
+            相手が自分より力を持っている時、直接相手の知識を覗けたらチームの成長スピードは格段に上がるはず。</p>
+          </li>
+          <li class="product-value-item">
+            <img src="/img/money-icon.png">
+            <h2 class="product-value-title">知識を売る</h2>
+            <p class="product-value-paragraph">アイデアには金銭的価値があります。SoftBankや、ARMなど知識が作業よりもお金を生む例はたくさんあります。
+            テーマに沿ってURLをまとめ、価格を決めて販売しましょう。これはコンサルティングよりも圧倒的に少ない手間で、
+            買う側は安く、売る側は高い収益を上げることができます。
+            </p>
+          </li>
+        </ul> 
+      </div>
+    </section>
   </main>
-
-  <div id="firebaseui-auth-container"></div>
-  <div id="loader">Loading...</div>
   <footer>
-    <p class="footer-logo">&copy; Real OZ Project  org.| 2018</p>
+    <div class="footer-container">
+      <span id="copyright">Copyright &copy; 2019 Real OZ Project org. All rights reserved.</span>
+    </div>
   </footer>
-  <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-database.js"></script>
