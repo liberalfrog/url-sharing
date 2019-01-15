@@ -73,8 +73,31 @@ function blobToFile(theBlob, fileName){
 
 
 class AddButton extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {
+      "kind": undefined
+    }
+    console.log(props.icon)
+    switch(props.icon){
+      case "+":
+        this.state.kind = "fa fa-plus";
+        break;
+      case "folder":
+        this.state.kind = "fa fa-folder-plus";
+        break;
+      case "url":
+        this.state.kind = "fa far fa-code";
+        break;
+
+      default:
+        this.state.kind = "fa"
+      break
+    }
+    console.log(this.state.kind)
+  }
   render(){
-    return( <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>);
+    return( <button id="add_button" className={this.state.kind} onClick={this.props.func}></button>);
   }
 }
 
@@ -413,7 +436,7 @@ class UrlFolderPost extends React.Component{
       <div>
         <div className="window-overlay" onClick={closePostView}></div>
         <div className="post__container">
-          <h1 className="view-title">URLを入れるフォルダを作成</h1>
+          <h1 className="view-title">URLのフォルダを作成</h1>
           <form action="" name="urlset_form">
             <div className="post-folder__preview">
               <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
@@ -422,7 +445,7 @@ class UrlFolderPost extends React.Component{
               <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
             </div>
             <div className="post-folder__sub">
-              <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+              <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid"> 販売する</label>
             </div>
             <div className="sell__section">
               <input type="text" name="price" /><label htmlFor="price">円</label>
