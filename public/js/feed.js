@@ -32709,10 +32709,30 @@ function blobToFile(theBlob, fileName) {
 var AddButton = (function (_React$Component) {
   _inherits(AddButton, _React$Component);
 
-  function AddButton() {
+  function AddButton(props) {
     _classCallCheck(this, AddButton);
 
-    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).call(this, props);
+    this.state = {
+      "kind": undefined
+    };
+    console.log(props.icon);
+    switch (props.icon) {
+      case "+":
+        this.state.kind = "fa fa-plus";
+        break;
+      case "folder":
+        this.state.kind = "fa fa-folder-plus";
+        break;
+      case "url":
+        this.state.kind = "fa far fa-code";
+        break;
+
+      default:
+        this.state.kind = "fa";
+        break;
+    }
+    console.log(this.state.kind);
   }
 
   // @platong Appear if plus button is tapped or clicked.
@@ -32720,11 +32740,7 @@ var AddButton = (function (_React$Component) {
   _createClass(AddButton, [{
     key: "render",
     value: function render() {
-      return React.createElement(
-        "button",
-        { id: "add_button", onClick: this.props.func },
-        this.props.icon
-      );
+      return React.createElement("button", { id: "add_button", className: this.state.kind, onClick: this.props.func });
     }
   }]);
 
@@ -33299,7 +33315,7 @@ var UrlFolderPost = (function (_React$Component5) {
           React.createElement(
             "h1",
             { className: "view-title" },
-            "URLを入れるフォルダを作成"
+            "URLのフォルダを作成"
           ),
           React.createElement(
             "form",
@@ -33323,7 +33339,7 @@ var UrlFolderPost = (function (_React$Component5) {
               React.createElement(
                 "label",
                 { htmlFor: "paid" },
-                "販売する"
+                " 販売する"
               )
             ),
             React.createElement(
