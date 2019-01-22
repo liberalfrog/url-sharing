@@ -1,26 +1,29 @@
 import React from 'react';
-import Folders from '../js/folder';
-import Urls from '../js/url';
-import AccountRegister from '../js/account_register';
-import {segueToGlobal, SegueAnyToUrl, SegueAnyToFolder, segueToFolders} from '../js/segue';
-import {auth, storage, db} from "../js/firebase";
+import Folders from '../../component/folder';
+import Urls from '../../component/url';
+import AccountRegister from '../../component/account_register';
+import {segueInitToGlobal, SegueAnyToUrl, segueInitFolderFeed} from '../../component/segue';
+import {auth, storage, db} from "../../component/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
 
-var blob;
+
 window.addEventListener('popstate', function(e) {
-  init()
+  backBefore()
 });
+
+function backBefore(){
+  let path = sessionStorage.udBeforeLocation.split("/")[1]
+  if(path === "feed"){
+    path = "home"
+  }
+  let selector = "#list-nav__" + path
+  $(selector).click()
+}
 
 
 init()
-
-function blobToFile(theBlob, fileName){
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-}
 
 
 function accountRegisterSubmitValidation(){
@@ -50,17 +53,19 @@ function init(){
           localStorage.setItem("accountId", i.id);
           return i.id
         }
+      }else if(!navigator.onLine && localStorage.accountId !== undefined){
+        return localStorage.accountId 
+      }else{
+        $("body").prepend('<div id="popover"></div>');
+        ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
+        return Promise.reject("Account doesn't exist.");
       }
-      $("body").prepend('<div id="popover"></div>');
-      ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
-      return Promise.reject("Account doesn't exist.");
     }).then(aId => {
       switch(location.pathname){
         case "/feed":
-          segueToGlobal()
+          segueInitToGlobal()
           break
         case "/folders":
-          ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"))
           let query = location.search;
           if(query !== ""){
             let hash = query.slice(1).split("&")
@@ -87,7 +92,7 @@ function init(){
               ReactDOM.render(<SegueAnyToUrl list={list} id={folderId}/>, document.getElementById("container"))
             });
           }else{
-            segueToFolders()
+            segueInitFolderFeed()
           }
           break
       }

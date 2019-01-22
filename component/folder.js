@@ -15,7 +15,6 @@ class Folder extends React.Component {
     }
   }
   putShow(){
-    ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"))
     let list = []
     let d
     let aId = localStorage.accountId
@@ -58,7 +57,7 @@ class Folder extends React.Component {
       };
       sessionStorage.url_list = for_saved_list.join("-@-");
       history.pushState('','',"folder?id=" + this.props.id);
-      ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("container"))
+      ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("main__container"))
     });
   }
   edit(){

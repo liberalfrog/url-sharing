@@ -233,7 +233,7 @@ button{
     border-top: 1px solid;
   }
   
-  .list-nav a{
+  .list-nav li{
     text-align: center;
     width: 20vw;
     color:#BBB;
@@ -242,6 +242,10 @@ button{
     text-decoration: none;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: 400;
+  }
+
+  .list-nav button.tb-active{
+    background: aqua;
   }
   
   
@@ -462,17 +466,22 @@ button{
     height: 100vh;
   }
   
-  .list-nav a{
-    color:#BBB;
+  .list-nav li{
     line-height:90px;
-    font-size:19px;
     text-decoration: none;
     margin-left:20px;
-   
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: 400;
   }
-  
+
+  .list-nav li button{
+    color:#BBB;
+    font-size:19px;
+  }
+
+  .list-nav button.tb-active{
+    color: aqua !important;
+  }
   
   /* Begin Register Account */
   .centering_popover{

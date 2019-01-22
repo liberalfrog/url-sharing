@@ -1,6 +1,8 @@
-import {SegueAnyToFolderList, SegueAnyToFolderPost, SegueAnyToUrlPostFolderChoice} from "./segue";
+import {segueAnyToUrlPostFolderChoice, segueFolderFeed, segueFolderFeedToPostFolder} from "./segue";
+import {ViewPostFolder} from "./view";
 import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
+import {sideMenuButtonShift} from "./side_menu";
 
 
 // @platong For compressed image
@@ -8,16 +10,7 @@ const THUMBNAIL_HEIGHT = 100;
 
 
 function closePostView(){ 
-  ReactDOM.unmountComponentAtNode(document.getElementById("container"))
-  let list = sessionStorage.urlset_list.split("-@-")
-  for(let i=0; i<list.length; i++){
-    list[i] = JSON.parse(list[i])
-  }
-  ReactDOM.render(<SegueAnyToFolderList list={list} />, document.getElementById("container"))
-  console.log(list)
-  for(let d of list){
-    $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-  }
+  segueFolderFeed()
 }
 
 
@@ -82,58 +75,38 @@ class AddButton extends React.Component{
 // @platong Appear if plus button is tapped or clicked.
 class AddPanel extends React.Component{
   folderCreate(){
-    let list = []
+    history.pushState('','',"folders")
     let aId = localStorage.getItem("accountId")
-    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
-      let d;
-      let for_saved_list = []
-      for(let i of snap1.docs){
-        d = i.data()
+    let for_saved_list = []
+    let list = []
+    db.collection("account").doc(aId).collection("folders").get().then(snap => {
+      for(let i of snap.docs){
+        let d = i.data()
         d.id = i.id
         list.push(d)
         for_saved_list.push(JSON.stringify(d))
       };
-      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
-        for(let i of snap2.docs){
-          d = i.data()
-          d.id = i.id
-          list.push(d)
-          for_saved_list.push(JSON.stringify(d))
-        };
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        ReactDOM.render(<SegueAnyToFolderPost list={list}/>, document.getElementById("container"));
-        for(let d of list){
-          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-        }
-      })
+      return db.collection("account").doc(aId).collection("myfreefolders").get()
+    }).then(snap => {
+      for(let i of snap.docs){
+        let d = i.data()
+        d.id = i.id
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };
+      sessionStorage.urlset_list = for_saved_list.join("-@-");
+      sideMenuButtonShift("folders")
+      ReactDOM.render(<ViewPostFolder list={list}/>, document.getElementById("main__container"));
+      ReactDOM.render(<AddButton func={segueFolderFeedToPostFolder} icon={"folder"} />,
+        document.getElementById("utility__area"))
+      for(let d of list){
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }
     })
   }
   urlCreate(){
-    let list = []
-    let aId = localStorage.getItem("accountId")
-    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
-      let d;
-      let for_saved_list = []
-      for(let i of snap1.docs){
-        d = i.data()
-        d.id = i.id
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
-        for(let i of snap2.docs){
-          d = i.data()
-          d.id = i.id
-          list.push(d)
-          for_saved_list.push(JSON.stringify(d))
-        };
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        ReactDOM.render(<SegueAnyToUrlPostFolderChoice list={list}/>, document.getElementById("container"));
-        for(let d of list){
-          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-        }
-      })
-    })
+    sideMenuButtonShift("folders")
+    segueAnyToUrlPostFolderChoice()
   }
   render(){
     return(
@@ -171,8 +144,8 @@ class UrlPost extends React.Component{
       data:{ "url": url }
     })
     .done(data => {
-      let selector = 'input[name="title' + num + '"]'
-      $(selector).val(data.title)
+      let selector2 = 'input[name="title' + num + '"]'
+      $(selector2).val(data.title)
     })
     .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
@@ -192,7 +165,7 @@ class UrlPost extends React.Component{
 
       let data = {
         title: title,
-        content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
+        content: "",
         href: url,
         aId: aId,
         aProfileImg: user.photoURL,
@@ -218,6 +191,8 @@ class UrlPost extends React.Component{
             return db.collection("freefolder").doc(t_id).get().then(snap => {
               return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data())
             }).then(docRef => {
+              return db.collection("account").doc(aId).collection("folders").doc(t_id).delete()
+            }).then(() => {
               return db.collection("freefolder").doc(t_id).collection("urls").get()
             }).then(snaps => {
               return snaps.forEach(x => {
@@ -246,24 +221,22 @@ class UrlPost extends React.Component{
     ReactDOM.render(<UrlInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
   }
   render(){
-    return (
-      <div>
-        <div className="window-overlay" onClick={closePostView}></div>
-        <div className="post__container">
-          <h1 className="view-title">URLを登録</h1>
-          <form name="urlput_form">
-            <div id="url_input">
-              <div id="url_input0">
-                <input name="url0" type="text" onInput={this.urlConverter.bind(this, 0)} placeholder="URLを入力" required/>
-                <input name="title0" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
-              </div>
+    return ([
+      <div className="window-overlay" onClick={closePostView}></div>,
+      <div className="post__container">
+        <h1 className="view-title">URLを登録</h1>
+        <form name="urlput_form">
+          <div id="url_input">
+            <div id="url_input0">
+              <input name="url0" type="text" onInput={this.urlConverter.bind(this, 0)} placeholder="URLを入力" required/>
+              <input name="title0" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
             </div>
-            <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="post__submit submit_is_disactive" id="url_submit"/>
-          </form>
-          <input type="button" onClick={this.morePost.bind(this)} value="さらにURLを登録" className="" />
-        </div>
+          </div>
+          <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="post__submit submit_is_disactive" id="url_submit"/>
+        </form>
+        <input type="button" onClick={this.morePost.bind(this)} value="さらにURLを登録" className="" />
       </div>
-    );
+    ]);
   }
 }
 
@@ -359,7 +332,7 @@ class UrlFolderPost extends React.Component{
           list = listStr.split("-@-").map(x => JSON.parse(x))
         else
           list = []
-        ReactDOM.render(<SegueAnyToFolderList list={list}/>, document.getElementById("container"));
+        ReactDOM.render(<SegueInitFolderFeed list={list}/>, document.getElementById("container"));
       });
     });
   };
@@ -409,29 +382,27 @@ class UrlFolderPost extends React.Component{
     buttonActiveSwitch()
   }
   render(){
-    return (
-      <div>
-        <div className="window-overlay" onClick={closePostView}></div>
-        <div className="post__container">
-          <h1 className="view-title">URLを入れるフォルダを作成</h1>
-          <form action="" name="urlset_form">
-            <div className="post-folder__preview">
-              <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
-              <span className="post-folder__upload-message">画像を選択する</span>
-              <input id="ap_select_img"  className="post-folder__image" name="urlbook_img" type="file" onChange={this.fileChanged} />
-              <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
-            </div>
-            <div className="post-folder__sub">
-              <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
-            </div>
-            <div className="sell__section">
-              <input type="text" name="price" /><label htmlFor="price">円</label>
-            </div>
-            <input type="button" onClick={this.submit} value="作成" className="post__submit submit_is_disactive" id="ap_submit" />
-          </form>
-        </div>
-      </div>
-    );
+    return ([
+      <div className="window-overlay" onClick={closePostView}></div>,
+      <div className="post__container">
+        <h1 className="view-title">URLを入れるフォルダを作成</h1>
+        <form action="" name="urlset_form">
+          <div className="post-folder__preview">
+            <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
+            <span className="post-folder__upload-message">画像を選択する</span>
+            <input id="ap_select_img"  className="post-folder__image" name="urlbook_img" type="file" onChange={this.fileChanged} />
+            <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
+          </div>
+          <div className="post-folder__sub">
+            <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+          </div>
+          <div className="sell__section">
+            <input type="text" name="price" /><label htmlFor="price">円</label>
+          </div>
+          <input type="button" onClick={this.submit} value="作成" className="post__submit submit_is_disactive" id="ap_submit" />
+        </form>
+      </div>,
+    ]);
   }
 }
 
