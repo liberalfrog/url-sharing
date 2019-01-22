@@ -185,6 +185,2614 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],2:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _firebase = require("./firebase");
+
+var blob;
+
+function blobToFile(theBlob, fileName) {
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
+
+function getAccountId(user) {
+  return _firebase.db.collection("account").where("uId", "==", user.uid).get().then(function (querySnapshots) {
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = querySnapshots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var i = _step.value;
+
+        return i.id;
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator["return"]) {
+          _iterator["return"]();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+  });
+}
+
+function accountRegisterSubmitValidation() {
+  var name = document.getElementById("ra_name").value;
+  var file = document.getElementById("ra_profile_img").files[0];
+  if (name !== "" && file !== undefined) return true;
+  return false;
+}
+
+function raButtonActiveSwitch() {
+  if (accountRegisterSubmitValidation()) {
+    $("#ra_submit").addClass("submit_is_active");
+    $("#ra_submit").removeClass("submit_is_disactive");
+  } else {
+    $("#ra_submit").removeClass("submit_is_active");
+    $("#ra_submit").addClass("submit_is_disactive");
+  }
+}
+
+var AccountRegister = (function (_React$Component) {
+  _inherits(AccountRegister, _React$Component);
+
+  function AccountRegister() {
+    _classCallCheck(this, AccountRegister);
+
+    _get(Object.getPrototypeOf(AccountRegister.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(AccountRegister, [{
+    key: "fileChanged",
+
+    // @platong If file is changed, file will be compressed.
+    value: function fileChanged() {
+      var file = document.getElementById("ra_profile_img").files[0];
+      if (file.type != 'image/jpeg' && file.type != 'image/png') {
+        file = null;
+        blob = null;
+        return;
+        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+      }
+      var image = new Image();
+      var reader = new FileReader();
+      var IMG_MAX_WIDTH = 96;
+
+      reader.onload = function (e) {
+        image.onload = function () {
+          var width, height, ratio;
+          if (image.width > image.height) {
+            ratio = image.height / image.width;
+            width = IMG_MAX_WIDTH;
+            height = IMG_MAX_WIDTH * ratio;
+          } else {
+            ratio = image.width / image.height;
+            width = IMG_MAX_WIDTH * ratio;
+            height = IMG_MAX_WIDTH;
+          }
+          var canvas = $('#ra_preview').attr('width', width).attr('height', height);
+          var ctx = canvas[0].getContext('2d');
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+
+          var base64 = canvas.get(0).toDataURL('image/jpeg');
+          var barr, bin, i, len;
+          bin = atob(base64.split('base64,')[1]);
+          len = bin.length;
+          barr = new Uint8Array(len);
+          i = 0;
+          while (i < len) {
+            barr[i] = bin.charCodeAt(i);
+            i++;
+          }
+          blob = new Blob([barr], { type: 'image/jpeg' });
+        };
+        image.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      raButtonActiveSwitch();
+    }
+  }, {
+    key: "submit",
+    value: function submit() {
+      var file = document.getElementById("ra_profile_img").files[0];
+      if (!accountRegisterSubmitValidation() && !blob) return; // validation
+      var storage = firebase.storage();
+      var storageRef = storage.ref();
+      var imagesRef = storageRef.child('account_profile_imgs');
+      var file_name = file.name;
+      file = blobToFile(blob);
+      var ref = storageRef.child('account_profile_imgs/' + file_name);
+      var uploadTask = ref.put(file);
+      // Listen for state changes, errors, and completion of the upload.
+      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+      function (snapshot) {
+        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+          case firebase.storage.TaskState.PAUSED:
+            // or 'paused'
+            console.log('Upload is paused');
+            break;
+          case firebase.storage.TaskState.RUNNING:
+            // or 'running'
+            console.log('Upload is running');
+            break;
+        }
+      }, function (error) {
+        // https://firebase.google.com/docs/storage/web/handle-errors
+        switch (error.code) {
+          case 'storage/unauthorized':
+            // User doesn't have permission to access the object
+            break;
+          case 'storage/canceled':
+            // User canceled the upload
+            break;
+          case 'storage/unknown':
+            // Unknown error occurred, inspect error.serverResponse
+            break;
+        }
+      }, function () {
+        // Upload completed successfully, now we can get the download URL
+        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+          console.log('File available at', downloadURL);
+          var user = _firebase.auth.currentUser;
+          var name = document.getElementById("ra_name").value;
+          _firebase.db.collection("account").add({
+            img: downloadURL,
+            name: name,
+            uId: user.uid,
+            followee: 0,
+            follower: 0
+          }).then(function (docRef) {
+            user.updateProfile({
+              displayName: name,
+              photoURL: downloadURL
+            }).then(function () {
+              console.log("All process is done");
+              location.reload();
+            })["catch"](function (err) {
+              console.error("Error: Register account: ", err);
+            });
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        });
+      });
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        { className: "ra" },
+        React.createElement("div", { className: "window-overlay" }),
+        React.createElement(
+          "div",
+          { className: "centering_popover" },
+          React.createElement(
+            "h2",
+            null,
+            "Register an account"
+          ),
+          React.createElement(
+            "form",
+            null,
+            React.createElement("input", { type: "text", id: "ra_name", style: { display: "block" }, placeholder: "表示名（アカウント名）", onInput: raButtonActiveSwitch }),
+            React.createElement(
+              "label",
+              { htmlFor: "ra_profile_img" },
+              "プロフィール画像を選択"
+            ),
+            React.createElement("input", { type: "file", id: "ra_profile_img", name: "ra_profile_img", onChange: this.fileChanged }),
+            React.createElement("input", { type: "text", id: "ra_intro", placeholder: "自己紹介" }),
+            React.createElement("input", { type: "button", onClick: this.submit, value: "登録", className: "submit_is_disactive", id: "ra_submit" })
+          ),
+          React.createElement("canvas", { id: "ra_preview", width: "96", height: "96" })
+        )
+      );
+    }
+  }]);
+
+  return AccountRegister;
+})(React.Component);
+
+exports["default"] = AccountRegister;
+module.exports = exports["default"];
+
+},{"./firebase":4}],3:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _segue = require("./segue");
+
+var _view = require("./view");
+
+var _uuid = require("./uuid");
+
+var _uuid2 = _interopRequireDefault(_uuid);
+
+var _firebase = require("./firebase");
+
+var _side_menu = require("./side_menu");
+
+// @platong For compressed image
+var THUMBNAIL_HEIGHT = 100;
+
+function closePostView() {
+  (0, _segue.segueFolderFeed)();
+}
+
+// @platong If the folder form can submit, return true.
+function folderSubmitValidation() {
+  var title = document.getElementById("ap_panel_title").value;
+  var file = document.urlset_form.urlbook_img.files[0];
+  if (title !== "" && file !== undefined) return true;
+  return false;
+}
+
+// @platong If the url form can submit, return true.
+function urlSubmitValidation() {
+  var url = document.urlput_form.url.value;
+  var title = document.urlput_form.title.value;
+  if (url !== "" && title !== "") return true;
+  return false;
+}
+
+// @platong Change button color if the form can submit.
+function buttonActiveSwitch() {
+  if (folderSubmitValidation()) {
+    $("#ap_submit").addClass("submit_is_active");
+    $("#ap_submit").removeClass("submit_is_disactive");
+  } else {
+    $("#ap_submit").removeClass("submit_is_active");
+    $("#ap_submit").addClass("submit_is_disactive");
+  }
+}
+
+// @platong Change button color if the form can submit.
+function urlSubmitActiveSwitch() {
+  if (urlSubmitValidation()) {
+    $("#url_submit").addClass("submit_is_active");
+    $("#url_submit").removeClass("submit_is_disactive");
+  } else {
+    $("#url_submit").removeClass("submit_is_active");
+    $("#url_submit").addClass("submit_is_disactive");
+  }
+}
+
+function blobToFile(theBlob, fileName) {
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
+
+var AddButton = (function (_React$Component) {
+  _inherits(AddButton, _React$Component);
+
+  function AddButton() {
+    _classCallCheck(this, AddButton);
+
+    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  // @platong Appear if plus button is tapped or clicked.
+
+  _createClass(AddButton, [{
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "button",
+        { id: "add_button", onClick: this.props.func },
+        this.props.icon
+      );
+    }
+  }]);
+
+  return AddButton;
+})(React.Component);
+
+var AddPanel = (function (_React$Component2) {
+  _inherits(AddPanel, _React$Component2);
+
+  function AddPanel() {
+    _classCallCheck(this, AddPanel);
+
+    _get(Object.getPrototypeOf(AddPanel.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  // @platong register URL
+
+  _createClass(AddPanel, [{
+    key: "folderCreate",
+    value: function folderCreate() {
+      history.pushState('', '', "folders");
+      var aId = localStorage.getItem("accountId");
+      var for_saved_list = [];
+      var list = [];
+      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var i = _step.value;
+
+            var d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator["return"]) {
+              _iterator["return"]();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        ;
+        return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+      }).then(function (snap) {
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var i = _step2.value;
+
+            var d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+              _iterator2["return"]();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.urlset_list = for_saved_list.join("-@-");
+        (0, _side_menu.sideMenuButtonShift)("folders");
+        ReactDOM.render(React.createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
+        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder" }), document.getElementById("utility__area"));
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var d = _step3.value;
+
+            $("#" + d.id).css("background-image", "url(" + d.img + ")");
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+              _iterator3["return"]();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+      });
+    }
+  }, {
+    key: "urlCreate",
+    value: function urlCreate() {
+      (0, _side_menu.sideMenuButtonShift)("folders");
+      (0, _segue.segueAnyToUrlPostFolderChoice)();
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        { className: "add_view" },
+        React.createElement(
+          "div",
+          { className: "add_panel", onClick: this.folderCreate },
+          React.createElement(
+            "h3",
+            null,
+            "Add folder"
+          ),
+          React.createElement(
+            "p",
+            null,
+            "URLを管理するフォルダを作成"
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: "add_panel", onClick: this.urlCreate },
+          React.createElement(
+            "h3",
+            null,
+            "Add URL"
+          ),
+          React.createElement(
+            "p",
+            null,
+            "URLをフォルダに追加"
+          )
+        )
+      );
+    }
+  }]);
+
+  return AddPanel;
+})(React.Component);
+
+var UrlPost = (function (_React$Component3) {
+  _inherits(UrlPost, _React$Component3);
+
+  function UrlPost(props) {
+    _classCallCheck(this, UrlPost);
+
+    _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId,
+      count: 0
+    };
+  }
+
+  _createClass(UrlPost, [{
+    key: "urlConverter",
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
+      $.ajax({
+        url: "/api_v1/url_to_title",
+        type: 'GET',
+        data: { "url": url }
+      }).done(function (data) {
+        var selector2 = 'input[name="title' + num + '"]';
+        $(selector2).val(data.title);
+      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
+    }
+  }, {
+    key: "getChanged",
+    value: function getChanged() {
+      urlSubmitActiveSwitch();
+    }
+  }, {
+    key: "urlputSubmit",
+    value: function urlputSubmit() {
+      var aId = localStorage.accountId;
+      var t_id = this.state.id;
+      var user = _firebase.auth.currentUser;
+      var ownerAId = this.state.ownerAId;
+
+      var _loop = function (i) {
+        var url = $('input[name="url' + i + '"]').val();
+        var title = $('input[name="title' + i + '"]').val();
+
+        if (url === "" || title === "") return "continue";
+
+        var data = {
+          title: title,
+          content: "",
+          href: url,
+          aId: aId,
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        };
+
+        if (ownerAId === aId) {
+          _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+            closePostView();
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        } else {
+          var myfolderRef = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id);
+
+          myfolderRef.get().then(function (snap) {
+            if (snap.exists) {
+              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+            } else {
+              return _firebase.db.collection("freefolder").doc(t_id).get().then(function (snap) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data());
+              }).then(function (docRef) {
+                return _firebase.db.collection("account").doc(aId).collection("folders").doc(t_id)["delete"]();
+              }).then(function () {
+                return _firebase.db.collection("freefolder").doc(t_id).collection("urls").get();
+              }).then(function (snaps) {
+                return snaps.forEach(function (x) {
+                  _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").doc(x.id).set(x.data());
+                });
+              }).then(function (res) {
+                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
+              });
+            }
+          }).then(function (docRef) {
+            console.log("Document written with ID: ", docRef.id);
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+        }
+        closePostView();
+      };
+
+      for (var i = 0; i <= this.state.count; i++) {
+        var _ret = _loop(i);
+
+        if (_ret === "continue") continue;
+      }
+      this.state.count = 0;
+    }
+  }, {
+    key: "morePost",
+    value: function morePost() {
+      ++this.state.count;
+      var element = document.createElement("div");
+      element.setAttribute("id", "url_input" + this.state.count);
+      document.getElementById("url_input").appendChild(element);
+      ReactDOM.render(React.createElement(UrlInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+        "div",
+        { className: "post__container" },
+        React.createElement(
+          "h1",
+          { className: "view-title" },
+          "URLを登録"
+        ),
+        React.createElement(
+          "form",
+          { name: "urlput_form" },
+          React.createElement(
+            "div",
+            { id: "url_input" },
+            React.createElement(
+              "div",
+              { id: "url_input0" },
+              React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
+              React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
+            )
+          ),
+          React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "post__submit submit_is_disactive", id: "url_submit" })
+        ),
+        React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
+      )];
+    }
+  }]);
+
+  return UrlPost;
+})(React.Component);
+
+var UrlInput = (function (_React$Component4) {
+  _inherits(UrlInput, _React$Component4);
+
+  function UrlInput(props) {
+    _classCallCheck(this, UrlInput);
+
+    _get(Object.getPrototypeOf(UrlInput.prototype), "constructor", this).call(this, props);
+    this.state = {
+      urlName: "url" + this.props.num,
+      titleName: "title" + this.props.num
+    };
+  }
+
+  _createClass(UrlInput, [{
+    key: "urlConverter",
+    value: function urlConverter(num) {
+      var selector1 = 'input[name="url' + num + '"]';
+      var url = $(selector1).val();
+      $.ajax({
+        url: "/api_v1/url_to_title",
+        type: 'GET',
+        data: { "url": url }
+      }).done(function (data) {
+        var selector = 'input[name="title' + num + '"]';
+        $(selector).val(data.title);
+      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "div",
+        null,
+        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
+        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
+      );
+    }
+  }]);
+
+  return UrlInput;
+})(React.Component);
+
+var blob = null;
+
+var UrlFolderPost = (function (_React$Component5) {
+  _inherits(UrlFolderPost, _React$Component5);
+
+  function UrlFolderPost() {
+    _classCallCheck(this, UrlFolderPost);
+
+    _get(Object.getPrototypeOf(UrlFolderPost.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(UrlFolderPost, [{
+    key: "submit",
+    value: function submit() {
+      var file = document.urlset_form.urlbook_img.files[0];
+      if (!folderSubmitValidation() && !blob) return; // validation
+      var storageRef = _firebase.storage.ref();
+      var imagesRef = storageRef.child('urlset_images');
+      var extension = file.name.split(".").slice(-1)[0];
+      var file_name = (0, _uuid2["default"])() + "." + extension;
+      file = blobToFile(blob);
+      var ref = storageRef.child('urlset_images/' + file_name);
+      var uploadTask = ref.put(file);
+      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function (snapshot) {
+        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
+        console.log('Upload is ' + progress + '% done');
+        switch (snapshot.state) {
+          case firebase.storage.TaskState.PAUSED:
+            // or 'paused'
+            console.log('Upload is paused');
+            break;
+          case firebase.storage.TaskState.RUNNING:
+            // or 'running'
+            console.log('Upload is running');
+            break;
+        }
+      }, function (error) {
+        // https://firebase.google.com/docs/storage/web/handle-errors
+        switch (error.code) {
+          case 'storage/unauthorized':
+            break;
+          case 'storage/canceled':
+            break;
+          case 'storage/unknown':
+            break;
+        }
+      }, function () {
+        var user = _firebase.auth.currentUser;
+        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+          console.log('File available at', downloadURL);
+          var aId = localStorage.getItem("accountId");
+          var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
+
+          ref.add({
+            img: downloadURL,
+            name: document.urlset_form.title.value,
+            aId: localStorage.getItem("accountId"),
+            aProfileImg: user.photoURL,
+            aName: user.displayName,
+            dateTime: new Date()
+          }).then(function (docRef) {
+            closePostView();
+          })["catch"](function (error) {
+            console.error("Error adding document: ", error);
+          });
+          var listStr = sessionStorage.urlset_list;
+          var list = undefined;
+          if (listStr !== "") list = listStr.split("-@-").map(function (x) {
+            return JSON.parse(x);
+          });else list = [];
+          ReactDOM.render(React.createElement(SegueInitFolderFeed, { list: list }), document.getElementById("container"));
+        });
+      });
+    }
+  }, {
+    key: "fileChanged",
+
+    // @platong If file is changed, file will be compressed.
+    value: function fileChanged() {
+      var file = document.urlset_form.urlbook_img.files[0];
+      if (file.type != 'image/jpeg' && file.type != 'image/png') {
+        file = null;
+        blob = null;
+        return;
+        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+      }
+      var image = new Image();
+      var reader = new FileReader();
+
+      reader.onload = function (e) {
+        image.onload = function () {
+          var width, height;
+          if (image.width > image.height) {
+            var ratio = image.width / image.height;
+            width = THUMBNAIL_HEIGHT * ratio;
+            height = THUMBNAIL_HEIGHT;
+          } else {
+            alert("縦長の画像はアップロードできません");
+            return;
+          }
+          var canvas = $('#ap_preview').attr('width', width).attr('height', height);
+          var ctx = canvas[0].getContext('2d');
+          ctx.clearRect(0, 0, width, height);
+          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+
+          var base64 = canvas.get(0).toDataURL('image/jpeg');
+          var barr, bin, i, len;
+          bin = atob(base64.split('base64,')[1]);
+          len = bin.length;
+          barr = new Uint8Array(len);
+          i = 0;
+          while (i < len) {
+            barr[i] = bin.charCodeAt(i);
+            i++;
+          }
+          blob = new Blob([barr], { type: 'image/jpeg' });
+        };
+        image.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      buttonActiveSwitch();
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+        "div",
+        { className: "post__container" },
+        React.createElement(
+          "h1",
+          { className: "view-title" },
+          "URLを入れるフォルダを作成"
+        ),
+        React.createElement(
+          "form",
+          { action: "", name: "urlset_form" },
+          React.createElement(
+            "div",
+            { className: "post-folder__preview" },
+            React.createElement("canvas", { id: "ap_preview", className: "post-folder__folder", width: "0", height: "0" }),
+            React.createElement(
+              "span",
+              { className: "post-folder__upload-message" },
+              "画像を選択する"
+            ),
+            React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
+            React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
+          ),
+          React.createElement(
+            "div",
+            { className: "post-folder__sub" },
+            React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
+            React.createElement(
+              "label",
+              { htmlFor: "paid" },
+              "販売する"
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "sell__section" },
+            React.createElement("input", { type: "text", name: "price" }),
+            React.createElement(
+              "label",
+              { htmlFor: "price" },
+              "円"
+            )
+          ),
+          React.createElement("input", { type: "button", onClick: this.submit, value: "作成", className: "post__submit submit_is_disactive", id: "ap_submit" })
+        )
+      )];
+    }
+  }]);
+
+  return UrlFolderPost;
+})(React.Component);
+
+exports.AddButton = AddButton;
+exports.AddPanel = AddPanel;
+exports.UrlFolderPost = UrlFolderPost;
+exports.UrlPost = UrlPost;
+
+},{"./firebase":4,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+require('firebase/app');
+require('firebase/firestore');
+require('firebase/storage');
+require('firebase/auth');
+
+var db = firebase.firestore();
+var storage = firebase.storage();
+var auth = firebase.auth();
+
+var settings = { timestampsInSnapshots: true };
+db.settings(settings);
+
+exports.db = db;
+exports.storage = storage;
+exports.auth = auth;
+
+},{"firebase/app":21,"firebase/auth":22,"firebase/firestore":23,"firebase/storage":26}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _url = require('./url');
+
+var _url2 = _interopRequireDefault(_url);
+
+var _segue = require("./segue");
+
+var _firebase = require("./firebase");
+
+var _view = require("./view");
+
+var Folder = (function (_React$Component) {
+  _inherits(Folder, _React$Component);
+
+  function Folder(props) {
+    _classCallCheck(this, Folder);
+
+    _get(Object.getPrototypeOf(Folder.prototype), 'constructor', this).call(this, props);
+    this.state = {
+      putShow: props.post ? this.urlPost : this.putShow,
+      id: props.id,
+      ownerAId: props.aId,
+      kind: props.kind
+    };
+  }
+
+  _createClass(Folder, [{
+    key: 'putShow',
+    value: function putShow() {
+      var _this = this;
+
+      var list = [];
+      var d = undefined;
+      var aId = localStorage.accountId;
+      var query = undefined;
+      switch (this.state.kind) {
+        case "folders":
+          query = _firebase.db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls");
+          break;
+        case "myfreefolders":
+          query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
+          break;
+        case "freefolder":
+          query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
+          break;
+        default:
+          break;
+      }
+      query.get().then(function (snap) {
+        var for_saved_list = [];
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var i = _step.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator['return']) {
+              _iterator['return']();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.url_list = for_saved_list.join("-@-");
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, ownerAId: _this.state.ownerAId, list: list }), document.getElementById("container"));
+      });
+    }
+  }, {
+    key: 'urlPost',
+    value: function urlPost() {
+      var _this2 = this;
+
+      var list = [];
+      var d = undefined;
+      _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(function (snap) {
+        var for_saved_list = [];
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var i = _step2.value;
+
+            d = i.data();
+            d.id = i.id;
+            list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+              _iterator2['return']();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.url_list = for_saved_list.join("-@-");
+        history.pushState('', '', "folder?id=" + _this2.props.id);
+        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("main__container"));
+      });
+    }
+  }, {
+    key: 'edit',
+    value: function edit() {
+      if (localStorage.accountId === this.state.ownerAId) {
+        ReactDOM.render(_react2['default'].createElement(_view.ViewFolderEdit, { ownerAId: this.state.ownerAId, id: this.state.id }), document.getElementById("container"));
+      }
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      return _react2['default'].createElement(
+        'div',
+        { className: 'urlset_panel', id: this.props.id },
+        _react2['default'].createElement(
+          'button',
+          { className: 'edit__folder', onClick: this.edit.bind(this) },
+          '…'
+        ),
+        _react2['default'].createElement(
+          'a',
+          { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' },
+          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' })
+        ),
+        _react2['default'].createElement(
+          'h3',
+          null,
+          this.props.name
+        ),
+        _react2['default'].createElement(
+          'p',
+          { className: 'account_name' },
+          this.props.aName
+        ),
+        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
+      );
+    }
+  }]);
+
+  return Folder;
+})(_react2['default'].Component);
+
+var Folders = (function (_React$Component2) {
+  _inherits(Folders, _React$Component2);
+
+  function Folders(props) {
+    _classCallCheck(this, Folders);
+
+    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).call(this, props);
+    this.state = { list: props.list };
+  }
+
+  _createClass(Folders, [{
+    key: 'render',
+    value: function render() {
+      var return_html = [];
+      var _iteratorNormalCompletion3 = true;
+      var _didIteratorError3 = false;
+      var _iteratorError3 = undefined;
+
+      try {
+        for (var _iterator3 = this.state.list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+          var d = _step3.value;
+
+          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
+            post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
+        }
+      } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+            _iterator3['return']();
+          }
+        } finally {
+          if (_didIteratorError3) {
+            throw _iteratorError3;
+          }
+        }
+      }
+
+      return return_html;
+    }
+  }]);
+
+  return Folders;
+})(_react2['default'].Component);
+
+exports['default'] = Folders;
+module.exports = exports['default'];
+
+},{"./firebase":4,"./segue":7,"./url":9,"./view":11,"react":32}],6:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var LaterButton = (function (_React$Component) {
+  _inherits(LaterButton, _React$Component);
+
+  function LaterButton() {
+    _classCallCheck(this, LaterButton);
+
+    _get(Object.getPrototypeOf(LaterButton.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(LaterButton, [{
+    key: "laterButtonClicked",
+    value: function laterButtonClicked() {
+      alert("すみません、あとで読むは後日実装されます。");
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return React.createElement(
+        "button",
+        { id: "later_button", onClick: this.laterButtonClicked },
+        "Watch later"
+      );
+    }
+  }]);
+
+  return LaterButton;
+})(React.Component);
+
+exports["default"] = LaterButton;
+module.exports = exports["default"];
+
+},{}],7:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _url = require("./url");
+
+var _url2 = _interopRequireDefault(_url);
+
+var _folder = require("./folder");
+
+var _folder2 = _interopRequireDefault(_folder);
+
+var _add_button = require('./add_button');
+
+var _side_menu = require("./side_menu");
+
+var _side_menu2 = _interopRequireDefault(_side_menu);
+
+var _firebase = require("./firebase");
+
+var _view = require("./view");
+
+var _later_button = require("./later_button");
+
+var _later_button2 = _interopRequireDefault(_later_button);
+
+var SegueAnyToUrl = (function (_React$Component) {
+  _inherits(SegueAnyToUrl, _React$Component);
+
+  function SegueAnyToUrl(props) {
+    _classCallCheck(this, SegueAnyToUrl);
+
+    _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId
+    };
+    history.pushState('', '', "folders?id=" + this.props.id);
+  }
+
+  _createClass(SegueAnyToUrl, [{
+    key: "openAddPanel",
+    value: function openAddPanel() {
+      var listStr = sessionStorage.url_list;
+      var list = undefined;
+      if (listStr !== "") list = listStr.split("-@-").map(function (x) {
+        return JSON.parse(x);
+      });else list = [];
+      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id, ownerAId: this.state.ownerAId }), document.getElementById("main__container"));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" }),
+        _react2["default"].createElement(_side_menu2["default"], null)
+      );
+    }
+  }]);
+
+  return SegueAnyToUrl;
+})(_react2["default"].Component);
+
+function segueFolderFeedToPostFolder() {
+  var list = sessionStorage.urlset_list.split("-@-");
+  list.map(function (x) {
+    JSON.parse(x);
+  });
+  ReactDOM.render(_react2["default"].createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
+  var _iteratorNormalCompletion = true;
+  var _didIteratorError = false;
+  var _iteratorError = undefined;
+
+  try {
+    for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+      var d = _step.value;
+
+      var aId = localStorage.accountId;
+      if (d.aId === aId) {
+        var selector = "#" + d.id + " .edit__folder";
+        $(selector).css("display", "block");
+      }
+      $("#" + d.id).css("background-image", "url(" + d.img + ")");
+    }
+  } catch (err) {
+    _didIteratorError = true;
+    _iteratorError = err;
+  } finally {
+    try {
+      if (!_iteratorNormalCompletion && _iterator["return"]) {
+        _iterator["return"]();
+      }
+    } finally {
+      if (_didIteratorError) {
+        throw _iteratorError;
+      }
+    }
+  }
+}
+
+function segueFolderToAddPanel() {
+  ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("utility__area"));
+}
+
+function segueAnyToUrlPostFolderChoice() {
+  history.pushState('', '', "folders");
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  var for_saved_list = [];
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+    var d = undefined;
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var i = _step2.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+          _iterator2["return"]();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
+    var d = undefined;
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+      for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+        var i = _step3.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError3 = true;
+      _iteratorError3 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+          _iterator3["return"]();
+        }
+      } finally {
+        if (_didIteratorError3) {
+          throw _iteratorError3;
+        }
+      }
+    }
+
+    sessionStorage.urlset_list = for_saved_list.join("-@-");
+    ReactDOM.render([_react2["default"].createElement(
+      "h1",
+      { className: "title__folder-choice" },
+      "URLを登録するフォルダを選択"
+    ), _react2["default"].createElement(
+      "div",
+      { className: "container__wrapper" },
+      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
+    )], document.getElementById("main__container"));
+    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+      for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+        var _d = _step4.value;
+
+        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError4 = true;
+      _iteratorError4 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+          _iterator4["return"]();
+        }
+      } finally {
+        if (_didIteratorError4) {
+          throw _iteratorError4;
+        }
+      }
+    }
+  });
+}
+
+var SegueAnyToUrlPost = (function (_React$Component2) {
+  _inherits(SegueAnyToUrlPost, _React$Component2);
+
+  function SegueAnyToUrlPost() {
+    _classCallCheck(this, SegueAnyToUrlPost);
+
+    _get(Object.getPrototypeOf(SegueAnyToUrlPost.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(SegueAnyToUrlPost, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
+        _react2["default"].createElement(_side_menu2["default"], null)
+      );
+    }
+  }]);
+
+  return SegueAnyToUrlPost;
+})(_react2["default"].Component);
+
+function segueInitFolderFeed() {
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
+    var d = undefined;
+    var for_saved_list = [];
+    var _iteratorNormalCompletion5 = true;
+    var _didIteratorError5 = false;
+    var _iteratorError5 = undefined;
+
+    try {
+      for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var i = _step5.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError5 = true;
+      _iteratorError5 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+          _iterator5["return"]();
+        }
+      } finally {
+        if (_didIteratorError5) {
+          throw _iteratorError5;
+        }
+      }
+    }
+
+    ;
+    _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
+      var d = undefined;
+      var _iteratorNormalCompletion6 = true;
+      var _didIteratorError6 = false;
+      var _iteratorError6 = undefined;
+
+      try {
+        for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+          var i = _step6.value;
+
+          d = i.data();
+          d.id = i.id;
+          d.kind = "myfreefolders";
+          list.push(d);
+          for_saved_list.push(JSON.stringify(d));
+        }
+      } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+            _iterator6["return"]();
+          }
+        } finally {
+          if (_didIteratorError6) {
+            throw _iteratorError6;
+          }
+        }
+      }
+
+      ;
+      sessionStorage.urlset_list = for_saved_list.join("-@-");
+      ReactDOM.render(_react2["default"].createElement(_view.ViewFolderFeed, { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion7 = true;
+      var _didIteratorError7 = false;
+      var _iteratorError7 = undefined;
+
+      try {
+        for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+          var _d2 = _step7.value;
+
+          var _aId = localStorage.accountId;
+          if (_d2.aId === _aId) {
+            var selector = "#" + _d2.id + " .edit__folder";
+            $(selector).css("display", "block");
+          }
+          $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+        }
+      } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+            _iterator7["return"]();
+          }
+        } finally {
+          if (_didIteratorError7) {
+            throw _iteratorError7;
+          }
+        }
+      }
+    });
+  });
+}
+
+function segueFolderFeed() {
+  sessionStorage.udBeforeLocation = location.pathname;
+  history.pushState('', '', "folders");
+  var list = [];
+  var for_saved_list = [];
+  var aId = localStorage.getItem("accountId");
+  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], null), _react2["default"].createElement(_add_button.AddButton, { func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion8 = true;
+    var _didIteratorError8 = false;
+    var _iteratorError8 = undefined;
+
+    try {
+      for (var _iterator8 = snap.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+        var i = _step8.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError8 = true;
+      _iteratorError8 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
+          _iterator8["return"]();
+        }
+      } finally {
+        if (_didIteratorError8) {
+          throw _iteratorError8;
+        }
+      }
+    }
+
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion9 = true;
+    var _didIteratorError9 = false;
+    var _iteratorError9 = undefined;
+
+    try {
+      for (var _iterator9 = snap.docs[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+        var i = _step9.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "myfreefolders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError9 = true;
+      _iteratorError9 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+          _iterator9["return"]();
+        }
+      } finally {
+        if (_didIteratorError9) {
+          throw _iteratorError9;
+        }
+      }
+    }
+
+    sessionStorage.urlset_list = for_saved_list.join("-@-");
+    ReactDOM.render(_react2["default"].createElement(
+      "div",
+      { className: "container__wrapper" },
+      _react2["default"].createElement(_folder2["default"], { list: list })
+    ), document.getElementById("main__container"));
+    var _iteratorNormalCompletion10 = true;
+    var _didIteratorError10 = false;
+    var _iteratorError10 = undefined;
+
+    try {
+      for (var _iterator10 = list[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+        var _d3 = _step10.value;
+
+        var _aId2 = localStorage.accountId;
+        if (_d3.aId === _aId2) {
+          var selector = "#" + _d3.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError10 = true;
+      _iteratorError10 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
+          _iterator10["return"]();
+        }
+      } finally {
+        if (_didIteratorError10) {
+          throw _iteratorError10;
+        }
+      }
+    }
+  });
+}
+
+function segueGlobal() {
+  sessionStorage.udBeforeLocation = location.pathname;
+  history.pushState('', '', "feed");
+  var aId = localStorage.accountId;
+  var for_saved_list = [];
+  var latest_list = [];
+  var recommend_list = [];
+  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueFolderToAddPanel, icon: "+" }), document.getElementById("utility__area"));
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion11 = true;
+    var _didIteratorError11 = false;
+    var _iteratorError11 = undefined;
+
+    try {
+      for (var _iterator11 = snap.docs[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
+        var j = _step11.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        latest_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError11 = true;
+      _iteratorError11 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion11 && _iterator11["return"]) {
+          _iterator11["return"]();
+        }
+      } finally {
+        if (_didIteratorError11) {
+          throw _iteratorError11;
+        }
+      }
+    }
+
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+  }).then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion12 = true;
+    var _didIteratorError12 = false;
+    var _iteratorError12 = undefined;
+
+    try {
+      for (var _iterator12 = snap.docs[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
+        var j = _step12.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        recommend_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError12 = true;
+      _iteratorError12 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
+          _iterator12["return"]();
+        }
+      } finally {
+        if (_didIteratorError12) {
+          throw _iteratorError12;
+        }
+      }
+    }
+
+    ;
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+    ReactDOM.render([_react2["default"].createElement(
+      "div",
+      { id: "container__latest" },
+      _react2["default"].createElement(
+        "h1",
+        { className: "latest-container__title" },
+        "新着情報"
+      ),
+      _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_folder2["default"], { list: latest_list })
+      )
+    ), _react2["default"].createElement(
+      "div",
+      null,
+      _react2["default"].createElement(
+        "h1",
+        { className: "recommend-container__title" },
+        "評価されている情報"
+      ),
+      _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_folder2["default"], { list: recommend_list })
+      )
+    )], document.getElementById("main__container"));
+    var list = latest_list.concat(recommend_list);
+    var _iteratorNormalCompletion13 = true;
+    var _didIteratorError13 = false;
+    var _iteratorError13 = undefined;
+
+    try {
+      for (var _iterator13 = list[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
+        var _d4 = _step13.value;
+
+        var _aId3 = localStorage.accountId;
+        if (_d4.aId === _aId3) {
+          var selector = "#" + _d4.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d4.id).css("background-image", "url(" + _d4.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError13 = true;
+      _iteratorError13 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion13 && _iterator13["return"]) {
+          _iterator13["return"]();
+        }
+      } finally {
+        if (_didIteratorError13) {
+          throw _iteratorError13;
+        }
+      }
+    }
+
+    return true;
+  });
+}
+
+function segueInitToGlobal() {
+  var aId = localStorage.accountId;
+  var for_saved_list = [];
+  var latest_list = [];
+  var recommend_list = [];
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion14 = true;
+    var _didIteratorError14 = false;
+    var _iteratorError14 = undefined;
+
+    try {
+      for (var _iterator14 = snap.docs[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
+        var j = _step14.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        latest_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError14 = true;
+      _iteratorError14 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion14 && _iterator14["return"]) {
+          _iterator14["return"]();
+        }
+      } finally {
+        if (_didIteratorError14) {
+          throw _iteratorError14;
+        }
+      }
+    }
+
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+  }).then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion15 = true;
+    var _didIteratorError15 = false;
+    var _iteratorError15 = undefined;
+
+    try {
+      for (var _iterator15 = snap.docs[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
+        var j = _step15.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        recommend_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError15 = true;
+      _iteratorError15 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion15 && _iterator15["return"]) {
+          _iterator15["return"]();
+        }
+      } finally {
+        if (_didIteratorError15) {
+          throw _iteratorError15;
+        }
+      }
+    }
+
+    ;
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list }), document.getElementById("container"));
+    var _iteratorNormalCompletion16 = true;
+    var _didIteratorError16 = false;
+    var _iteratorError16 = undefined;
+
+    try {
+      for (var _iterator16 = recommend_list[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
+        var _d5 = _step16.value;
+
+        var _aId4 = localStorage.accountId;
+        if (_d5.aId === _aId4) {
+          var selector = "#" + _d5.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d5.id).css("background-image", "url(" + _d5.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError16 = true;
+      _iteratorError16 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion16 && _iterator16["return"]) {
+          _iterator16["return"]();
+        }
+      } finally {
+        if (_didIteratorError16) {
+          throw _iteratorError16;
+        }
+      }
+    }
+
+    var _iteratorNormalCompletion17 = true;
+    var _didIteratorError17 = false;
+    var _iteratorError17 = undefined;
+
+    try {
+      for (var _iterator17 = latest_list[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
+        var _d6 = _step17.value;
+
+        var _aId5 = localStorage.accountId;
+        if (_d6.aId === _aId5) {
+          var selector = "#" + _d6.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d6.id).css("background-image", "url(" + _d6.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError17 = true;
+      _iteratorError17 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion17 && _iterator17["return"]) {
+          _iterator17["return"]();
+        }
+      } finally {
+        if (_didIteratorError17) {
+          throw _iteratorError17;
+        }
+      }
+    }
+
+    return true;
+  });
+}
+
+exports.segueAnyToUrlPostFolderChoice = segueAnyToUrlPostFolderChoice;
+exports.SegueAnyToUrl = SegueAnyToUrl;
+exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
+exports.segueInitFolderFeed = segueInitFolderFeed;
+exports.segueFolderFeed = segueFolderFeed;
+exports.segueInitToGlobal = segueInitToGlobal;
+exports.segueGlobal = segueGlobal;
+exports.segueFolderToAddPanel = segueFolderToAddPanel;
+exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
+
+},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./side_menu":8,"./url":9,"./view":11,"react":32}],8:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _segue = require("./segue");
+
+var _firebase = require("./firebase");
+
+var SideMenu = (function (_React$Component) {
+  _inherits(SideMenu, _React$Component);
+
+  function SideMenu(props) {
+    _classCallCheck(this, SideMenu);
+
+    _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).call(this, props);
+    this.state = {
+      profStyle: props.profStyle,
+      homeStyle: props.homeStyle,
+      foldersStyle: props.foldersStyle,
+      alertStyle: props.alertStyle,
+      instructStyle: props.instructStyle
+    };
+    this.sideMenuActiveShift = this.sidemenuActiveShift.bind(this);
+  }
+
+  _createClass(SideMenu, [{
+    key: "sidemenuActiveShift",
+    value: function sidemenuActiveShift() {
+      var sideMenuState = JSON.parse(sessionStorage.udSideMenuState);
+      this.setState(sideMenuState);
+      sessionStorage.removeItem("udSideMenuState");
+    }
+  }, {
+    key: "profClicked",
+    value: function profClicked() {
+      this.setState(switchButtonActive("prof"));
+    }
+  }, {
+    key: "homeClicked",
+    value: function homeClicked() {
+      this.setState(switchButtonActive("home"));
+      (0, _segue.segueGlobal)();
+    }
+  }, {
+    key: "folderClicked",
+    value: function folderClicked() {
+      this.setState(switchButtonActive("folders"));
+      (0, _segue.segueFolderFeed)();
+    }
+  }, {
+    key: "notifiClicked",
+    value: function notifiClicked() {
+      this.setState(switchButtonActive("notification"));
+      alert("すみません、通知機能はこれから実装されます。");
+      var path = location.pathname.split("/")[1];
+      if (path === "feed") path = "home";
+      this.setState(switchButtonActive(path));
+    }
+  }, {
+    key: "instructClicked",
+    value: function instructClicked() {
+      this.setState(switchButtonActive("instruction"));
+      alert("すみません、説明書はこれから実装されます。");
+      var path = location.pathname.split("/")[1];
+      if (path === "feed") path = "home";
+      this.setState(switchButtonActive(path));
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return [_react2["default"].createElement(
+        "ul",
+        { className: "list-nav" },
+        _react2["default"].createElement(
+          "li",
+          { className: this.state.profStyle },
+          _react2["default"].createElement(
+            "a",
+            { href: "/account?aId=" + localStorage.getItem("accountId") },
+            "Profile"
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { id: "list-nav__home", className: this.state.homeStyle, onClick: this.homeClicked.bind(this) },
+            "Home"
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
+            "folders"
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { className: this.state.notifiStyle, onClick: this.notifiClicked.bind(this) },
+            "通知"
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { className: this.state.instructStyle, onClick: this.instructClicked.bind(this) },
+            "説明書"
+          )
+        )
+      ), _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })];
+    }
+  }]);
+
+  return SideMenu;
+})(_react2["default"].Component);
+
+exports["default"] = SideMenu;
+
+function switchButtonActive(targetElement) {
+  var after = {
+    profStyle: "",
+    homeStyle: "",
+    foldersStyle: "",
+    notifiStyle: "",
+    instructStyle: ""
+  };
+  switch (targetElement) {
+    case "home":
+      after.homeStyle = "tb-active";
+      break;
+    case "profile":
+      after.profStyle = "tb-active";
+      break;
+    case "folders":
+      after.foldersStyle = "tb-active";
+      break;
+    case "notification":
+      after.notifiStyle = "tb-active";
+      break;
+    case "instruction":
+      after.instructStyle = "tb-active";
+      break;
+  }
+  return after;
+}
+
+function sideMenuButtonShift(targetElement) {
+  sessionStorage.udSideMenuState = JSON.stringify(switchButtonActive(targetElement));
+  $("#list-nav__rigid").click();
+}
+
+exports.sideMenuButtonShift = sideMenuButtonShift;
+
+},{"./firebase":4,"./segue":7,"react":32}],9:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _firebase = require("./firebase");
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var Url = (function (_React$Component) {
+  _inherits(Url, _React$Component);
+
+  function Url(props) {
+    _classCallCheck(this, Url);
+
+    _get(Object.getPrototypeOf(Url.prototype), "constructor", this).call(this, props);
+    this.state = {
+      title: props.title,
+      href: props.href,
+      content: props.content
+    };
+  }
+
+  _createClass(Url, [{
+    key: "clickHandler",
+    value: function clickHandler() {
+      var aId = localStorage.getItem("accountId");
+      var data = {
+        href: this.state.href,
+        date: new Date()
+      };
+      _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "urlput_panel" },
+        _react2["default"].createElement(
+          "div",
+          { className: "text_overflow_url" },
+          _react2["default"].createElement(
+            "h3",
+            null,
+            this.state.title
+          ),
+          _react2["default"].createElement("a", { href: this.state.href, target: "_blank", onClick: this.clickHandler.bind(this) })
+        ),
+        _react2["default"].createElement(
+          "p",
+          { className: "baloon" },
+          this.state.content
+        )
+      );
+    }
+  }]);
+
+  return Url;
+})(_react2["default"].Component);
+
+var Urls = (function (_React$Component2) {
+  _inherits(Urls, _React$Component2);
+
+  function Urls(props) {
+    _classCallCheck(this, Urls);
+
+    _get(Object.getPrototypeOf(Urls.prototype), "constructor", this).call(this);
+    this.state = {
+      list: props.list
+    };
+  }
+
+  _createClass(Urls, [{
+    key: "render",
+    value: function render() {
+      var return_html = [];
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.state.list.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var _step$value = _slicedToArray(_step.value, 2);
+
+          var i = _step$value[0];
+          var d = _step$value[1];
+
+          return_html.push(_react2["default"].createElement(Url, { key: i, title: d.title, content: d.content, href: d.href }));
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator["return"]) {
+            _iterator["return"]();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+
+      return return_html;
+    }
+  }]);
+
+  return Urls;
+})(_react2["default"].Component);
+
+exports["default"] = Urls;
+
+jQuery(function ($) {
+  $('.textOverflowUrl').each(function () {
+    var $target = $(this);
+
+    var html = $target.html();
+
+    var $clone = $target.clone();
+    $clone.css({
+      display: 'none',
+      position: 'absolute',
+      overflow: 'visible'
+    }).width($target.width()).height('auto');
+
+    $target.after($clone);
+    while (html.length > 0 && $clone.height() > $target.height()) {
+      html = html.substr(0, html.length - 1);
+      $clone.html(html + '...');
+    }
+
+    $target.html($clone.html());
+    $clone.remove();
+  });
+});
+module.exports = exports["default"];
+
+},{"./firebase":4,"react":32}],10:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = generateUuid;
+
+function generateUuid() {
+  // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
+  // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+  var chars = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".split("");
+  for (var i = 0, len = chars.length; i < len; i++) {
+    switch (chars[i]) {
+      case "x":
+        chars[i] = Math.floor(Math.random() * 16).toString(16);
+        break;
+      case "y":
+        chars[i] = (Math.floor(Math.random() * 4) + 8).toString(16);
+        break;
+    }
+  }
+  return chars.join("");
+}
+
+module.exports = exports["default"];
+
+},{}],11:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _url = require("./url");
+
+var _url2 = _interopRequireDefault(_url);
+
+var _folder = require("./folder");
+
+var _folder2 = _interopRequireDefault(_folder);
+
+var _add_button = require('./add_button');
+
+var _side_menu = require("./side_menu");
+
+var _side_menu2 = _interopRequireDefault(_side_menu);
+
+var _firebase = require("./firebase");
+
+var _segue = require("./segue");
+
+var _later_button = require("./later_button");
+
+var _later_button2 = _interopRequireDefault(_later_button);
+
+/* Props list: cancel(function) title(string) content(html) */
+
+var TemplateViewNavTab = (function (_React$Component) {
+  _inherits(TemplateViewNavTab, _React$Component);
+
+  function TemplateViewNavTab() {
+    _classCallCheck(this, TemplateViewNavTab);
+
+    _get(Object.getPrototypeOf(TemplateViewNavTab.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(TemplateViewNavTab, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        null,
+        _react2["default"].createElement("div", { className: "window-overlay", onClick: this.props.cancel }),
+        _react2["default"].createElement(
+          "div",
+          { className: "post__container" },
+          _react2["default"].createElement(
+            "h1",
+            { className: "view-title" },
+            this.props.title
+          ),
+          this.props.content
+        )
+      );
+    }
+  }]);
+
+  return TemplateViewNavTab;
+})(_react2["default"].Component);
+
+var ViewFolderEdit = (function (_React$Component2) {
+  _inherits(ViewFolderEdit, _React$Component2);
+
+  function ViewFolderEdit(props) {
+    _classCallCheck(this, ViewFolderEdit);
+
+    _get(Object.getPrototypeOf(ViewFolderEdit.prototype), "constructor", this).call(this, props);
+    var list = sessionStorage.urlset_list.split("-@-").map(function (x) {
+      return JSON.parse(x);
+    });
+    var jsx = _react2["default"].createElement(
+      "div",
+      { className: "add_view" },
+      _react2["default"].createElement(
+        "div",
+        { className: "add_panel", onClick: this.deleteFolder.bind(this) },
+        _react2["default"].createElement(
+          "h3",
+          null,
+          "フォルダの削除"
+        ),
+        _react2["default"].createElement(
+          "p",
+          null,
+          "このフォルダを削除します"
+        )
+      )
+    );
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId,
+      list: list,
+      content: jsx
+    };
+  }
+
+  _createClass(ViewFolderEdit, [{
+    key: "deleteFolder",
+    value: function deleteFolder() {
+      _firebase.db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id)["delete"]();
+      ReactDOM.render(_react2["default"].createElement(SegueInitToFolderFeed, { list: this.state.list }), document.getElementById("container"));
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
+
+      try {
+        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var d = _step.value;
+
+          $("#" + d.id).css("background-image", "url(" + d.img + ")");
+          var aId = localStorage.accountId;
+          if (d.aId === aId) {
+            var selector = "#" + d.id + " .edit__folder";
+            $(selector).css("display", "block");
+          }
+        }
+      } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion && _iterator["return"]) {
+            _iterator["return"]();
+          }
+        } finally {
+          if (_didIteratorError) {
+            throw _iteratorError;
+          }
+        }
+      }
+    }
+  }, {
+    key: "cancel",
+    value: function cancel() {
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+      var list = sessionStorage.urlset_list.split("-@-");
+      for (var i = 0; i < list.length; i++) {
+        list[i] = JSON.parse(list[i]);
+      }
+      ReactDOM.render(_react2["default"].createElement("segueInitFolderFeed", { list: list }), document.getElementById("container"));
+      var _iteratorNormalCompletion2 = true;
+      var _didIteratorError2 = false;
+      var _iteratorError2 = undefined;
+
+      try {
+        for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+          var d = _step2.value;
+
+          $("#" + d.id).css("background-image", "url(" + d.img + ")");
+          var aId = localStorage.accountId;
+          if (d.aId === aId) {
+            var selector = "#" + d.id + " .edit__folder";
+            $(selector).css("display", "block");
+          }
+        }
+      } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+      } finally {
+        try {
+          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+            _iterator2["return"]();
+          }
+        } finally {
+          if (_didIteratorError2) {
+            throw _iteratorError2;
+          }
+        }
+      }
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
+        _react2["default"].createElement(TemplateViewNavTab, { content: this.state.content, title: this.state.id, cancel: this.cancel })
+      );
+    }
+  }]);
+
+  return ViewFolderEdit;
+})(_react2["default"].Component);
+
+var ViewTop = (function (_React$Component3) {
+  _inherits(ViewTop, _React$Component3);
+
+  function ViewTop() {
+    _classCallCheck(this, ViewTop);
+
+    _get(Object.getPrototypeOf(ViewTop.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(ViewTop, [{
+    key: "openAddPanel",
+    value: function openAddPanel() {
+      (0, _segue.segueFolderToAddPanel)();
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return [_react2["default"].createElement(
+        "div",
+        { id: "main__container" },
+        _react2["default"].createElement(
+          "div",
+          { id: "container__latest" },
+          _react2["default"].createElement(
+            "h1",
+            { className: "latest-container__title" },
+            "新着情報"
+          ),
+          _react2["default"].createElement(
+            "div",
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.props.latest_list })
+          )
+        ),
+        _react2["default"].createElement(
+          "div",
+          null,
+          _react2["default"].createElement(
+            "h1",
+            { className: "recommend-container__title" },
+            "評価されている情報"
+          ),
+          _react2["default"].createElement(
+            "div",
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.props.recommend_list })
+          )
+        )
+      ), _react2["default"].createElement(
+        "div",
+        { id: "utility__area" },
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+      ), _react2["default"].createElement(_side_menu2["default"], { homeStyle: "tb-active" })];
+    }
+  }]);
+
+  return ViewTop;
+})(_react2["default"].Component);
+
+var ViewFolderFeed = (function (_React$Component4) {
+  _inherits(ViewFolderFeed, _React$Component4);
+
+  function ViewFolderFeed() {
+    _classCallCheck(this, ViewFolderFeed);
+
+    _get(Object.getPrototypeOf(ViewFolderFeed.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(ViewFolderFeed, [{
+    key: "openFolderPost",
+    value: function openFolderPost() {
+      (0, _segue.segueFolderFeedToPostFolder)();
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return [_react2["default"].createElement(
+        "div",
+        { id: "main__container" },
+        _react2["default"].createElement(
+          "div",
+          { className: "container__wrapper" },
+          _react2["default"].createElement(_folder2["default"], { list: this.props.list })
+        )
+      ), _react2["default"].createElement(
+        "div",
+        { id: "utility__area" },
+        _react2["default"].createElement(_later_button2["default"], null),
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
+      ), _react2["default"].createElement(_side_menu2["default"], { foldersStyle: "tb-active" })];
+    }
+  }]);
+
+  return ViewFolderFeed;
+})(_react2["default"].Component);
+
+var ViewPostFolder = (function (_React$Component5) {
+  _inherits(ViewPostFolder, _React$Component5);
+
+  function ViewPostFolder(props) {
+    _classCallCheck(this, ViewPostFolder);
+
+    _get(Object.getPrototypeOf(ViewPostFolder.prototype), "constructor", this).call(this, props);
+    this.state = { list: this.props.list };
+  }
+
+  _createClass(ViewPostFolder, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_add_button.UrlFolderPost, null),
+        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
+      );
+    }
+  }]);
+
+  return ViewPostFolder;
+})(_react2["default"].Component);
+
+exports.TemplateViewNavTab = TemplateViewNavTab;
+exports.ViewFolderEdit = ViewFolderEdit;
+exports.ViewTop = ViewTop;
+exports.ViewFolderFeed = ViewFolderFeed;
+exports.ViewPostFolder = ViewPostFolder;
+
+},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"react":32}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -584,7 +3192,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":9}],3:[function(require,module,exports){
+},{"@firebase/util":19}],13:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -910,7 +3518,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":2}],4:[function(require,module,exports){
+},{"@firebase/app":12}],14:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -21999,7 +24607,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":2,"@firebase/logger":5,"@firebase/webchannel-wrapper":10,"_process":1,"tslib":23}],5:[function(require,module,exports){
+},{"@firebase/app":12,"@firebase/logger":15,"@firebase/webchannel-wrapper":20,"_process":1,"tslib":33}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -22187,7 +24795,7 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],6:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -23722,7 +26330,7 @@ var iterator = _wksExt.f('iterator');
  */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"whatwg-fetch":7}],7:[function(require,module,exports){
+},{"whatwg-fetch":17}],17:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -24190,7 +26798,7 @@ var iterator = _wksExt.f('iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],8:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -27651,7 +30259,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":2}],9:[function(require,module,exports){
+},{"@firebase/app":12}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -29429,7 +32037,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":23}],10:[function(require,module,exports){
+},{"tslib":33}],20:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -29554,7 +32162,7 @@ e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],11:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -29580,7 +32188,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":14,"@firebase/polyfill":6}],12:[function(require,module,exports){
+},{"@firebase/app":24,"@firebase/polyfill":16}],22:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -29601,7 +32209,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":3}],13:[function(require,module,exports){
+},{"@firebase/auth":13}],23:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -29622,7 +32230,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":4}],14:[function(require,module,exports){
+},{"@firebase/firestore":14}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30022,9 +32630,9 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":15}],15:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"dup":9,"tslib":23}],16:[function(require,module,exports){
+},{"@firebase/util":25}],25:[function(require,module,exports){
+arguments[4][19][0].apply(exports,arguments)
+},{"dup":19,"tslib":33}],26:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -30045,7 +32653,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":8}],17:[function(require,module,exports){
+},{"@firebase/storage":18}],27:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -30137,7 +32745,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],18:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -30232,7 +32840,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":19,"_process":1}],19:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":29,"_process":1}],29:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -30246,7 +32854,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],20:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -32079,7 +34687,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":1,"object-assign":17,"prop-types/checkPropTypes":18}],21:[function(require,module,exports){
+},{"_process":1,"object-assign":27,"prop-types/checkPropTypes":28}],31:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -32105,7 +34713,7 @@ _currentValue:a,_currentValue2:a,Provider:null,Consumer:null};a.Provider={$$type
 b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.1",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,
 assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":17}],22:[function(require,module,exports){
+},{"object-assign":27}],32:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -32116,7 +34724,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":20,"./cjs/react.production.min.js":21,"_process":1}],23:[function(require,module,exports){
+},{"./cjs/react.development.js":30,"./cjs/react.production.min.js":31,"_process":1}],33:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -32361,2425 +34969,7 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],24:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _firebase = require("./firebase");
-
-var blob;
-
-function blobToFile(theBlob, fileName) {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-}
-
-function getAccountId(user) {
-  return _firebase.db.collection("account").where("uId", "==", user.uid).get().then(function (querySnapshots) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = querySnapshots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var i = _step.value;
-
-        return i.id;
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator["return"]) {
-          _iterator["return"]();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-  });
-}
-
-function accountRegisterSubmitValidation() {
-  var name = document.getElementById("ra_name").value;
-  var file = document.getElementById("ra_profile_img").files[0];
-  if (name !== "" && file !== undefined) return true;
-  return false;
-}
-
-function raButtonActiveSwitch() {
-  if (accountRegisterSubmitValidation()) {
-    $("#ra_submit").addClass("submit_is_active");
-    $("#ra_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#ra_submit").removeClass("submit_is_active");
-    $("#ra_submit").addClass("submit_is_disactive");
-  }
-}
-
-var AccountRegister = (function (_React$Component) {
-  _inherits(AccountRegister, _React$Component);
-
-  function AccountRegister() {
-    _classCallCheck(this, AccountRegister);
-
-    _get(Object.getPrototypeOf(AccountRegister.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(AccountRegister, [{
-    key: "fileChanged",
-
-    // @platong If file is changed, file will be compressed.
-    value: function fileChanged() {
-      var file = document.getElementById("ra_profile_img").files[0];
-      if (file.type != 'image/jpeg' && file.type != 'image/png') {
-        file = null;
-        blob = null;
-        return;
-        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-      }
-      var image = new Image();
-      var reader = new FileReader();
-      var IMG_MAX_WIDTH = 96;
-
-      reader.onload = function (e) {
-        image.onload = function () {
-          var width, height, ratio;
-          if (image.width > image.height) {
-            ratio = image.height / image.width;
-            width = IMG_MAX_WIDTH;
-            height = IMG_MAX_WIDTH * ratio;
-          } else {
-            ratio = image.width / image.height;
-            width = IMG_MAX_WIDTH * ratio;
-            height = IMG_MAX_WIDTH;
-          }
-          var canvas = $('#ra_preview').attr('width', width).attr('height', height);
-          var ctx = canvas[0].getContext('2d');
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-
-          var base64 = canvas.get(0).toDataURL('image/jpeg');
-          var barr, bin, i, len;
-          bin = atob(base64.split('base64,')[1]);
-          len = bin.length;
-          barr = new Uint8Array(len);
-          i = 0;
-          while (i < len) {
-            barr[i] = bin.charCodeAt(i);
-            i++;
-          }
-          blob = new Blob([barr], { type: 'image/jpeg' });
-        };
-        image.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      raButtonActiveSwitch();
-    }
-  }, {
-    key: "submit",
-    value: function submit() {
-      var file = document.getElementById("ra_profile_img").files[0];
-      if (!accountRegisterSubmitValidation() && !blob) return; // validation
-      var storage = firebase.storage();
-      var storageRef = storage.ref();
-      var imagesRef = storageRef.child('account_profile_imgs');
-      var file_name = file.name;
-      file = blobToFile(blob);
-      var ref = storageRef.child('account_profile_imgs/' + file_name);
-      var uploadTask = ref.put(file);
-      // Listen for state changes, errors, and completion of the upload.
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-      function (snapshot) {
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED:
-            // or 'paused'
-            console.log('Upload is paused');
-            break;
-          case firebase.storage.TaskState.RUNNING:
-            // or 'running'
-            console.log('Upload is running');
-            break;
-        }
-      }, function (error) {
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            // User doesn't have permission to access the object
-            break;
-          case 'storage/canceled':
-            // User canceled the upload
-            break;
-          case 'storage/unknown':
-            // Unknown error occurred, inspect error.serverResponse
-            break;
-        }
-      }, function () {
-        // Upload completed successfully, now we can get the download URL
-        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-          console.log('File available at', downloadURL);
-          var user = _firebase.auth.currentUser;
-          var name = document.getElementById("ra_name").value;
-          _firebase.db.collection("account").add({
-            img: downloadURL,
-            name: name,
-            uId: user.uid,
-            followee: 0,
-            follower: 0
-          }).then(function (docRef) {
-            user.updateProfile({
-              displayName: name,
-              photoURL: downloadURL
-            }).then(function () {
-              console.log("All process is done");
-              location.reload();
-            })["catch"](function (err) {
-              console.error("Error: Register account: ", err);
-            });
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
-        });
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        { className: "ra" },
-        React.createElement("div", { className: "window-overlay" }),
-        React.createElement(
-          "div",
-          { className: "centering_popover" },
-          React.createElement(
-            "h2",
-            null,
-            "Register an account"
-          ),
-          React.createElement(
-            "form",
-            null,
-            React.createElement("input", { type: "text", id: "ra_name", style: { display: "block" }, placeholder: "表示名（アカウント名）", onInput: raButtonActiveSwitch }),
-            React.createElement(
-              "label",
-              { htmlFor: "ra_profile_img" },
-              "プロフィール画像を選択"
-            ),
-            React.createElement("input", { type: "file", id: "ra_profile_img", name: "ra_profile_img", onChange: this.fileChanged }),
-            React.createElement("input", { type: "text", id: "ra_intro", placeholder: "自己紹介" }),
-            React.createElement("input", { type: "button", onClick: this.submit, value: "登録", className: "submit_is_disactive", id: "ra_submit" })
-          ),
-          React.createElement("canvas", { id: "ra_preview", width: "96", height: "96" })
-        )
-      );
-    }
-  }]);
-
-  return AccountRegister;
-})(React.Component);
-
-exports["default"] = AccountRegister;
-module.exports = exports["default"];
-
-},{"./firebase":26}],25:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _segue = require("./segue");
-
-var _uuid = require("./uuid");
-
-var _uuid2 = _interopRequireDefault(_uuid);
-
-var _firebase = require("./firebase");
-
-// @platong For compressed image
-var THUMBNAIL_HEIGHT = 100;
-
-function closePostView() {
-  ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-  var list = sessionStorage.urlset_list.split("-@-");
-  for (var i = 0; i < list.length; i++) {
-    list[i] = JSON.parse(list[i]);
-  }
-  ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-  console.log(list);
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
-
-  try {
-    for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var d = _step.value;
-
-      $("#" + d.id).css("background-image", "url(" + d.img + ")");
-    }
-  } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion && _iterator["return"]) {
-        _iterator["return"]();
-      }
-    } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
-      }
-    }
-  }
-}
-
-// @platong If the folder form can submit, return true.
-function folderSubmitValidation() {
-  var title = document.getElementById("ap_panel_title").value;
-  var file = document.urlset_form.urlbook_img.files[0];
-  if (title !== "" && file !== undefined) return true;
-  return false;
-}
-
-// @platong If the url form can submit, return true.
-function urlSubmitValidation() {
-  var url = document.urlput_form.url.value;
-  var title = document.urlput_form.title.value;
-  if (url !== "" && title !== "") return true;
-  return false;
-}
-
-// @platong Change button color if the form can submit.
-function buttonActiveSwitch() {
-  if (folderSubmitValidation()) {
-    $("#ap_submit").addClass("submit_is_active");
-    $("#ap_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#ap_submit").removeClass("submit_is_active");
-    $("#ap_submit").addClass("submit_is_disactive");
-  }
-}
-
-// @platong Change button color if the form can submit.
-function urlSubmitActiveSwitch() {
-  if (urlSubmitValidation()) {
-    $("#url_submit").addClass("submit_is_active");
-    $("#url_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#url_submit").removeClass("submit_is_active");
-    $("#url_submit").addClass("submit_is_disactive");
-  }
-}
-
-function blobToFile(theBlob, fileName) {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-}
-
-var AddButton = (function (_React$Component) {
-  _inherits(AddButton, _React$Component);
-
-  function AddButton() {
-    _classCallCheck(this, AddButton);
-
-    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  // @platong Appear if plus button is tapped or clicked.
-
-  _createClass(AddButton, [{
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "button",
-        { id: "add_button", onClick: this.props.func },
-        this.props.icon
-      );
-    }
-  }]);
-
-  return AddButton;
-})(React.Component);
-
-var AddPanel = (function (_React$Component2) {
-  _inherits(AddPanel, _React$Component2);
-
-  function AddPanel() {
-    _classCallCheck(this, AddPanel);
-
-    _get(Object.getPrototypeOf(AddPanel.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  // @platong register URL
-
-  _createClass(AddPanel, [{
-    key: "folderCreate",
-    value: function folderCreate() {
-      var list = [];
-      var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snap1.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var i = _step2.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        ;
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-          var _iteratorNormalCompletion3 = true;
-          var _didIteratorError3 = false;
-          var _iteratorError3 = undefined;
-
-          try {
-            for (var _iterator3 = snap2.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-              var i = _step3.value;
-
-              d = i.data();
-              d.id = i.id;
-              list.push(d);
-              for_saved_list.push(JSON.stringify(d));
-            }
-          } catch (err) {
-            _didIteratorError3 = true;
-            _iteratorError3 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-                _iterator3["return"]();
-              }
-            } finally {
-              if (_didIteratorError3) {
-                throw _iteratorError3;
-              }
-            }
-          }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          ReactDOM.render(React.createElement(_segue.SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
-          var _iteratorNormalCompletion4 = true;
-          var _didIteratorError4 = false;
-          var _iteratorError4 = undefined;
-
-          try {
-            for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-              var _d = _step4.value;
-
-              $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError4 = true;
-            _iteratorError4 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-                _iterator4["return"]();
-              }
-            } finally {
-              if (_didIteratorError4) {
-                throw _iteratorError4;
-              }
-            }
-          }
-        });
-      });
-    }
-  }, {
-    key: "urlCreate",
-    value: function urlCreate() {
-      var list = [];
-      var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
-
-        try {
-          for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var i = _step5.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-              _iterator5["return"]();
-            }
-          } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
-            }
-          }
-        }
-
-        ;
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-          var _iteratorNormalCompletion6 = true;
-          var _didIteratorError6 = false;
-          var _iteratorError6 = undefined;
-
-          try {
-            for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-              var i = _step6.value;
-
-              d = i.data();
-              d.id = i.id;
-              list.push(d);
-              for_saved_list.push(JSON.stringify(d));
-            }
-          } catch (err) {
-            _didIteratorError6 = true;
-            _iteratorError6 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-                _iterator6["return"]();
-              }
-            } finally {
-              if (_didIteratorError6) {
-                throw _iteratorError6;
-              }
-            }
-          }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          ReactDOM.render(React.createElement(_segue.SegueAnyToUrlPostFolderChoice, { list: list }), document.getElementById("container"));
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
-
-          try {
-            for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var _d2 = _step7.value;
-
-              $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-                _iterator7["return"]();
-              }
-            } finally {
-              if (_didIteratorError7) {
-                throw _iteratorError7;
-              }
-            }
-          }
-        });
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        { className: "add_view" },
-        React.createElement(
-          "div",
-          { className: "add_panel", onClick: this.folderCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add folder"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLを管理するフォルダを作成"
-          )
-        ),
-        React.createElement(
-          "div",
-          { className: "add_panel", onClick: this.urlCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add URL"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLをフォルダに追加"
-          )
-        )
-      );
-    }
-  }]);
-
-  return AddPanel;
-})(React.Component);
-
-var UrlPost = (function (_React$Component3) {
-  _inherits(UrlPost, _React$Component3);
-
-  function UrlPost(props) {
-    _classCallCheck(this, UrlPost);
-
-    _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      count: 0
-    };
-  }
-
-  _createClass(UrlPost, [{
-    key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
-      $.ajax({
-        url: "/api_v1/url_to_title",
-        type: 'GET',
-        data: { "url": url }
-      }).done(function (data) {
-        var selector = 'input[name="title' + num + '"]';
-        $(selector).val(data.title);
-      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
-    }
-  }, {
-    key: "getChanged",
-    value: function getChanged() {
-      urlSubmitActiveSwitch();
-    }
-  }, {
-    key: "urlputSubmit",
-    value: function urlputSubmit() {
-      var aId = localStorage.accountId;
-      var t_id = this.state.id;
-      var user = _firebase.auth.currentUser;
-      var ownerAId = this.state.ownerAId;
-
-      var _loop = function (i) {
-        var url = $('input[name="url' + i + '"]').val();
-        var title = $('input[name="title' + i + '"]').val();
-
-        if (url === "" || title === "") return "continue";
-
-        var data = {
-          title: title,
-          content: "URLのコンテンツの概要は、現行のバージョンでは表示されません",
-          href: url,
-          aId: aId,
-          aProfileImg: user.photoURL,
-          aName: user.displayName,
-          dateTime: new Date()
-        };
-
-        if (ownerAId === aId) {
-          _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
-            console.log("Document written with ID: ", docRef.id);
-            closePostView();
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
-        } else {
-          var myfolderRef = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id);
-
-          myfolderRef.get().then(function (snap) {
-            if (snap.exists) {
-              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
-            } else {
-              return _firebase.db.collection("freefolder").doc(t_id).get().then(function (snap) {
-                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data());
-              }).then(function (docRef) {
-                return _firebase.db.collection("freefolder").doc(t_id).collection("urls").get();
-              }).then(function (snaps) {
-                return snaps.forEach(function (x) {
-                  _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").doc(x.id).set(x.data());
-                });
-              }).then(function (res) {
-                return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
-              });
-            }
-          }).then(function (docRef) {
-            console.log("Document written with ID: ", docRef.id);
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
-        }
-        closePostView();
-      };
-
-      for (var i = 0; i <= this.state.count; i++) {
-        var _ret = _loop(i);
-
-        if (_ret === "continue") continue;
-      }
-      this.state.count = 0;
-    }
-  }, {
-    key: "morePost",
-    value: function morePost() {
-      ++this.state.count;
-      var element = document.createElement("div");
-      element.setAttribute("id", "url_input" + this.state.count);
-      document.getElementById("url_input").appendChild(element);
-      ReactDOM.render(React.createElement(UrlInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        null,
-        React.createElement("div", { className: "window-overlay", onClick: closePostView }),
-        React.createElement(
-          "div",
-          { className: "post__container" },
-          React.createElement(
-            "h1",
-            { className: "view-title" },
-            "URLを登録"
-          ),
-          React.createElement(
-            "form",
-            { name: "urlput_form" },
-            React.createElement(
-              "div",
-              { id: "url_input" },
-              React.createElement(
-                "div",
-                { id: "url_input0" },
-                React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
-                React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
-              )
-            ),
-            React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "post__submit submit_is_disactive", id: "url_submit" })
-          ),
-          React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
-        )
-      );
-    }
-  }]);
-
-  return UrlPost;
-})(React.Component);
-
-var UrlInput = (function (_React$Component4) {
-  _inherits(UrlInput, _React$Component4);
-
-  function UrlInput(props) {
-    _classCallCheck(this, UrlInput);
-
-    _get(Object.getPrototypeOf(UrlInput.prototype), "constructor", this).call(this, props);
-    this.state = {
-      urlName: "url" + this.props.num,
-      titleName: "title" + this.props.num
-    };
-  }
-
-  _createClass(UrlInput, [{
-    key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
-      $.ajax({
-        url: "/api_v1/url_to_title",
-        type: 'GET',
-        data: { "url": url }
-      }).done(function (data) {
-        var selector = 'input[name="title' + num + '"]';
-        $(selector).val(data.title);
-      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        null,
-        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
-        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
-      );
-    }
-  }]);
-
-  return UrlInput;
-})(React.Component);
-
-var blob = null;
-
-var UrlFolderPost = (function (_React$Component5) {
-  _inherits(UrlFolderPost, _React$Component5);
-
-  function UrlFolderPost() {
-    _classCallCheck(this, UrlFolderPost);
-
-    _get(Object.getPrototypeOf(UrlFolderPost.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(UrlFolderPost, [{
-    key: "submit",
-    value: function submit() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (!folderSubmitValidation() && !blob) return; // validation
-      var storageRef = _firebase.storage.ref();
-      var imagesRef = storageRef.child('urlset_images');
-      var extension = file.name.split(".").slice(-1)[0];
-      var file_name = (0, _uuid2["default"])() + "." + extension;
-      file = blobToFile(blob);
-      var ref = storageRef.child('urlset_images/' + file_name);
-      var uploadTask = ref.put(file);
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function (snapshot) {
-        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED:
-            // or 'paused'
-            console.log('Upload is paused');
-            break;
-          case firebase.storage.TaskState.RUNNING:
-            // or 'running'
-            console.log('Upload is running');
-            break;
-        }
-      }, function (error) {
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            break;
-          case 'storage/canceled':
-            break;
-          case 'storage/unknown':
-            break;
-        }
-      }, function () {
-        var user = _firebase.auth.currentUser;
-        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-          console.log('File available at', downloadURL);
-          var aId = localStorage.getItem("accountId");
-          var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
-
-          ref.add({
-            img: downloadURL,
-            name: document.urlset_form.title.value,
-            aId: localStorage.getItem("accountId"),
-            aProfileImg: user.photoURL,
-            aName: user.displayName,
-            dateTime: new Date()
-          }).then(function (docRef) {
-            closePostView();
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
-          var listStr = sessionStorage.urlset_list;
-          var list = undefined;
-          if (listStr !== "") list = listStr.split("-@-").map(function (x) {
-            return JSON.parse(x);
-          });else list = [];
-          ReactDOM.render(React.createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-        });
-      });
-    }
-  }, {
-    key: "fileChanged",
-
-    // @platong If file is changed, file will be compressed.
-    value: function fileChanged() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (file.type != 'image/jpeg' && file.type != 'image/png') {
-        file = null;
-        blob = null;
-        return;
-        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-      }
-      var image = new Image();
-      var reader = new FileReader();
-
-      reader.onload = function (e) {
-        image.onload = function () {
-          var width, height;
-          if (image.width > image.height) {
-            var ratio = image.width / image.height;
-            width = THUMBNAIL_HEIGHT * ratio;
-            height = THUMBNAIL_HEIGHT;
-          } else {
-            alert("縦長の画像はアップロードできません");
-            return;
-          }
-          var canvas = $('#ap_preview').attr('width', width).attr('height', height);
-          var ctx = canvas[0].getContext('2d');
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-
-          var base64 = canvas.get(0).toDataURL('image/jpeg');
-          var barr, bin, i, len;
-          bin = atob(base64.split('base64,')[1]);
-          len = bin.length;
-          barr = new Uint8Array(len);
-          i = 0;
-          while (i < len) {
-            barr[i] = bin.charCodeAt(i);
-            i++;
-          }
-          blob = new Blob([barr], { type: 'image/jpeg' });
-        };
-        image.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      buttonActiveSwitch();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        null,
-        React.createElement("div", { className: "window-overlay", onClick: closePostView }),
-        React.createElement(
-          "div",
-          { className: "post__container" },
-          React.createElement(
-            "h1",
-            { className: "view-title" },
-            "URLを入れるフォルダを作成"
-          ),
-          React.createElement(
-            "form",
-            { action: "", name: "urlset_form" },
-            React.createElement(
-              "div",
-              { className: "post-folder__preview" },
-              React.createElement("canvas", { id: "ap_preview", className: "post-folder__folder", width: "0", height: "0" }),
-              React.createElement(
-                "span",
-                { className: "post-folder__upload-message" },
-                "画像を選択する"
-              ),
-              React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
-              React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
-            ),
-            React.createElement(
-              "div",
-              { className: "post-folder__sub" },
-              React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
-              React.createElement(
-                "label",
-                { htmlFor: "paid" },
-                "販売する"
-              )
-            ),
-            React.createElement(
-              "div",
-              { className: "sell__section" },
-              React.createElement("input", { type: "text", name: "price" }),
-              React.createElement(
-                "label",
-                { htmlFor: "price" },
-                "円"
-              )
-            ),
-            React.createElement("input", { type: "button", onClick: this.submit, value: "作成", className: "post__submit submit_is_disactive", id: "ap_submit" })
-          )
-        )
-      );
-    }
-  }]);
-
-  return UrlFolderPost;
-})(React.Component);
-
-exports.AddButton = AddButton;
-exports.AddPanel = AddPanel;
-exports.UrlFolderPost = UrlFolderPost;
-exports.UrlPost = UrlPost;
-
-},{"./firebase":26,"./segue":28,"./uuid":31}],26:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-require('firebase/app');
-require('firebase/firestore');
-require('firebase/storage');
-require('firebase/auth');
-
-var db = firebase.firestore();
-var storage = firebase.storage();
-var auth = firebase.auth();
-
-var settings = { timestampsInSnapshots: true };
-db.settings(settings);
-
-exports.db = db;
-exports.storage = storage;
-exports.auth = auth;
-
-},{"firebase/app":11,"firebase/auth":12,"firebase/firestore":13,"firebase/storage":16}],27:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _url = require('./url');
-
-var _url2 = _interopRequireDefault(_url);
-
-var _segue = require("./segue");
-
-var _firebase = require("./firebase");
-
-var _view = require("./view");
-
-var Folder = (function (_React$Component) {
-  _inherits(Folder, _React$Component);
-
-  function Folder(props) {
-    _classCallCheck(this, Folder);
-
-    _get(Object.getPrototypeOf(Folder.prototype), 'constructor', this).call(this, props);
-    this.state = {
-      putShow: props.post ? this.urlPost : this.putShow,
-      id: props.id,
-      ownerAId: props.aId,
-      kind: props.kind
-    };
-  }
-
-  _createClass(Folder, [{
-    key: 'putShow',
-    value: function putShow() {
-      var _this = this;
-
-      ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"));
-      var list = [];
-      var d = undefined;
-      var aId = localStorage.accountId;
-      var query = undefined;
-      switch (this.state.kind) {
-        case "folders":
-          query = _firebase.db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls");
-          break;
-        case "myfreefolders":
-          query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
-          break;
-        case "freefolder":
-          query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
-          break;
-        default:
-          break;
-      }
-      query.get().then(function (snap) {
-        var for_saved_list = [];
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator['return']) {
-              _iterator['return']();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.url_list = for_saved_list.join("-@-");
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, ownerAId: _this.state.ownerAId, list: list }), document.getElementById("container"));
-      });
-    }
-  }, {
-    key: 'urlPost',
-    value: function urlPost() {
-      var _this2 = this;
-
-      var list = [];
-      var d = undefined;
-      _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(function (snap) {
-        var for_saved_list = [];
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var i = _step2.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-              _iterator2['return']();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.url_list = for_saved_list.join("-@-");
-        history.pushState('', '', "folder?id=" + _this2.props.id);
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("container"));
-      });
-    }
-  }, {
-    key: 'edit',
-    value: function edit() {
-      if (localStorage.accountId === this.state.ownerAId) {
-        ReactDOM.render(_react2['default'].createElement(_view.ViewFolderEdit, { ownerAId: this.state.ownerAId, id: this.state.id }), document.getElementById("container"));
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      return _react2['default'].createElement(
-        'div',
-        { className: 'urlset_panel', id: this.props.id },
-        _react2['default'].createElement(
-          'button',
-          { className: 'edit__folder', onClick: this.edit.bind(this) },
-          '…'
-        ),
-        _react2['default'].createElement(
-          'a',
-          { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' },
-          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' })
-        ),
-        _react2['default'].createElement(
-          'h3',
-          null,
-          this.props.name
-        ),
-        _react2['default'].createElement(
-          'p',
-          { className: 'account_name' },
-          this.props.aName
-        ),
-        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
-      );
-    }
-  }]);
-
-  return Folder;
-})(_react2['default'].Component);
-
-var Folders = (function (_React$Component2) {
-  _inherits(Folders, _React$Component2);
-
-  function Folders(props) {
-    _classCallCheck(this, Folders);
-
-    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).call(this, props);
-    this.state = { list: props.list };
-  }
-
-  _createClass(Folders, [{
-    key: 'render',
-    value: function render() {
-      var return_html = [];
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
-
-      try {
-        for (var _iterator3 = this.state.list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var d = _step3.value;
-
-          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
-            post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
-        }
-      } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion3 && _iterator3['return']) {
-            _iterator3['return']();
-          }
-        } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
-          }
-        }
-      }
-
-      return return_html;
-    }
-  }]);
-
-  return Folders;
-})(_react2['default'].Component);
-
-exports['default'] = Folders;
-module.exports = exports['default'];
-
-},{"./firebase":26,"./segue":28,"./url":30,"./view":32,"react":22}],28:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _url = require("./url");
-
-var _url2 = _interopRequireDefault(_url);
-
-var _folder = require("./folder");
-
-var _folder2 = _interopRequireDefault(_folder);
-
-var _add_button = require('./add_button');
-
-var _side_menu = require("./side_menu");
-
-var _side_menu2 = _interopRequireDefault(_side_menu);
-
-var _firebase = require("./firebase");
-
-var SegueAnyToUrl = (function (_React$Component) {
-  _inherits(SegueAnyToUrl, _React$Component);
-
-  function SegueAnyToUrl(props) {
-    _classCallCheck(this, SegueAnyToUrl);
-
-    _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId
-    };
-    history.pushState('', '', "folders?id=" + this.props.id);
-  }
-
-  _createClass(SegueAnyToUrl, [{
-    key: "openAddPanel",
-    value: function openAddPanel() {
-      var listStr = sessionStorage.url_list;
-      var list = undefined;
-      if (listStr !== "") list = listStr.split("-@-").map(function (x) {
-        return JSON.parse(x);
-      });else list = [];
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id, ownerAId: this.state.ownerAId }), document.getElementById("container"));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToUrl;
-})(_react2["default"].Component);
-
-var SegueAnyToFolder = (function (_React$Component2) {
-  _inherits(SegueAnyToFolder, _React$Component2);
-
-  function SegueAnyToFolder(props) {
-    _classCallCheck(this, SegueAnyToFolder);
-
-    _get(Object.getPrototypeOf(SegueAnyToFolder.prototype), "constructor", this).call(this, props);
-    this.state = {
-      list: props.list
-    };
-  }
-
-  _createClass(SegueAnyToFolder, [{
-    key: "openAddPanel",
-    value: function openAddPanel() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      ReactDOM.render(_react2["default"].createElement(SegueFolderToAddPanel, { list: this.state.list }), document.getElementById("container"));
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var d = _step.value;
-
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToFolder;
-})(_react2["default"].Component);
-
-var SegueFolderToAddPanel = (function (_React$Component3) {
-  _inherits(SegueFolderToAddPanel, _React$Component3);
-
-  function SegueFolderToAddPanel() {
-    _classCallCheck(this, SegueFolderToAddPanel);
-
-    _get(Object.getPrototypeOf(SegueFolderToAddPanel.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SegueFolderToAddPanel, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddPanel, null),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueFolderToAddPanel;
-})(_react2["default"].Component);
-
-var SegueAnyToFolderList = (function (_React$Component4) {
-  _inherits(SegueAnyToFolderList, _React$Component4);
-
-  function SegueAnyToFolderList() {
-    _classCallCheck(this, SegueAnyToFolderList);
-
-    _get(Object.getPrototypeOf(SegueAnyToFolderList.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SegueAnyToFolderList, [{
-    key: "openFolderPost",
-    value: function openFolderPost() {
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderPost, { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var d = _step2.value;
-
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-            _iterator2["return"]();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.props.list }),
-        _react2["default"].createElement(
-          "button",
-          { id: "later_button" },
-          "Watch later"
-        ),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToFolderList;
-})(_react2["default"].Component);
-
-var SegueAnyToFolderPost = (function (_React$Component5) {
-  _inherits(SegueAnyToFolderPost, _React$Component5);
-
-  function SegueAnyToFolderPost(props) {
-    _classCallCheck(this, SegueAnyToFolderPost);
-
-    _get(Object.getPrototypeOf(SegueAnyToFolderPost.prototype), "constructor", this).call(this, props);
-    this.state = { list: this.props.list };
-  }
-
-  _createClass(SegueAnyToFolderPost, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_add_button.UrlFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToFolderPost;
-})(_react2["default"].Component);
-
-var SegueAnyToUrlPostFolderChoice = (function (_React$Component6) {
-  _inherits(SegueAnyToUrlPostFolderChoice, _React$Component6);
-
-  function SegueAnyToUrlPostFolderChoice(props) {
-    _classCallCheck(this, SegueAnyToUrlPostFolderChoice);
-
-    _get(Object.getPrototypeOf(SegueAnyToUrlPostFolderChoice.prototype), "constructor", this).call(this, props);
-    this.state = { list: this.props.list };
-  }
-
-  _createClass(SegueAnyToUrlPostFolderChoice, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        null,
-        _react2["default"].createElement(
-          "h1",
-          { className: "title__folder-choice" },
-          "URLを登録するフォルダを選択"
-        ),
-        _react2["default"].createElement(
-          "div",
-          { className: "container__wrapper" },
-          _react2["default"].createElement(_folder2["default"], { post: true, list: this.state.list }),
-          _react2["default"].createElement(_side_menu2["default"], null)
-        )
-      );
-    }
-  }]);
-
-  return SegueAnyToUrlPostFolderChoice;
-})(_react2["default"].Component);
-
-var SegueAnyToUrlPost = (function (_React$Component7) {
-  _inherits(SegueAnyToUrlPost, _React$Component7);
-
-  function SegueAnyToUrlPost() {
-    _classCallCheck(this, SegueAnyToUrlPost);
-
-    _get(Object.getPrototypeOf(SegueAnyToUrlPost.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SegueAnyToUrlPost, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToUrlPost;
-})(_react2["default"].Component);
-
-function segueToFolders() {
-  history.pushState('', '', "folders");
-  var list = [];
-  var aId = localStorage.getItem("accountId");
-  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-    var d = undefined;
-    var for_saved_list = [];
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-      for (var _iterator3 = snap1.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var i = _step3.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "folders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError3 = true;
-      _iteratorError3 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-          _iterator3["return"]();
-        }
-      } finally {
-        if (_didIteratorError3) {
-          throw _iteratorError3;
-        }
-      }
-    }
-
-    ;
-    _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-      var d = undefined;
-      var _iteratorNormalCompletion4 = true;
-      var _didIteratorError4 = false;
-      var _iteratorError4 = undefined;
-
-      try {
-        for (var _iterator4 = snap2.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-          var i = _step4.value;
-
-          d = i.data();
-          d.id = i.id;
-          d.kind = "myfreefolders";
-          list.push(d);
-          for_saved_list.push(JSON.stringify(d));
-        }
-      } catch (err) {
-        _didIteratorError4 = true;
-        _iteratorError4 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-            _iterator4["return"]();
-          }
-        } finally {
-          if (_didIteratorError4) {
-            throw _iteratorError4;
-          }
-        }
-      }
-
-      ;
-      sessionStorage.urlset_list = for_saved_list.join("-@-");
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion5 = true;
-      var _didIteratorError5 = false;
-      var _iteratorError5 = undefined;
-
-      try {
-        for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-          var _d = _step5.value;
-
-          var _aId = localStorage.accountId;
-          if (_d.aId === _aId) {
-            var selector = "#" + _d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-          $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-        }
-      } catch (err) {
-        _didIteratorError5 = true;
-        _iteratorError5 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-            _iterator5["return"]();
-          }
-        } finally {
-          if (_didIteratorError5) {
-            throw _iteratorError5;
-          }
-        }
-      }
-    });
-  });
-}
-
-function segueToGlobal() {
-  var list = [];
-  var d = undefined;
-  var for_saved_list = [];
-  var aId = localStorage.accountId;
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
-    var _iteratorNormalCompletion6 = true;
-    var _didIteratorError6 = false;
-    var _iteratorError6 = undefined;
-
-    try {
-      for (var _iterator6 = snap.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-        var j = _step6.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError6 = true;
-      _iteratorError6 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-          _iterator6["return"]();
-        }
-      } finally {
-        if (_didIteratorError6) {
-          throw _iteratorError6;
-        }
-      }
-    }
-
-    ;
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(_react2["default"].createElement(
-      "div",
-      null,
-      _react2["default"].createElement(
-        "h1",
-        { className: "latest-container__title" },
-        "新着情報"
-      ),
-      _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: list })
-      )
-    ), document.getElementById("container__latest"));
-    var _iteratorNormalCompletion7 = true;
-    var _didIteratorError7 = false;
-    var _iteratorError7 = undefined;
-
-    try {
-      for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-        var _d2 = _step7.value;
-
-        var _aId2 = localStorage.accountId;
-        if (_d2.aId === _aId2) {
-          var selector = "#" + _d2.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError7 = true;
-      _iteratorError7 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-          _iterator7["return"]();
-        }
-      } finally {
-        if (_didIteratorError7) {
-          throw _iteratorError7;
-        }
-      }
-    }
-
-    return true;
-  }).then(function () {
-    list = [];
-    d = [];
-    for_saved_list = [];
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get().then(function (snap) {
-      var _iteratorNormalCompletion8 = true;
-      var _didIteratorError8 = false;
-      var _iteratorError8 = undefined;
-
-      try {
-        for (var _iterator8 = snap.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-          var j = _step8.value;
-
-          d = j.data();
-          d.id = j.id;
-          d.kind = "freefolder";
-          list.push(d);
-          for_saved_list.push(JSON.stringify(d));
-        }
-      } catch (err) {
-        _didIteratorError8 = true;
-        _iteratorError8 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-            _iterator8["return"]();
-          }
-        } finally {
-          if (_didIteratorError8) {
-            throw _iteratorError8;
-          }
-        }
-      }
-
-      ;
-      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-      ReactDOM.render(_react2["default"].createElement(
-        "div",
-        null,
-        _react2["default"].createElement(
-          "h1",
-          { className: "recommend-container__title" },
-          "評価されている情報"
-        ),
-        _react2["default"].createElement(SegueAnyToFolder, { list: list })
-      ), document.getElementById("container"));
-      var _iteratorNormalCompletion9 = true;
-      var _didIteratorError9 = false;
-      var _iteratorError9 = undefined;
-
-      try {
-        for (var _iterator9 = list[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-          var _d3 = _step9.value;
-
-          var _aId3 = localStorage.accountId;
-          if (_d3.aId === _aId3) {
-            var selector = "#" + _d3.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-          $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
-        }
-      } catch (err) {
-        _didIteratorError9 = true;
-        _iteratorError9 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
-            _iterator9["return"]();
-          }
-        } finally {
-          if (_didIteratorError9) {
-            throw _iteratorError9;
-          }
-        }
-      }
-
-      return true;
-    });
-  });
-}
-
-exports.SegueAnyToUrlPostFolderChoice = SegueAnyToUrlPostFolderChoice;
-exports.SegueAnyToFolder = SegueAnyToFolder;
-exports.SegueAnyToFolderList = SegueAnyToFolderList;
-exports.SegueAnyToFolderPost = SegueAnyToFolderPost;
-exports.SegueAnyToUrl = SegueAnyToUrl;
-exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
-exports.segueToFolders = segueToFolders;
-exports.segueToGlobal = segueToGlobal;
-
-},{"./add_button":25,"./firebase":26,"./folder":27,"./side_menu":29,"./url":30,"react":22}],29:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _segue = require("./segue");
-
-var _firebase = require("./firebase");
-
-var SideMenu = (function (_React$Component) {
-  _inherits(SideMenu, _React$Component);
-
-  function SideMenu() {
-    _classCallCheck(this, SideMenu);
-
-    _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SideMenu, [{
-    key: "homeClicked",
-    value: function homeClicked() {
-      history.pushState('', '', "feed");
-      (0, _segue.segueToGlobal)();
-    }
-  }, {
-    key: "folderClicked",
-    value: function folderClicked() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"));
-      history.pushState('', '', "folders");
-      var list = [];
-      var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = snap1.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
-
-            d = i.data();
-            d.id = i.id;
-            d.kind = "folders";
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator["return"]) {
-              _iterator["return"]();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        ;
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-          var d = undefined;
-          var _iteratorNormalCompletion2 = true;
-          var _didIteratorError2 = false;
-          var _iteratorError2 = undefined;
-
-          try {
-            for (var _iterator2 = snap2.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-              var i = _step2.value;
-
-              d = i.data();
-              d.id = i.id;
-              d.kind = "myfreefolders";
-              list.push(d);
-              for_saved_list.push(JSON.stringify(d));
-            }
-          } catch (err) {
-            _didIteratorError2 = true;
-            _iteratorError2 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-                _iterator2["return"]();
-              }
-            } finally {
-              if (_didIteratorError2) {
-                throw _iteratorError2;
-              }
-            }
-          }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-          ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-          var _iteratorNormalCompletion3 = true;
-          var _didIteratorError3 = false;
-          var _iteratorError3 = undefined;
-
-          try {
-            for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-              var _d = _step3.value;
-
-              var _aId = localStorage.accountId;
-              if (_d.aId === _aId) {
-                var selector = "#" + _d.id + " .edit__folder";
-                $(selector).css("display", "block");
-              }
-              $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError3 = true;
-            _iteratorError3 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-                _iterator3["return"]();
-              }
-            } finally {
-              if (_didIteratorError3) {
-                throw _iteratorError3;
-              }
-            }
-          }
-        });
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "ul",
-        { className: "list-nav" },
-        _react2["default"].createElement(
-          "a",
-          { href: "/account?aId=" + localStorage.getItem("accountId") },
-          "Profile"
-        ),
-        _react2["default"].createElement(
-          "a",
-          { onClick: this.homeClicked },
-          "Home"
-        ),
-        _react2["default"].createElement(
-          "a",
-          { onClick: this.folderClicked },
-          "folders"
-        ),
-        _react2["default"].createElement(
-          "a",
-          { href: "" },
-          "通知"
-        ),
-        _react2["default"].createElement(
-          "a",
-          { href: "" },
-          "説明書"
-        )
-      );
-    }
-  }]);
-
-  return SideMenu;
-})(_react2["default"].Component);
-
-exports["default"] = SideMenu;
-module.exports = exports["default"];
-
-},{"./firebase":26,"./segue":28,"react":22}],30:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _firebase = require("./firebase");
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var Url = (function (_React$Component) {
-  _inherits(Url, _React$Component);
-
-  function Url(props) {
-    _classCallCheck(this, Url);
-
-    _get(Object.getPrototypeOf(Url.prototype), "constructor", this).call(this, props);
-    this.state = {
-      title: props.title,
-      href: props.href,
-      content: props.content
-    };
-  }
-
-  _createClass(Url, [{
-    key: "clickHandler",
-    value: function clickHandler() {
-      var aId = localStorage.getItem("accountId");
-      var data = {
-        href: this.state.href,
-        date: new Date()
-      };
-      _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "urlput_panel" },
-        _react2["default"].createElement(
-          "div",
-          { className: "text_overflow_url" },
-          _react2["default"].createElement(
-            "h3",
-            null,
-            this.state.title
-          ),
-          _react2["default"].createElement("a", { href: this.state.href, target: "_blank", onClick: this.clickHandler.bind(this) })
-        ),
-        _react2["default"].createElement(
-          "p",
-          { className: "baloon" },
-          this.state.content
-        )
-      );
-    }
-  }]);
-
-  return Url;
-})(_react2["default"].Component);
-
-var Urls = (function (_React$Component2) {
-  _inherits(Urls, _React$Component2);
-
-  function Urls(props) {
-    _classCallCheck(this, Urls);
-
-    _get(Object.getPrototypeOf(Urls.prototype), "constructor", this).call(this);
-    this.state = {
-      list: props.list
-    };
-  }
-
-  _createClass(Urls, [{
-    key: "render",
-    value: function render() {
-      var return_html = [];
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.list.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2);
-
-          var i = _step$value[0];
-          var d = _step$value[1];
-
-          return_html.push(_react2["default"].createElement(Url, { key: i, title: d.title, content: d.content, href: d.href }));
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      return return_html;
-    }
-  }]);
-
-  return Urls;
-})(_react2["default"].Component);
-
-exports["default"] = Urls;
-
-jQuery(function ($) {
-  $('.textOverflowUrl').each(function () {
-    var $target = $(this);
-
-    var html = $target.html();
-
-    var $clone = $target.clone();
-    $clone.css({
-      display: 'none',
-      position: 'absolute',
-      overflow: 'visible'
-    }).width($target.width()).height('auto');
-
-    $target.after($clone);
-    while (html.length > 0 && $clone.height() > $target.height()) {
-      html = html.substr(0, html.length - 1);
-      $clone.html(html + '...');
-    }
-
-    $target.html($clone.html());
-    $clone.remove();
-  });
-});
-module.exports = exports["default"];
-
-},{"./firebase":26,"react":22}],31:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = generateUuid;
-
-function generateUuid() {
-  // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
-  // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
-  var chars = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".split("");
-  for (var i = 0, len = chars.length; i < len; i++) {
-    switch (chars[i]) {
-      case "x":
-        chars[i] = Math.floor(Math.random() * 16).toString(16);
-        break;
-      case "y":
-        chars[i] = (Math.floor(Math.random() * 4) + 8).toString(16);
-        break;
-    }
-  }
-  return chars.join("");
-}
-
-module.exports = exports["default"];
-
-},{}],32:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _url = require("./url");
-
-var _url2 = _interopRequireDefault(_url);
-
-var _folder = require("./folder");
-
-var _folder2 = _interopRequireDefault(_folder);
-
-var _add_button = require('./add_button');
-
-var _side_menu = require("./side_menu");
-
-var _side_menu2 = _interopRequireDefault(_side_menu);
-
-var _firebase = require("./firebase");
-
-var _segue = require("./segue");
-
-/* Props list: cancel(function) title(string) content(html) */
-
-var TemplateViewNavTab = (function (_React$Component) {
-  _inherits(TemplateViewNavTab, _React$Component);
-
-  function TemplateViewNavTab() {
-    _classCallCheck(this, TemplateViewNavTab);
-
-    _get(Object.getPrototypeOf(TemplateViewNavTab.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(TemplateViewNavTab, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        null,
-        _react2["default"].createElement("div", { className: "window-overlay", onClick: this.props.cancel }),
-        _react2["default"].createElement(
-          "div",
-          { className: "post__container" },
-          _react2["default"].createElement(
-            "h1",
-            { className: "view-title" },
-            this.props.title
-          ),
-          this.props.content
-        )
-      );
-    }
-  }]);
-
-  return TemplateViewNavTab;
-})(_react2["default"].Component);
-
-var ViewFolderEdit = (function (_React$Component2) {
-  _inherits(ViewFolderEdit, _React$Component2);
-
-  function ViewFolderEdit(props) {
-    _classCallCheck(this, ViewFolderEdit);
-
-    _get(Object.getPrototypeOf(ViewFolderEdit.prototype), "constructor", this).call(this, props);
-    var list = sessionStorage.urlset_list.split("-@-").map(function (x) {
-      return JSON.parse(x);
-    });
-    var jsx = _react2["default"].createElement(
-      "div",
-      { className: "add_view" },
-      _react2["default"].createElement(
-        "div",
-        { className: "add_panel", onClick: this.deleteFolder.bind(this) },
-        _react2["default"].createElement(
-          "h3",
-          null,
-          "フォルダの削除"
-        ),
-        _react2["default"].createElement(
-          "p",
-          null,
-          "このフォルダを削除します"
-        )
-      )
-    );
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      list: list,
-      content: jsx
-    };
-  }
-
-  _createClass(ViewFolderEdit, [{
-    key: "deleteFolder",
-    value: function deleteFolder() {
-      _firebase.db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id)["delete"]();
-      ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: this.state.list }), document.getElementById("container"));
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var d = _step.value;
-
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
-    key: "cancel",
-    value: function cancel() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement(_segue.SegueAnyToFolderList, { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var d = _step2.value;
-
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-            _iterator2["return"]();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(TemplateViewNavTab, { content: this.state.content, title: this.state.id, cancel: this.cancel }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return ViewFolderEdit;
-})(_react2["default"].Component);
-
-exports.TemplateViewNavTab = TemplateViewNavTab;
-exports.ViewFolderEdit = ViewFolderEdit;
-
-},{"./add_button":25,"./firebase":26,"./folder":27,"./segue":28,"./side_menu":29,"./url":30,"react":22}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -34788,37 +34978,39 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var _jsFolder = require('../js/folder');
+var _componentFolder = require('../../component/folder');
 
-var _jsFolder2 = _interopRequireDefault(_jsFolder);
+var _componentFolder2 = _interopRequireDefault(_componentFolder);
 
-var _jsUrl = require('../js/url');
+var _componentUrl = require('../../component/url');
 
-var _jsUrl2 = _interopRequireDefault(_jsUrl);
+var _componentUrl2 = _interopRequireDefault(_componentUrl);
 
-var _jsAccount_register = require('../js/account_register');
+var _componentAccount_register = require('../../component/account_register');
 
-var _jsAccount_register2 = _interopRequireDefault(_jsAccount_register);
+var _componentAccount_register2 = _interopRequireDefault(_componentAccount_register);
 
-var _jsSegue = require('../js/segue');
+var _componentSegue = require('../../component/segue');
 
-var _jsFirebase = require("../js/firebase");
+var _componentFirebase = require("../../component/firebase");
 
 // @plaong Use session storage ( like a iOS user defaults )
 // If anyone knows more smart ways, please tell me about that.
 
-var blob;
 window.addEventListener('popstate', function (e) {
-  init();
+  backBefore();
 });
 
-init();
-
-function blobToFile(theBlob, fileName) {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
+function backBefore() {
+  var path = sessionStorage.udBeforeLocation.split("/")[1];
+  if (path === "feed") {
+    path = "home";
+  }
+  var selector = "#list-nav__" + path;
+  $(selector).click();
 }
+
+init();
 
 function accountRegisterSubmitValidation() {
   var name = document.getElementById("ra_name").value;
@@ -34828,7 +35020,7 @@ function accountRegisterSubmitValidation() {
 }
 
 function init() {
-  _jsFirebase.auth.onAuthStateChanged(function (user) {
+  _componentFirebase.auth.onAuthStateChanged(function (user) {
     if (user === null) {
       var redirect_url = "/" + location.search;
       localStorage.removeItem("accountId");
@@ -34839,7 +35031,7 @@ function init() {
       location.href = redirect_url;
     }
 
-    _jsFirebase.db.collection("account").where("uId", "==", user.uid).get().then(function (snap) {
+    _componentFirebase.db.collection("account").where("uId", "==", user.uid).get().then(function (snap) {
       if (!snap.empty) {
         var _iteratorNormalCompletion = true;
         var _didIteratorError = false;
@@ -34866,17 +35058,19 @@ function init() {
             }
           }
         }
+      } else if (!navigator.onLine && localStorage.accountId !== undefined) {
+        return localStorage.accountId;
+      } else {
+        $("body").prepend('<div id="popover"></div>');
+        ReactDOM.render(_react2['default'].createElement(_componentAccount_register2['default'], null), document.getElementById("popover"));
+        return Promise.reject("Account doesn't exist.");
       }
-      $("body").prepend('<div id="popover"></div>');
-      ReactDOM.render(_react2['default'].createElement(_jsAccount_register2['default'], null), document.getElementById("popover"));
-      return Promise.reject("Account doesn't exist.");
     }).then(function (aId) {
       switch (location.pathname) {
         case "/feed":
-          (0, _jsSegue.segueToGlobal)();
+          (0, _componentSegue.segueInitToGlobal)();
           break;
         case "/folders":
-          ReactDOM.unmountComponentAtNode(document.getElementById("container__latest"));
           var query = location.search;
           if (query !== "") {
             var parameters;
@@ -34892,7 +35086,7 @@ function init() {
               });
               var folderId = parameters["id"];
               var list = [];
-              var queryToURLs = _jsFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls");
+              var queryToURLs = _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls");
               queryToURLs.get().then(function (snap) {
                 var _iteratorNormalCompletion2 = true;
                 var _didIteratorError2 = false;
@@ -34927,11 +35121,11 @@ function init() {
                 }
 
                 ;
-                ReactDOM.render(_react2['default'].createElement(_jsSegue.SegueAnyToUrl, { list: list, id: folderId }), document.getElementById("container"));
+                ReactDOM.render(_react2['default'].createElement(_componentSegue.SegueAnyToUrl, { list: list, id: folderId }), document.getElementById("container"));
               });
             })();
           } else {
-            (0, _jsSegue.segueToFolders)();
+            (0, _componentSegue.segueInitFolderFeed)();
           }
           break;
       }
@@ -34949,4 +35143,4 @@ function raButtonActiveSwitch() {
   }
 }
 
-},{"../js/account_register":24,"../js/firebase":26,"../js/folder":27,"../js/segue":28,"../js/url":30,"react":22}]},{},[33]);
+},{"../../component/account_register":2,"../../component/firebase":4,"../../component/folder":5,"../../component/segue":7,"../../component/url":9,"react":32}]},{},[34]);

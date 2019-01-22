@@ -1,5 +1,5 @@
 require("firebase/app");
-import {auth, db} from "../js/firebase";
+import {auth, db} from "../../component/firebase";
 
 auth.onAuthStateChanged(user => {
   if(user !== null) {

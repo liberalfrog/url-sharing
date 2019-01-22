@@ -1,7 +1,7 @@
 import React from 'react';
-import Folders from '../js/folder';
-import {storage, db} from "../js/firebase";
-import fileChanged from "../js/img_compresser";
+import Folders from '../../component/folder';
+import {storage, db} from "../../component/firebase";
+import fileChanged from "../../component/img_compresser";
 
 var isFollow
 
