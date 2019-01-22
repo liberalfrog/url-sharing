@@ -66,8 +66,31 @@ function blobToFile(theBlob, fileName){
 
 
 class AddButton extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {
+      "kind": undefined
+    }
+    console.log(props.icon)
+    switch(props.icon){
+      case "+":
+        this.state.kind = "fa fa-plus";
+        break;
+      case "folder":
+        this.state.kind = "fa fa-folder-plus";
+        break;
+      case "url":
+        this.state.kind = "fa far fa-code";
+        break;
+
+      default:
+        this.state.kind = "fa"
+      break
+    }
+    console.log(this.state.kind)
+  }
   render(){
-    return( <button id="add_button" onClick={this.props.func}>{this.props.icon}</button>);
+    return( <button id="add_button" className={this.state.kind} onClick={this.props.func}></button>);
   }
 }
 
