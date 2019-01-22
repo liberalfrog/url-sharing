@@ -278,7 +278,7 @@ button{
     flex-wrap: wrap;
   }
 
-  .latest-container__title, .recommend-container__title{ margin: 0 0 0 250px; }
+  .latest-container__title, .recommend-container__title{ margin: 0 0 0 250px; padding: 40px 0 0 0;}
   
   .urlset_panel, .post-folder__folder{
     border-radius: 5px;
@@ -397,7 +397,7 @@ button{
   }
   
   .post-folder__folder, .post-folder__image{
-    width: 450px;
+    width: 40vw;
     height: 220px;
   }
   
