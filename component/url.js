@@ -1,7 +1,7 @@
 import {db} from "./firebase";
 import React from 'react';
 
-class Url extends React.Component {
+class URL extends React.Component {
   constructor(props){
     super(props)
     this.state = {
@@ -32,7 +32,7 @@ class Url extends React.Component {
 }
 
 
-export default class Urls extends React.Component {
+export default class URLs extends React.Component {
   constructor(props){
     super()
     this.state = {
@@ -42,14 +42,14 @@ export default class Urls extends React.Component {
   render(){
     var return_html = []
     for(let [i, d] of this.state.list.entries()){
-      return_html.push( <Url key={i} title={d.title} content={d.content} href={d.href}/>);
+      return_html.push( <URL key={i} title={d.title} content={d.content} href={d.href}/>);
     }
     return return_html;
   }
 }
 
 jQuery(function($){
-  $('.textOverflowUrl').each(function() {
+  $('.textOverflowURL').each(function() {
     var $target = $(this);
 
     var html = $target.html();

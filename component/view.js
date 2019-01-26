@@ -1,10 +1,10 @@
 import React from "react";
-import Urls from "./url";
+import URLs from "./url";
 import Folders from "./folder";
-import {AddButton, AddPanel, UrlFolderPost, UrlPost} from './add_button';
+import {AddButton,  URLFolderPost, URLPost} from './add_button';
 import SideMenu from "./side_menu";
 import {db} from "./firebase";
-import {segueFolderFeedToPostFolder, segueInitFolderFeed, SegueFolderToAddPanel, segueFolderToAddPanel} from "./segue";
+import {segueFolderFeedToPostFolder, segueInitFolderFeed, segueFolderToAddPanel, segueURLfeedToURLPost} from "./segue";
 import LaterButton from "./later_button";
 
 
@@ -142,7 +142,7 @@ class ViewPostFolder extends React.Component {
   render(){
     return(
       <div className="container__wrapper">
-        <UrlFolderPost />
+        <URLFolderPost />
         <Folders list={this.state.list} />
       </div>
     )
@@ -150,4 +150,40 @@ class ViewPostFolder extends React.Component {
 }
 
 
-export {TemplateViewNavTab, ViewFolderEdit, ViewTop, ViewFolderFeed, ViewPostFolder} 
+class ViewURLFeed extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = { 
+      id: props.id,
+      ownerAId: props.ownerAId
+    }   
+    history.pushState('','',"folders?id=" + this.props.id)
+  }
+  openAddPanel(){ 
+    segueURLfeedToURLPost(this.state.id, this.state.ownerAid)
+  }
+  render(){
+    return(
+      <div className="container__wrapper">
+        <URLs list={this.props.list} />
+      </div>
+    );  
+  }
+}
+
+
+class ViewURLPost extends React.Component {
+  render(){
+    return(
+      <div className="container__wrapper">
+        <URLs list={this.props.list} />
+        <URLPost id={this.props.id} ownerAId={this.props.ownerAId}/>
+        <SideMenu />
+      </div>
+    );
+  }
+}
+
+
+
+export {TemplateViewNavTab, ViewFolderEdit, ViewTop, ViewFolderFeed, ViewPostFolder, ViewURLFeed, ViewURLPost}

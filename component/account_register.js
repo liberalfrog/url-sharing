@@ -121,7 +121,7 @@ export default class AccountRegister extends React.Component{
           break;
       }
     }, function() { // Upload completed successfully, now we can get the download URL
-      uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
         console.log('File available at', downloadURL);
         let user = auth.currentUser;
         let name = document.getElementById("ra_name").value

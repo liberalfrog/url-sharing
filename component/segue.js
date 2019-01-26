@@ -1,45 +1,66 @@
 import React from "react";
-import Urls from "./url";
+import URLs from "./url";
 import Folders from "./folder";
-import {AddButton, AddPanel, UrlPost} from './add_button';
+import {AddButton, AddPanel, URLPost} from './add_button';
 import SideMenu from "./side_menu";
 import {db} from "./firebase";
-import {ViewTop, ViewFolderFeed, ViewPostFolder} from "./view";
+import {ViewTop, ViewFolderFeed, ViewPostFolder, ViewURLFeed, ViewURLPost} from "./view";
 import LaterButton from "./later_button";
 
 
-class SegueAnyToUrl extends React.Component {
-  constructor(props){
-    super(props)
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId
+function segueURLFeed(kind, id, ownerAId){
+  let list = []
+  let d
+  let aId = localStorage.accountId
+  let query
+  switch(kind){
+    case "folders":
+      query = db.collection("account").doc(aId).collection("folders").doc(id).collection("urls")
+      break
+    case "myfreefolders":
+      query = db.collection("account").doc(aId).collection("myfreefolders")
+                .doc(id).collection("urls")
+      break
+    case "freefolder":
+      query = db.collection("freefolder").doc(id).collection("urls")
+      break
+    default: 
+      console.log("Some thing bug is occured at segueURLFeed.")
+      break
+  }
+  query.get().then(snap => {
+    let for_saved_list = []
+    for(let i of snap.docs){
+      d = i.data()
+      d.id = i.id
+      list.push(d)
+      for_saved_list.push(JSON.stringify(d))
+    };
+    sessionStorage.url_list = for_saved_list.join("-@-");
+
+    if(document.getElementById("main__container")){
+      ReactDOM.render(<ViewURLFeed id={id} 
+          ownerAId={ownerAId} list={list}/>, document.getElementById("main__container"))
+      ReactDOM.render(<AddButton func={segueURLPost} icon={"url"} />,
+          document.getElementById("utility__area"))
+    }else{
+      ReactDOM.render([
+        <div id="main__container">
+          <ViewURLFeed id={id} ownerAId={ownerAId} list={list}/>
+        </div>,
+        <div id="utility__area">
+          <AddButton func={segueURLPost} icon={"url"} />
+        </div>,
+        <SideMenu foldersStyle="tb-active"/>
+      ], document.getElementById("container"))
     }
-    history.pushState('','',"folders?id=" + this.props.id);
-  }
-  openAddPanel(){ 
-    let listStr = sessionStorage.url_list
-    let list
-    if(listStr !== "")
-      list = listStr.split("-@-").map(x => JSON.parse(x))
-    else
-      list = []
-    ReactDOM.render(<SegueAnyToUrlPost list={list} id={this.state.id} ownerAId={this.state.ownerAId}/>, document.getElementById("main__container"))
-  }
-  render(){
-    return(
-      <div className="container__wrapper">
-        <Urls list={this.props.list} />
-        <AddButton func={this.openAddPanel.bind(this)} icon={"url"} />
-        <SideMenu />
-      </div>
-    );
-  }
+  });
 }
 
 
 function segueFolderFeedToPostFolder(){
   let list = sessionStorage.urlset_list.split("-@-")
+    console.log("a button")
   list.map(x => {JSON.parse(x)})
   ReactDOM.render(<ViewPostFolder list={list} />, document.getElementById("main__container"))
   for(let d of list){
@@ -54,11 +75,13 @@ function segueFolderFeedToPostFolder(){
 
 
 function segueFolderToAddPanel(){
+    console.log("b button")
   ReactDOM.render(<AddPanel /> , document.getElementById("utility__area"))
 }
 
 
-function segueAnyToUrlPostFolderChoice(){
+function segueAnyToURLPostFolderChoice(){
+    console.log("c button")
   history.pushState('','',"folders")
   let list = []
   let aId = localStorage.getItem("accountId")
@@ -68,6 +91,7 @@ function segueAnyToUrlPostFolderChoice(){
     for(let i of snap.docs){
       d = i.data()
       d.id = i.id
+      d.kind = "folders"
       list.push(d)
       for_saved_list.push(JSON.stringify(d))
     }   
@@ -77,6 +101,7 @@ function segueAnyToUrlPostFolderChoice(){
     for(let i of snap.docs){
       d = i.data()
       d.id = i.id
+      d.kind = "myfreefolders"
       list.push(d)
       for_saved_list.push(JSON.stringify(d))
     }   
@@ -95,18 +120,48 @@ function segueAnyToUrlPostFolderChoice(){
 }
 
 
-class SegueAnyToUrlPost extends React.Component {
-  render(){
-    return(
-      <div className="container__wrapper">
-        <Urls list={this.props.list} />
-        <UrlPost id={this.props.id} ownerAId={this.props.ownerAId}/>
-        <SideMenu />
-      </div>
-    );
+function segueURLPost(id, ownerAId, kind){
+  let list = []
+  let d
+  let aId = localStorage.accountId
+  let query
+  console.log(kind)
+  console.log(id)
+  console.log(ownerAId)
+  switch(kind){
+    case "folders":
+      query = db.collection("account").doc(aId).collection("folders").doc(id).collection("urls")
+      break
+    case "myfreefolders":
+      query = db.collection("account").doc(aId).collection("myfreefolders")
+                .doc(id).collection("urls")
+      break
+    case "freefolder":
+      query = db.collection("freefolder").doc(id).collection("urls")
+      break
+    default:
+      console.log("Some thing bug is occured at segueURLFeed.")
+      break
   }
-}
+  query.get().then(snap => {
+    let for_saved_list = []
+    for(let i of snap.docs){
+      d = i.data()
+      d.id = i.id
+      list.push(d)
+      for_saved_list.push(JSON.stringify(d))
+    };
+    sessionStorage.url_list = for_saved_list.join("-@-");
 
+  /*let listStr = sessionStorage.url_list
+  let list
+  if(listStr !== "")
+    list = listStr.split("-@-").map(x => JSON.parse(x))
+  else
+    list = []*/
+    ReactDOM.render(<ViewURLPost list={list} id={id} ownerAId={ownerAId}/>, document.getElementById("main__container"))
+  })
+}
 
 function segueInitFolderFeed(){
   let list = []
@@ -254,9 +309,9 @@ function segueInitToGlobal(){
   let for_saved_list = []
   let latest_list = []
   let recommend_list = []
-  db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(snap => {
+  db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(snaps => {
     let d = {}
-    for(let j of snap.docs){
+    for(let j of snaps.docs){
       d = j.data()
       d.id = j.id
       d.kind = "freefolder"
@@ -264,9 +319,9 @@ function segueInitToGlobal(){
       for_saved_list.push(JSON.stringify(d))
     }  
     return db.collection("freefolder").orderBy("dateTime").limit(8).get()
-  }).then(snap => {
+  }).then(snaps => {
     let d = {}
-    for(let j of snap.docs){
+    for(let j of snaps.docs){
       d = j.data()
       d.id = j.id
       d.kind = "freefolder"
@@ -297,5 +352,5 @@ function segueInitToGlobal(){
 }
 
 
-export {segueAnyToUrlPostFolderChoice, SegueAnyToUrl, SegueAnyToUrlPost, segueInitFolderFeed,
-    segueFolderFeed, segueInitToGlobal, segueGlobal, segueFolderToAddPanel, segueFolderFeedToPostFolder}
+export {segueAnyToURLPostFolderChoice, segueURLFeed, segueInitFolderFeed,
+    segueFolderFeed, segueInitToGlobal, segueGlobal, segueFolderToAddPanel, segueFolderFeedToPostFolder, segueURLPost }

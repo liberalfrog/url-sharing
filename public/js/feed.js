@@ -506,10 +506,28 @@ function blobToFile(theBlob, fileName) {
 var AddButton = (function (_React$Component) {
   _inherits(AddButton, _React$Component);
 
-  function AddButton() {
+  function AddButton(props) {
     _classCallCheck(this, AddButton);
 
-    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).call(this, props);
+    this.state = {
+      "kind": undefined
+    };
+    switch (props.icon) {
+      case "+":
+        this.state.kind = "fa fa-plus";
+        break;
+      case "folder":
+        this.state.kind = "fa fa-folder-plus";
+        break;
+      case "url":
+        this.state.kind = "fa far fa-code";
+        break;
+
+      default:
+        this.state.kind = "fa";
+        break;
+    }
   }
 
   // @platong Appear if plus button is tapped or clicked.
@@ -517,11 +535,7 @@ var AddButton = (function (_React$Component) {
   _createClass(AddButton, [{
     key: "render",
     value: function render() {
-      return React.createElement(
-        "button",
-        { id: "add_button", onClick: this.props.func },
-        this.props.icon
-      );
+      return React.createElement("button", { id: "add_button", className: this.state.kind, onClick: this.props.func });
     }
   }]);
 
@@ -641,7 +655,7 @@ var AddPanel = (function (_React$Component2) {
     key: "urlCreate",
     value: function urlCreate() {
       (0, _side_menu.sideMenuButtonShift)("folders");
-      (0, _segue.segueAnyToUrlPostFolderChoice)();
+      (0, _segue.segueAnyToURLPostFolderChoice)();
     }
   }, {
     key: "render",
@@ -684,13 +698,13 @@ var AddPanel = (function (_React$Component2) {
   return AddPanel;
 })(React.Component);
 
-var UrlPost = (function (_React$Component3) {
-  _inherits(UrlPost, _React$Component3);
+var URLPost = (function (_React$Component3) {
+  _inherits(URLPost, _React$Component3);
 
-  function UrlPost(props) {
-    _classCallCheck(this, UrlPost);
+  function URLPost(props) {
+    _classCallCheck(this, URLPost);
 
-    _get(Object.getPrototypeOf(UrlPost.prototype), "constructor", this).call(this, props);
+    _get(Object.getPrototypeOf(URLPost.prototype), "constructor", this).call(this, props);
     this.state = {
       id: props.id,
       ownerAId: props.ownerAId,
@@ -698,7 +712,7 @@ var UrlPost = (function (_React$Component3) {
     };
   }
 
-  _createClass(UrlPost, [{
+  _createClass(URLPost, [{
     key: "urlConverter",
     value: function urlConverter(num) {
       var selector1 = 'input[name="url' + num + '"]';
@@ -728,9 +742,7 @@ var UrlPost = (function (_React$Component3) {
       var _loop = function (i) {
         var url = $('input[name="url' + i + '"]').val();
         var title = $('input[name="title' + i + '"]').val();
-
         if (url === "" || title === "") return "continue";
-
         var data = {
           title: title,
           content: "",
@@ -740,7 +752,6 @@ var UrlPost = (function (_React$Component3) {
           aName: user.displayName,
           dateTime: new Date()
         };
-
         if (ownerAId === aId) {
           _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
             console.log("Document written with ID: ", docRef.id);
@@ -792,7 +803,7 @@ var UrlPost = (function (_React$Component3) {
       var element = document.createElement("div");
       element.setAttribute("id", "url_input" + this.state.count);
       document.getElementById("url_input").appendChild(element);
-      ReactDOM.render(React.createElement(UrlInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
+      ReactDOM.render(React.createElement(URLInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
     }
   }, {
     key: "render",
@@ -825,23 +836,23 @@ var UrlPost = (function (_React$Component3) {
     }
   }]);
 
-  return UrlPost;
+  return URLPost;
 })(React.Component);
 
-var UrlInput = (function (_React$Component4) {
-  _inherits(UrlInput, _React$Component4);
+var URLInput = (function (_React$Component4) {
+  _inherits(URLInput, _React$Component4);
 
-  function UrlInput(props) {
-    _classCallCheck(this, UrlInput);
+  function URLInput(props) {
+    _classCallCheck(this, URLInput);
 
-    _get(Object.getPrototypeOf(UrlInput.prototype), "constructor", this).call(this, props);
+    _get(Object.getPrototypeOf(URLInput.prototype), "constructor", this).call(this, props);
     this.state = {
       urlName: "url" + this.props.num,
       titleName: "title" + this.props.num
     };
   }
 
-  _createClass(UrlInput, [{
+  _createClass(URLInput, [{
     key: "urlConverter",
     value: function urlConverter(num) {
       var selector1 = 'input[name="url' + num + '"]';
@@ -867,21 +878,21 @@ var UrlInput = (function (_React$Component4) {
     }
   }]);
 
-  return UrlInput;
+  return URLInput;
 })(React.Component);
 
 var blob = null;
 
-var UrlFolderPost = (function (_React$Component5) {
-  _inherits(UrlFolderPost, _React$Component5);
+var URLFolderPost = (function (_React$Component5) {
+  _inherits(URLFolderPost, _React$Component5);
 
-  function UrlFolderPost() {
-    _classCallCheck(this, UrlFolderPost);
+  function URLFolderPost() {
+    _classCallCheck(this, URLFolderPost);
 
-    _get(Object.getPrototypeOf(UrlFolderPost.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(URLFolderPost.prototype), "constructor", this).apply(this, arguments);
   }
 
-  _createClass(UrlFolderPost, [{
+  _createClass(URLFolderPost, [{
     key: "submit",
     value: function submit() {
       var file = document.urlset_form.urlbook_img.files[0];
@@ -1044,13 +1055,13 @@ var UrlFolderPost = (function (_React$Component5) {
     }
   }]);
 
-  return UrlFolderPost;
+  return URLFolderPost;
 })(React.Component);
 
 exports.AddButton = AddButton;
 exports.AddPanel = AddPanel;
-exports.UrlFolderPost = UrlFolderPost;
-exports.UrlPost = UrlPost;
+exports.URLFolderPost = URLFolderPost;
+exports.URLPost = URLPost;
 
 },{"./firebase":4,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],4:[function(require,module,exports){
 'use strict';
@@ -1123,102 +1134,12 @@ var Folder = (function (_React$Component) {
   _createClass(Folder, [{
     key: 'putShow',
     value: function putShow() {
-      var _this = this;
-
-      var list = [];
-      var d = undefined;
-      var aId = localStorage.accountId;
-      var query = undefined;
-      switch (this.state.kind) {
-        case "folders":
-          query = _firebase.db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls");
-          break;
-        case "myfreefolders":
-          query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(this.state.id).collection("urls");
-          break;
-        case "freefolder":
-          query = _firebase.db.collection("freefolder").doc(this.state.id).collection("urls");
-          break;
-        default:
-          break;
-      }
-      query.get().then(function (snap) {
-        var for_saved_list = [];
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator['return']) {
-              _iterator['return']();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.url_list = for_saved_list.join("-@-");
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrl, { id: _this.state.id, ownerAId: _this.state.ownerAId, list: list }), document.getElementById("container"));
-      });
+      (0, _segue.segueURLFeed)(this.state.kind, this.state.id, this.state.ownerAId);
     }
   }, {
     key: 'urlPost',
     value: function urlPost() {
-      var _this2 = this;
-
-      var list = [];
-      var d = undefined;
-      _firebase.db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(function (snap) {
-        var for_saved_list = [];
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var i = _step2.value;
-
-            d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-              _iterator2['return']();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.url_list = for_saved_list.join("-@-");
-        history.pushState('', '', "folder?id=" + _this2.props.id);
-        ReactDOM.render(_react2['default'].createElement(_segue.SegueAnyToUrlPost, { id: _this2.state.id, list: list }), document.getElementById("main__container"));
-      });
+      (0, _segue.segueURLPost)(this.state.id, this.state.ownerAId, this.state.kind);
     }
   }, {
     key: 'edit',
@@ -1275,28 +1196,28 @@ var Folders = (function (_React$Component2) {
     key: 'render',
     value: function render() {
       var return_html = [];
-      var _iteratorNormalCompletion3 = true;
-      var _didIteratorError3 = false;
-      var _iteratorError3 = undefined;
+      var _iteratorNormalCompletion = true;
+      var _didIteratorError = false;
+      var _iteratorError = undefined;
 
       try {
-        for (var _iterator3 = this.state.list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-          var d = _step3.value;
+        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+          var d = _step.value;
 
           return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
             post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
         }
       } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
+        _didIteratorError = true;
+        _iteratorError = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion3 && _iterator3['return']) {
-            _iterator3['return']();
+          if (!_iteratorNormalCompletion && _iterator['return']) {
+            _iterator['return']();
           }
         } finally {
-          if (_didIteratorError3) {
-            throw _iteratorError3;
+          if (_didIteratorError) {
+            throw _iteratorError;
           }
         }
       }
@@ -1364,15 +1285,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 var _react = require("react");
 
@@ -1400,59 +1313,90 @@ var _later_button = require("./later_button");
 
 var _later_button2 = _interopRequireDefault(_later_button);
 
-var SegueAnyToUrl = (function (_React$Component) {
-  _inherits(SegueAnyToUrl, _React$Component);
-
-  function SegueAnyToUrl(props) {
-    _classCallCheck(this, SegueAnyToUrl);
-
-    _get(Object.getPrototypeOf(SegueAnyToUrl.prototype), "constructor", this).call(this, props);
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId
-    };
-    history.pushState('', '', "folders?id=" + this.props.id);
+function segueURLFeed(kind, id, ownerAId) {
+  var list = [];
+  var d = undefined;
+  var aId = localStorage.accountId;
+  var query = undefined;
+  switch (kind) {
+    case "folders":
+      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
+      break;
+    case "myfreefolders":
+      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
+      break;
+    case "freefolder":
+      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
+      break;
+    default:
+      console.log("Some thing bug is occured at segueURLFeed.");
+      break;
   }
+  query.get().then(function (snap) {
+    var for_saved_list = [];
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
 
-  _createClass(SegueAnyToUrl, [{
-    key: "openAddPanel",
-    value: function openAddPanel() {
-      var listStr = sessionStorage.url_list;
-      var list = undefined;
-      if (listStr !== "") list = listStr.split("-@-").map(function (x) {
-        return JSON.parse(x);
-      });else list = [];
-      ReactDOM.render(_react2["default"].createElement(SegueAnyToUrlPost, { list: list, id: this.state.id, ownerAId: this.state.ownerAId }), document.getElementById("main__container"));
+    try {
+      for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var i = _step.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator["return"]) {
+          _iterator["return"]();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
     }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
+
+    ;
+    sessionStorage.url_list = for_saved_list.join("-@-");
+
+    if (document.getElementById("main__container")) {
+      ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { id: id,
+        ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
+      ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueURLPost, icon: "url" }), document.getElementById("utility__area"));
+    } else {
+      ReactDOM.render([_react2["default"].createElement(
         "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "url" }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
+        { id: "main__container" },
+        _react2["default"].createElement(_view.ViewURLFeed, { id: id, ownerAId: ownerAId, list: list })
+      ), _react2["default"].createElement(
+        "div",
+        { id: "utility__area" },
+        _react2["default"].createElement(_add_button.AddButton, { func: segueURLPost, icon: "url" })
+      ), _react2["default"].createElement(_side_menu2["default"], { foldersStyle: "tb-active" })], document.getElementById("container"));
     }
-  }]);
-
-  return SegueAnyToUrl;
-})(_react2["default"].Component);
+  });
+}
 
 function segueFolderFeedToPostFolder() {
   var list = sessionStorage.urlset_list.split("-@-");
+  console.log("a button");
   list.map(function (x) {
     JSON.parse(x);
   });
   ReactDOM.render(_react2["default"].createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
-  var _iteratorNormalCompletion = true;
-  var _didIteratorError = false;
-  var _iteratorError = undefined;
+  var _iteratorNormalCompletion2 = true;
+  var _didIteratorError2 = false;
+  var _iteratorError2 = undefined;
 
   try {
-    for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-      var d = _step.value;
+    for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+      var d = _step2.value;
 
       var aId = localStorage.accountId;
       if (d.aId === aId) {
@@ -1462,62 +1406,33 @@ function segueFolderFeedToPostFolder() {
       $("#" + d.id).css("background-image", "url(" + d.img + ")");
     }
   } catch (err) {
-    _didIteratorError = true;
-    _iteratorError = err;
+    _didIteratorError2 = true;
+    _iteratorError2 = err;
   } finally {
     try {
-      if (!_iteratorNormalCompletion && _iterator["return"]) {
-        _iterator["return"]();
+      if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+        _iterator2["return"]();
       }
     } finally {
-      if (_didIteratorError) {
-        throw _iteratorError;
+      if (_didIteratorError2) {
+        throw _iteratorError2;
       }
     }
   }
 }
 
 function segueFolderToAddPanel() {
+  console.log("b button");
   ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("utility__area"));
 }
 
-function segueAnyToUrlPostFolderChoice() {
+function segueAnyToURLPostFolderChoice() {
+  console.log("c button");
   history.pushState('', '', "folders");
   var list = [];
   var aId = localStorage.getItem("accountId");
   var for_saved_list = [];
   _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-    var d = undefined;
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var i = _step2.value;
-
-        d = i.data();
-        d.id = i.id;
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-          _iterator2["return"]();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
     var d = undefined;
     var _iteratorNormalCompletion3 = true;
     var _didIteratorError3 = false;
@@ -1529,6 +1444,7 @@ function segueAnyToUrlPostFolderChoice() {
 
         d = i.data();
         d.id = i.id;
+        d.kind = "folders";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
@@ -1547,26 +1463,22 @@ function segueAnyToUrlPostFolderChoice() {
       }
     }
 
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render([_react2["default"].createElement(
-      "h1",
-      { className: "title__folder-choice" },
-      "URLを登録するフォルダを選択"
-    ), _react2["default"].createElement(
-      "div",
-      { className: "container__wrapper" },
-      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
-    )], document.getElementById("main__container"));
-    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
+    var d = undefined;
     var _iteratorNormalCompletion4 = true;
     var _didIteratorError4 = false;
     var _iteratorError4 = undefined;
 
     try {
-      for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-        var _d = _step4.value;
+      for (var _iterator4 = snap.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+        var i = _step4.value;
 
-        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+        d = i.data();
+        d.id = i.id;
+        d.kind = "myfreefolders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError4 = true;
@@ -1582,53 +1494,27 @@ function segueAnyToUrlPostFolderChoice() {
         }
       }
     }
-  });
-}
 
-var SegueAnyToUrlPost = (function (_React$Component2) {
-  _inherits(SegueAnyToUrlPost, _React$Component2);
-
-  function SegueAnyToUrlPost() {
-    _classCallCheck(this, SegueAnyToUrlPost);
-
-    _get(Object.getPrototypeOf(SegueAnyToUrlPost.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(SegueAnyToUrlPost, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.UrlPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
-        _react2["default"].createElement(_side_menu2["default"], null)
-      );
-    }
-  }]);
-
-  return SegueAnyToUrlPost;
-})(_react2["default"].Component);
-
-function segueInitFolderFeed() {
-  var list = [];
-  var aId = localStorage.getItem("accountId");
-  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-    var d = undefined;
-    var for_saved_list = [];
+    sessionStorage.urlset_list = for_saved_list.join("-@-");
+    ReactDOM.render([_react2["default"].createElement(
+      "h1",
+      { className: "title__folder-choice" },
+      "URLを登録するフォルダを選択"
+    ), _react2["default"].createElement(
+      "div",
+      { className: "container__wrapper" },
+      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
+    )], document.getElementById("main__container"));
+    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
     var _iteratorNormalCompletion5 = true;
     var _didIteratorError5 = false;
     var _iteratorError5 = undefined;
 
     try {
-      for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-        var i = _step5.value;
+      for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var _d = _step5.value;
 
-        d = i.data();
-        d.id = i.id;
-        d.kind = "folders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
       }
     } catch (err) {
       _didIteratorError5 = true;
@@ -1644,17 +1530,119 @@ function segueInitFolderFeed() {
         }
       }
     }
+  });
+}
+
+function segueURLPost(id, ownerAId, kind) {
+  var list = [];
+  var d = undefined;
+  var aId = localStorage.accountId;
+  var query = undefined;
+  console.log(kind);
+  console.log(id);
+  console.log(ownerAId);
+  switch (kind) {
+    case "folders":
+      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
+      break;
+    case "myfreefolders":
+      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
+      break;
+    case "freefolder":
+      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
+      break;
+    default:
+      console.log("Some thing bug is occured at segueURLFeed.");
+      break;
+  }
+  query.get().then(function (snap) {
+    var for_saved_list = [];
+    var _iteratorNormalCompletion6 = true;
+    var _didIteratorError6 = false;
+    var _iteratorError6 = undefined;
+
+    try {
+      for (var _iterator6 = snap.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+        var i = _step6.value;
+
+        d = i.data();
+        d.id = i.id;
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError6 = true;
+      _iteratorError6 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+          _iterator6["return"]();
+        }
+      } finally {
+        if (_didIteratorError6) {
+          throw _iteratorError6;
+        }
+      }
+    }
+
+    ;
+    sessionStorage.url_list = for_saved_list.join("-@-");
+
+    /*let listStr = sessionStorage.url_list
+    let list
+    if(listStr !== "")
+      list = listStr.split("-@-").map(x => JSON.parse(x))
+    else
+      list = []*/
+    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
+  });
+}
+
+function segueInitFolderFeed() {
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
+    var d = undefined;
+    var for_saved_list = [];
+    var _iteratorNormalCompletion7 = true;
+    var _didIteratorError7 = false;
+    var _iteratorError7 = undefined;
+
+    try {
+      for (var _iterator7 = snap1.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+        var i = _step7.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError7 = true;
+      _iteratorError7 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
+          _iterator7["return"]();
+        }
+      } finally {
+        if (_didIteratorError7) {
+          throw _iteratorError7;
+        }
+      }
+    }
 
     ;
     _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
       var d = undefined;
-      var _iteratorNormalCompletion6 = true;
-      var _didIteratorError6 = false;
-      var _iteratorError6 = undefined;
+      var _iteratorNormalCompletion8 = true;
+      var _didIteratorError8 = false;
+      var _iteratorError8 = undefined;
 
       try {
-        for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-          var i = _step6.value;
+        for (var _iterator8 = snap2.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+          var i = _step8.value;
 
           d = i.data();
           d.id = i.id;
@@ -1663,16 +1651,16 @@ function segueInitFolderFeed() {
           for_saved_list.push(JSON.stringify(d));
         }
       } catch (err) {
-        _didIteratorError6 = true;
-        _iteratorError6 = err;
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-            _iterator6["return"]();
+          if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
+            _iterator8["return"]();
           }
         } finally {
-          if (_didIteratorError6) {
-            throw _iteratorError6;
+          if (_didIteratorError8) {
+            throw _iteratorError8;
           }
         }
       }
@@ -1680,13 +1668,13 @@ function segueInitFolderFeed() {
       ;
       sessionStorage.urlset_list = for_saved_list.join("-@-");
       ReactDOM.render(_react2["default"].createElement(_view.ViewFolderFeed, { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion7 = true;
-      var _didIteratorError7 = false;
-      var _iteratorError7 = undefined;
+      var _iteratorNormalCompletion9 = true;
+      var _didIteratorError9 = false;
+      var _iteratorError9 = undefined;
 
       try {
-        for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-          var _d2 = _step7.value;
+        for (var _iterator9 = list[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+          var _d2 = _step9.value;
 
           var _aId = localStorage.accountId;
           if (_d2.aId === _aId) {
@@ -1696,16 +1684,16 @@ function segueInitFolderFeed() {
           $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
         }
       } catch (err) {
-        _didIteratorError7 = true;
-        _iteratorError7 = err;
+        _didIteratorError9 = true;
+        _iteratorError9 = err;
       } finally {
         try {
-          if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-            _iterator7["return"]();
+          if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
+            _iterator9["return"]();
           }
         } finally {
-          if (_didIteratorError7) {
-            throw _iteratorError7;
+          if (_didIteratorError9) {
+            throw _iteratorError9;
           }
         }
       }
@@ -1722,87 +1710,19 @@ function segueFolderFeed() {
   ReactDOM.render([_react2["default"].createElement(_later_button2["default"], null), _react2["default"].createElement(_add_button.AddButton, { func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
   _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
     var d = {};
-    var _iteratorNormalCompletion8 = true;
-    var _didIteratorError8 = false;
-    var _iteratorError8 = undefined;
+    var _iteratorNormalCompletion10 = true;
+    var _didIteratorError10 = false;
+    var _iteratorError10 = undefined;
 
     try {
-      for (var _iterator8 = snap.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-        var i = _step8.value;
+      for (var _iterator10 = snap.docs[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+        var i = _step10.value;
 
         d = i.data();
         d.id = i.id;
         d.kind = "folders";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError8 = true;
-      _iteratorError8 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-          _iterator8["return"]();
-        }
-      } finally {
-        if (_didIteratorError8) {
-          throw _iteratorError8;
-        }
-      }
-    }
-
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion9 = true;
-    var _didIteratorError9 = false;
-    var _iteratorError9 = undefined;
-
-    try {
-      for (var _iterator9 = snap.docs[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-        var i = _step9.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "myfreefolders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError9 = true;
-      _iteratorError9 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
-          _iterator9["return"]();
-        }
-      } finally {
-        if (_didIteratorError9) {
-          throw _iteratorError9;
-        }
-      }
-    }
-
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render(_react2["default"].createElement(
-      "div",
-      { className: "container__wrapper" },
-      _react2["default"].createElement(_folder2["default"], { list: list })
-    ), document.getElementById("main__container"));
-    var _iteratorNormalCompletion10 = true;
-    var _didIteratorError10 = false;
-    var _iteratorError10 = undefined;
-
-    try {
-      for (var _iterator10 = list[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-        var _d3 = _step10.value;
-
-        var _aId2 = localStorage.accountId;
-        if (_d3.aId === _aId2) {
-          var selector = "#" + _d3.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
       }
     } catch (err) {
       _didIteratorError10 = true;
@@ -1818,18 +1738,9 @@ function segueFolderFeed() {
         }
       }
     }
-  });
-}
 
-function segueGlobal() {
-  sessionStorage.udBeforeLocation = location.pathname;
-  history.pushState('', '', "feed");
-  var aId = localStorage.accountId;
-  var for_saved_list = [];
-  var latest_list = [];
-  var recommend_list = [];
-  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueFolderToAddPanel, icon: "+" }), document.getElementById("utility__area"));
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
     var d = {};
     var _iteratorNormalCompletion11 = true;
     var _didIteratorError11 = false;
@@ -1837,12 +1748,12 @@ function segueGlobal() {
 
     try {
       for (var _iterator11 = snap.docs[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-        var j = _step11.value;
+        var i = _step11.value;
 
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        latest_list.push(d);
+        d = i.data();
+        d.id = i.id;
+        d.kind = "myfreefolders";
+        list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
@@ -1860,22 +1771,26 @@ function segueGlobal() {
       }
     }
 
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-  }).then(function (snap) {
-    var d = {};
+    sessionStorage.urlset_list = for_saved_list.join("-@-");
+    ReactDOM.render(_react2["default"].createElement(
+      "div",
+      { className: "container__wrapper" },
+      _react2["default"].createElement(_folder2["default"], { list: list })
+    ), document.getElementById("main__container"));
     var _iteratorNormalCompletion12 = true;
     var _didIteratorError12 = false;
     var _iteratorError12 = undefined;
 
     try {
-      for (var _iterator12 = snap.docs[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-        var j = _step12.value;
+      for (var _iterator12 = list[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
+        var _d3 = _step12.value;
 
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        recommend_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        var _aId2 = localStorage.accountId;
+        if (_d3.aId === _aId2) {
+          var selector = "#" + _d3.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
       }
     } catch (err) {
       _didIteratorError12 = true;
@@ -1888,6 +1803,79 @@ function segueGlobal() {
       } finally {
         if (_didIteratorError12) {
           throw _iteratorError12;
+        }
+      }
+    }
+  });
+}
+
+function segueGlobal() {
+  sessionStorage.udBeforeLocation = location.pathname;
+  history.pushState('', '', "feed");
+  var aId = localStorage.accountId;
+  var for_saved_list = [];
+  var latest_list = [];
+  var recommend_list = [];
+  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueFolderToAddPanel, icon: "+" }), document.getElementById("utility__area"));
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion13 = true;
+    var _didIteratorError13 = false;
+    var _iteratorError13 = undefined;
+
+    try {
+      for (var _iterator13 = snap.docs[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
+        var j = _step13.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        latest_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError13 = true;
+      _iteratorError13 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion13 && _iterator13["return"]) {
+          _iterator13["return"]();
+        }
+      } finally {
+        if (_didIteratorError13) {
+          throw _iteratorError13;
+        }
+      }
+    }
+
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+  }).then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion14 = true;
+    var _didIteratorError14 = false;
+    var _iteratorError14 = undefined;
+
+    try {
+      for (var _iterator14 = snap.docs[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
+        var j = _step14.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        recommend_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError14 = true;
+      _iteratorError14 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion14 && _iterator14["return"]) {
+          _iterator14["return"]();
+        }
+      } finally {
+        if (_didIteratorError14) {
+          throw _iteratorError14;
         }
       }
     }
@@ -1922,13 +1910,13 @@ function segueGlobal() {
       )
     )], document.getElementById("main__container"));
     var list = latest_list.concat(recommend_list);
-    var _iteratorNormalCompletion13 = true;
-    var _didIteratorError13 = false;
-    var _iteratorError13 = undefined;
+    var _iteratorNormalCompletion15 = true;
+    var _didIteratorError15 = false;
+    var _iteratorError15 = undefined;
 
     try {
-      for (var _iterator13 = list[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
-        var _d4 = _step13.value;
+      for (var _iterator15 = list[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
+        var _d4 = _step15.value;
 
         var _aId3 = localStorage.accountId;
         if (_d4.aId === _aId3) {
@@ -1936,78 +1924,6 @@ function segueGlobal() {
           $(selector).css("display", "block");
         }
         $("#" + _d4.id).css("background-image", "url(" + _d4.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError13 = true;
-      _iteratorError13 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion13 && _iterator13["return"]) {
-          _iterator13["return"]();
-        }
-      } finally {
-        if (_didIteratorError13) {
-          throw _iteratorError13;
-        }
-      }
-    }
-
-    return true;
-  });
-}
-
-function segueInitToGlobal() {
-  var aId = localStorage.accountId;
-  var for_saved_list = [];
-  var latest_list = [];
-  var recommend_list = [];
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion14 = true;
-    var _didIteratorError14 = false;
-    var _iteratorError14 = undefined;
-
-    try {
-      for (var _iterator14 = snap.docs[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-        var j = _step14.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        latest_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError14 = true;
-      _iteratorError14 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion14 && _iterator14["return"]) {
-          _iterator14["return"]();
-        }
-      } finally {
-        if (_didIteratorError14) {
-          throw _iteratorError14;
-        }
-      }
-    }
-
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-  }).then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion15 = true;
-    var _didIteratorError15 = false;
-    var _iteratorError15 = undefined;
-
-    try {
-      for (var _iterator15 = snap.docs[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
-        var j = _step15.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        recommend_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError15 = true;
@@ -2024,23 +1940,30 @@ function segueInitToGlobal() {
       }
     }
 
-    ;
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list }), document.getElementById("container"));
+    return true;
+  });
+}
+
+function segueInitToGlobal() {
+  var aId = localStorage.accountId;
+  var for_saved_list = [];
+  var latest_list = [];
+  var recommend_list = [];
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snaps) {
+    var d = {};
     var _iteratorNormalCompletion16 = true;
     var _didIteratorError16 = false;
     var _iteratorError16 = undefined;
 
     try {
-      for (var _iterator16 = recommend_list[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-        var _d5 = _step16.value;
+      for (var _iterator16 = snaps.docs[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
+        var j = _step16.value;
 
-        var _aId4 = localStorage.accountId;
-        if (_d5.aId === _aId4) {
-          var selector = "#" + _d5.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d5.id).css("background-image", "url(" + _d5.img + ")");
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        latest_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError16 = true;
@@ -2057,20 +1980,22 @@ function segueInitToGlobal() {
       }
     }
 
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+  }).then(function (snaps) {
+    var d = {};
     var _iteratorNormalCompletion17 = true;
     var _didIteratorError17 = false;
     var _iteratorError17 = undefined;
 
     try {
-      for (var _iterator17 = latest_list[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-        var _d6 = _step17.value;
+      for (var _iterator17 = snaps.docs[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
+        var j = _step17.value;
 
-        var _aId5 = localStorage.accountId;
-        if (_d6.aId === _aId5) {
-          var selector = "#" + _d6.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d6.id).css("background-image", "url(" + _d6.img + ")");
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        recommend_list.push(d);
+        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError17 = true;
@@ -2087,19 +2012,82 @@ function segueInitToGlobal() {
       }
     }
 
+    ;
+    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list }), document.getElementById("container"));
+    var _iteratorNormalCompletion18 = true;
+    var _didIteratorError18 = false;
+    var _iteratorError18 = undefined;
+
+    try {
+      for (var _iterator18 = recommend_list[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
+        var _d5 = _step18.value;
+
+        var _aId4 = localStorage.accountId;
+        if (_d5.aId === _aId4) {
+          var selector = "#" + _d5.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d5.id).css("background-image", "url(" + _d5.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError18 = true;
+      _iteratorError18 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion18 && _iterator18["return"]) {
+          _iterator18["return"]();
+        }
+      } finally {
+        if (_didIteratorError18) {
+          throw _iteratorError18;
+        }
+      }
+    }
+
+    var _iteratorNormalCompletion19 = true;
+    var _didIteratorError19 = false;
+    var _iteratorError19 = undefined;
+
+    try {
+      for (var _iterator19 = latest_list[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
+        var _d6 = _step19.value;
+
+        var _aId5 = localStorage.accountId;
+        if (_d6.aId === _aId5) {
+          var selector = "#" + _d6.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d6.id).css("background-image", "url(" + _d6.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError19 = true;
+      _iteratorError19 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion19 && _iterator19["return"]) {
+          _iterator19["return"]();
+        }
+      } finally {
+        if (_didIteratorError19) {
+          throw _iteratorError19;
+        }
+      }
+    }
+
     return true;
   });
 }
 
-exports.segueAnyToUrlPostFolderChoice = segueAnyToUrlPostFolderChoice;
-exports.SegueAnyToUrl = SegueAnyToUrl;
-exports.SegueAnyToUrlPost = SegueAnyToUrlPost;
+exports.segueAnyToURLPostFolderChoice = segueAnyToURLPostFolderChoice;
+exports.segueURLFeed = segueURLFeed;
 exports.segueInitFolderFeed = segueInitFolderFeed;
 exports.segueFolderFeed = segueFolderFeed;
 exports.segueInitToGlobal = segueInitToGlobal;
 exports.segueGlobal = segueGlobal;
 exports.segueFolderToAddPanel = segueFolderToAddPanel;
 exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
+exports.segueURLPost = segueURLPost;
 
 },{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./side_menu":8,"./url":9,"./view":11,"react":32}],8:[function(require,module,exports){
 "use strict";
@@ -2305,13 +2293,13 @@ var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
 
-var Url = (function (_React$Component) {
-  _inherits(Url, _React$Component);
+var URL = (function (_React$Component) {
+  _inherits(URL, _React$Component);
 
-  function Url(props) {
-    _classCallCheck(this, Url);
+  function URL(props) {
+    _classCallCheck(this, URL);
 
-    _get(Object.getPrototypeOf(Url.prototype), "constructor", this).call(this, props);
+    _get(Object.getPrototypeOf(URL.prototype), "constructor", this).call(this, props);
     this.state = {
       title: props.title,
       href: props.href,
@@ -2319,7 +2307,7 @@ var Url = (function (_React$Component) {
     };
   }
 
-  _createClass(Url, [{
+  _createClass(URL, [{
     key: "clickHandler",
     value: function clickHandler() {
       var aId = localStorage.getItem("accountId");
@@ -2354,22 +2342,22 @@ var Url = (function (_React$Component) {
     }
   }]);
 
-  return Url;
+  return URL;
 })(_react2["default"].Component);
 
-var Urls = (function (_React$Component2) {
-  _inherits(Urls, _React$Component2);
+var URLs = (function (_React$Component2) {
+  _inherits(URLs, _React$Component2);
 
-  function Urls(props) {
-    _classCallCheck(this, Urls);
+  function URLs(props) {
+    _classCallCheck(this, URLs);
 
-    _get(Object.getPrototypeOf(Urls.prototype), "constructor", this).call(this);
+    _get(Object.getPrototypeOf(URLs.prototype), "constructor", this).call(this);
     this.state = {
       list: props.list
     };
   }
 
-  _createClass(Urls, [{
+  _createClass(URLs, [{
     key: "render",
     value: function render() {
       var return_html = [];
@@ -2384,7 +2372,7 @@ var Urls = (function (_React$Component2) {
           var i = _step$value[0];
           var d = _step$value[1];
 
-          return_html.push(_react2["default"].createElement(Url, { key: i, title: d.title, content: d.content, href: d.href }));
+          return_html.push(_react2["default"].createElement(URL, { key: i, title: d.title, content: d.content, href: d.href }));
         }
       } catch (err) {
         _didIteratorError = true;
@@ -2405,13 +2393,13 @@ var Urls = (function (_React$Component2) {
     }
   }]);
 
-  return Urls;
+  return URLs;
 })(_react2["default"].Component);
 
-exports["default"] = Urls;
+exports["default"] = URLs;
 
 jQuery(function ($) {
-  $('.textOverflowUrl').each(function () {
+  $('.textOverflowURL').each(function () {
     var $target = $(this);
 
     var html = $target.html();
@@ -2777,7 +2765,7 @@ var ViewPostFolder = (function (_React$Component5) {
       return _react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
-        _react2["default"].createElement(_add_button.UrlFolderPost, null),
+        _react2["default"].createElement(_add_button.URLFolderPost, null),
         _react2["default"].createElement(_folder2["default"], { list: this.state.list })
       );
     }
@@ -2786,11 +2774,71 @@ var ViewPostFolder = (function (_React$Component5) {
   return ViewPostFolder;
 })(_react2["default"].Component);
 
+var ViewURLFeed = (function (_React$Component6) {
+  _inherits(ViewURLFeed, _React$Component6);
+
+  function ViewURLFeed(props) {
+    _classCallCheck(this, ViewURLFeed);
+
+    _get(Object.getPrototypeOf(ViewURLFeed.prototype), "constructor", this).call(this, props);
+    this.state = {
+      id: props.id,
+      ownerAId: props.ownerAId
+    };
+    history.pushState('', '', "folders?id=" + this.props.id);
+  }
+
+  _createClass(ViewURLFeed, [{
+    key: "openAddPanel",
+    value: function openAddPanel() {
+      (0, _segue.segueURLfeedToURLPost)(this.state.id, this.state.ownerAid);
+    }
+  }, {
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_url2["default"], { list: this.props.list })
+      );
+    }
+  }]);
+
+  return ViewURLFeed;
+})(_react2["default"].Component);
+
+var ViewURLPost = (function (_React$Component7) {
+  _inherits(ViewURLPost, _React$Component7);
+
+  function ViewURLPost() {
+    _classCallCheck(this, ViewURLPost);
+
+    _get(Object.getPrototypeOf(ViewURLPost.prototype), "constructor", this).apply(this, arguments);
+  }
+
+  _createClass(ViewURLPost, [{
+    key: "render",
+    value: function render() {
+      return _react2["default"].createElement(
+        "div",
+        { className: "container__wrapper" },
+        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
+        _react2["default"].createElement(_add_button.URLPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
+        _react2["default"].createElement(_side_menu2["default"], null)
+      );
+    }
+  }]);
+
+  return ViewURLPost;
+})(_react2["default"].Component);
+
 exports.TemplateViewNavTab = TemplateViewNavTab;
 exports.ViewFolderEdit = ViewFolderEdit;
 exports.ViewTop = ViewTop;
 exports.ViewFolderFeed = ViewFolderFeed;
 exports.ViewPostFolder = ViewPostFolder;
+exports.ViewURLFeed = ViewURLFeed;
+exports.ViewURLPost = ViewURLPost;
 
 },{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"react":32}],12:[function(require,module,exports){
 'use strict';
@@ -35012,13 +35060,6 @@ function backBefore() {
 
 init();
 
-function accountRegisterSubmitValidation() {
-  var name = document.getElementById("ra_name").value;
-  var file = document.getElementById("ra_profile_img").files[0];
-  if (name !== "" && file !== undefined) return true;
-  return false;
-}
-
 function init() {
   _componentFirebase.auth.onAuthStateChanged(function (user) {
     if (user === null) {
@@ -35085,43 +35126,25 @@ function init() {
                 parameters[array[0]] = array[1];
               });
               var folderId = parameters["id"];
-              var list = [];
-              var queryToURLs = _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls");
-              queryToURLs.get().then(function (snap) {
-                var _iteratorNormalCompletion2 = true;
-                var _didIteratorError2 = false;
-                var _iteratorError2 = undefined;
-
-                try {
-                  for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-                    var i = _step2.value;
-
-                    var d = i.data();
-                    d.id = i.id;
-                    if (d.aId === undefined) {
-                      d.aId = "";
-                      d.aProfileImg = "";
-                      d.aName = "";
-                    }
-                    list.push(d);
-                  }
-                } catch (err) {
-                  _didIteratorError2 = true;
-                  _iteratorError2 = err;
-                } finally {
-                  try {
-                    if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-                      _iterator2['return']();
-                    }
-                  } finally {
-                    if (_didIteratorError2) {
-                      throw _iteratorError2;
-                    }
-                  }
+              _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(function (snap) {
+                if (snap.exists) {
+                  (0, _componentSegue.segueURLFeed)("myfreefolders", folderId, localStorage.accountId);
+                  throw 'Oh no!';
                 }
-
-                ;
-                ReactDOM.render(_react2['default'].createElement(_componentSegue.SegueAnyToUrl, { list: list, id: folderId }), document.getElementById("container"));
+                return _componentFirebase.db.collection("account").doc(aId).collection("folders").doc(folderId).get();
+              }).then(function (snap) {
+                if (snap.exists) {
+                  (0, _componentSegue.segueURLFeed)("folders", folderId, localStorage.accountId);
+                  throw 'Oh no!';
+                }
+                return _componentFirebase.db.collection("freefolder").doc(folderId).get();
+              }).then(function (snap) {
+                if (snap.exists) {
+                  var data = snap.data();
+                  (0, _componentSegue.segueURLFeed)("freefolder", folderId, data.ownerAId);
+                } else {
+                  console.log("URL folder is not found.");
+                }
               });
             })();
           } else {
@@ -35131,16 +35154,6 @@ function init() {
       }
     });
   });
-}
-
-function raButtonActiveSwitch() {
-  if (accountRegisterSubmitValidation()) {
-    $("#ra_submit").addClass("submit_is_active");
-    $("#ra_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#ra_submit").removeClass("submit_is_active");
-    $("#ra_submit").addClass("submit_is_disactive");
-  }
 }
 
 },{"../../component/account_register":2,"../../component/firebase":4,"../../component/folder":5,"../../component/segue":7,"../../component/url":9,"react":32}]},{},[34]);
