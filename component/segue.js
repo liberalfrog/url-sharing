@@ -25,7 +25,7 @@ function segueURLFeed(kind, id, ownerAId){
       query = db.collection("freefolder").doc(id).collection("urls")
       break
     default: 
-      console.log("Some thing bug is occured at segueURLFeed.")
+      console.error("Some thing bug is occured at segueURLFeed.")
       break
   }
   query.get().then(snap => {
@@ -41,7 +41,7 @@ function segueURLFeed(kind, id, ownerAId){
     if(document.getElementById("main__container")){
       ReactDOM.render(<ViewURLFeed id={id} 
           ownerAId={ownerAId} list={list}/>, document.getElementById("main__container"))
-      ReactDOM.render(<AddButton func={segueURLPost} icon={"url"} />,
+      ReactDOM.render(<AddButton func={() => segueURLPost(id, ownerAId, kind)} icon={"url"} />,
           document.getElementById("utility__area"))
     }else{
       ReactDOM.render([
@@ -49,7 +49,7 @@ function segueURLFeed(kind, id, ownerAId){
           <ViewURLFeed id={id} ownerAId={ownerAId} list={list}/>
         </div>,
         <div id="utility__area">
-          <AddButton func={segueURLPost} icon={"url"} />
+          <AddButton func={() => segueURLPost(id, ownerAId, kind)} icon={"url"} />
         </div>,
         <SideMenu foldersStyle="tb-active"/>
       ], document.getElementById("container"))
@@ -60,7 +60,6 @@ function segueURLFeed(kind, id, ownerAId){
 
 function segueFolderFeedToPostFolder(){
   let list = sessionStorage.urlset_list.split("-@-")
-    console.log("a button")
   list.map(x => {JSON.parse(x)})
   ReactDOM.render(<ViewPostFolder list={list} />, document.getElementById("main__container"))
   for(let d of list){
@@ -75,13 +74,11 @@ function segueFolderFeedToPostFolder(){
 
 
 function segueFolderToAddPanel(){
-    console.log("b button")
   ReactDOM.render(<AddPanel /> , document.getElementById("utility__area"))
 }
 
 
 function segueAnyToURLPostFolderChoice(){
-    console.log("c button")
   history.pushState('','',"folders")
   let list = []
   let aId = localStorage.getItem("accountId")
@@ -125,9 +122,6 @@ function segueURLPost(id, ownerAId, kind){
   let d
   let aId = localStorage.accountId
   let query
-  console.log(kind)
-  console.log(id)
-  console.log(ownerAId)
   switch(kind){
     case "folders":
       query = db.collection("account").doc(aId).collection("folders").doc(id).collection("urls")

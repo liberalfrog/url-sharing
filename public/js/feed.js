@@ -1329,7 +1329,7 @@ function segueURLFeed(kind, id, ownerAId) {
       query = _firebase.db.collection("freefolder").doc(id).collection("urls");
       break;
     default:
-      console.log("Some thing bug is occured at segueURLFeed.");
+      console.error("Some thing bug is occured at segueURLFeed.");
       break;
   }
   query.get().then(function (snap) {
@@ -1368,7 +1368,9 @@ function segueURLFeed(kind, id, ownerAId) {
     if (document.getElementById("main__container")) {
       ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { id: id,
         ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
-      ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueURLPost, icon: "url" }), document.getElementById("utility__area"));
+      ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: function () {
+          return segueURLPost(id, ownerAId, kind);
+        }, icon: "url" }), document.getElementById("utility__area"));
     } else {
       ReactDOM.render([_react2["default"].createElement(
         "div",
@@ -1377,7 +1379,9 @@ function segueURLFeed(kind, id, ownerAId) {
       ), _react2["default"].createElement(
         "div",
         { id: "utility__area" },
-        _react2["default"].createElement(_add_button.AddButton, { func: segueURLPost, icon: "url" })
+        _react2["default"].createElement(_add_button.AddButton, { func: function () {
+            return segueURLPost(id, ownerAId, kind);
+          }, icon: "url" })
       ), _react2["default"].createElement(_side_menu2["default"], { foldersStyle: "tb-active" })], document.getElementById("container"));
     }
   });
@@ -1385,7 +1389,6 @@ function segueURLFeed(kind, id, ownerAId) {
 
 function segueFolderFeedToPostFolder() {
   var list = sessionStorage.urlset_list.split("-@-");
-  console.log("a button");
   list.map(function (x) {
     JSON.parse(x);
   });
@@ -1422,12 +1425,10 @@ function segueFolderFeedToPostFolder() {
 }
 
 function segueFolderToAddPanel() {
-  console.log("b button");
   ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("utility__area"));
 }
 
 function segueAnyToURLPostFolderChoice() {
-  console.log("c button");
   history.pushState('', '', "folders");
   var list = [];
   var aId = localStorage.getItem("accountId");
@@ -1538,9 +1539,6 @@ function segueURLPost(id, ownerAId, kind) {
   var d = undefined;
   var aId = localStorage.accountId;
   var query = undefined;
-  console.log(kind);
-  console.log(id);
-  console.log(ownerAId);
   switch (kind) {
     case "folders":
       query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
