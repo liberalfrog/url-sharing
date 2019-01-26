@@ -47,15 +47,7 @@ class ViewFolderEdit extends React.Component {
   }
   deleteFolder(){ 
     db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id).delete()
-    ReactDOM.render(<SegueInitToFolderFeed list={this.state.list} /> , document.getElementById("container"))
-    for(let d of this.state.list){
-      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      let aId = localStorage.accountId
-      if(d.aId === aId){
-        let selector = "#" + d.id + " .edit__folder"
-        $(selector).css("display", "block")
-      }
-    }
+    segueInitFolderFeed()
   }
   cancel(){
     ReactDOM.unmountComponentAtNode(document.getElementById("container"))

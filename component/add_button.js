@@ -326,7 +326,7 @@ class URLFolderPost extends React.Component{
       }
     }, function() { 
       let user = auth.currentUser;
-      uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
+      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
         console.log('File available at', downloadURL);
         let aId = localStorage.getItem("accountId")
         let ref = db.collection("account").doc(aId).collection("myfreefolders")
@@ -342,14 +342,7 @@ class URLFolderPost extends React.Component{
           closePostView()
         }).catch(function(error) {
           console.error("Error adding document: ", error);
-        });
-        let listStr =  sessionStorage.urlset_list
-        let list 
-        if(listStr !== "")
-          list = listStr.split("-@-").map(x => JSON.parse(x))
-        else
-          list = []
-        ReactDOM.render(<SegueInitFolderFeed list={list}/>, document.getElementById("container"));
+        })
       });
     });
   };

@@ -946,12 +946,6 @@ var URLFolderPost = (function (_React$Component5) {
           })["catch"](function (error) {
             console.error("Error adding document: ", error);
           });
-          var listStr = sessionStorage.urlset_list;
-          var list = undefined;
-          if (listStr !== "") list = listStr.split("-@-").map(function (x) {
-            return JSON.parse(x);
-          });else list = [];
-          ReactDOM.render(React.createElement(SegueInitFolderFeed, { list: list }), document.getElementById("container"));
         });
       });
     }
@@ -2566,13 +2560,23 @@ var ViewFolderEdit = (function (_React$Component2) {
     key: "deleteFolder",
     value: function deleteFolder() {
       _firebase.db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id)["delete"]();
-      ReactDOM.render(_react2["default"].createElement(SegueInitToFolderFeed, { list: this.state.list }), document.getElementById("container"));
+      (0, _segue.segueInitFolderFeed)();
+    }
+  }, {
+    key: "cancel",
+    value: function cancel() {
+      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
+      var list = sessionStorage.urlset_list.split("-@-");
+      for (var i = 0; i < list.length; i++) {
+        list[i] = JSON.parse(list[i]);
+      }
+      ReactDOM.render(_react2["default"].createElement("segueInitFolderFeed", { list: list }), document.getElementById("container"));
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var d = _step.value;
 
           $("#" + d.id).css("background-image", "url(" + d.img + ")");
@@ -2593,45 +2597,6 @@ var ViewFolderEdit = (function (_React$Component2) {
         } finally {
           if (_didIteratorError) {
             throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
-    key: "cancel",
-    value: function cancel() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement("segueInitFolderFeed", { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var d = _step2.value;
-
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-        }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-            _iterator2["return"]();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
           }
         }
       }
