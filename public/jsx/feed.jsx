@@ -1,8 +1,8 @@
 import React from 'react';
 import Folders from '../../component/folder';
-import Urls from '../../component/url';
+import URLs from '../../component/url';
 import AccountRegister from '../../component/account_register';
-import {segueInitToGlobal, SegueAnyToUrl, segueInitFolderFeed} from '../../component/segue';
+import {segueInitToGlobal, SegueAnyToURL, segueInitFolderFeed, segueURLFeed, segueURLPost} from '../../component/segue';
 import {auth, storage, db} from "../../component/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
@@ -24,15 +24,6 @@ function backBefore(){
 
 
 init()
-
-
-function accountRegisterSubmitValidation(){
-  let name = document.getElementById("ra_name").value;
-  let file = document.getElementById("ra_profile_img").files[0];
-  if(name!=="" && file!==undefined)
-    return true;
-  return false;
-}
 
 
 function init(){
@@ -76,21 +67,26 @@ function init(){
               parameters[array[0]] = array[1]
             })
             let folderId = parameters["id"]
-            let list = [];
-            let queryToURLs = db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).collection("urls")
-            queryToURLs.get().then(snap => {
-              for(let i of snap.docs){
-                let d = i.data()
-                d.id = i.id
-                if(d.aId === undefined){
-                  d.aId = ""
-                  d.aProfileImg = ""
-                  d.aName = ""
-                }
-                list.push(d)
-              };
-              ReactDOM.render(<SegueAnyToUrl list={list} id={folderId}/>, document.getElementById("container"))
-            });
+            db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(snap => {
+              if(snap.exists){
+                segueURLFeed("myfreefolders", folderId, localStorage.accountId)
+                throw 'Oh no!';
+              }
+              return db.collection("account").doc(aId).collection("folders").doc(folderId).get()
+            }).then(snap => {
+              if(snap.exists){
+                segueURLFeed("folders", folderId, localStorage.accountId)
+                throw 'Oh no!';
+              }
+              return db.collection("freefolder").doc(folderId).get()
+            }).then(snap => {
+              if(snap.exists){
+                let data = snap.data()
+                segueURLFeed("freefolder", folderId, data.ownerAId)
+              }else{
+                console.log("URL folder is not found.")
+              }
+            })
           }else{
             segueInitFolderFeed()
           }
@@ -98,15 +94,4 @@ function init(){
       }
     });
   });
-}
-
-
-function raButtonActiveSwitch(){
-  if(accountRegisterSubmitValidation()){
-    $("#ra_submit").addClass("submit_is_active");
-    $("#ra_submit").removeClass("submit_is_disactive");
-  }else{
-    $("#ra_submit").removeClass("submit_is_active");
-    $("#ra_submit").addClass("submit_is_disactive");
-  }
 }

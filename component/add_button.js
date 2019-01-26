@@ -1,4 +1,4 @@
-import {segueAnyToUrlPostFolderChoice, segueFolderFeed, segueFolderFeedToPostFolder} from "./segue";
+import {segueAnyToURLPostFolderChoice, segueFolderFeed, segueFolderFeedToPostFolder, segueURLPost} from "./segue";
 import {ViewPostFolder} from "./view";
 import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
@@ -71,7 +71,6 @@ class AddButton extends React.Component{
     this.state = {
       "kind": undefined
     }
-    console.log(props.icon)
     switch(props.icon){
       case "+":
         this.state.kind = "fa fa-plus";
@@ -87,7 +86,6 @@ class AddButton extends React.Component{
         this.state.kind = "fa"
       break
     }
-    console.log(this.state.kind)
   }
   render(){
     return( <button id="add_button" className={this.state.kind} onClick={this.props.func}></button>);
@@ -129,7 +127,7 @@ class AddPanel extends React.Component{
   }
   urlCreate(){
     sideMenuButtonShift("folders")
-    segueAnyToUrlPostFolderChoice()
+    segueAnyToURLPostFolderChoice()
   }
   render(){
     return(
@@ -149,7 +147,7 @@ class AddPanel extends React.Component{
 
 
 // @platong register URL
-class UrlPost extends React.Component{
+class URLPost extends React.Component{
   constructor(props){
     super(props)
     this.state = { 
@@ -182,10 +180,7 @@ class UrlPost extends React.Component{
     for(let i=0; i<=this.state.count; i++){
       let url = $('input[name="url' + i + '"]').val()
       let title = $('input[name="title' + i + '"]').val()
-
-      if(url === "" || title === "")
-        continue
-
+      if(url === "" || title === "") continue
       let data = {
         title: title,
         content: "",
@@ -195,7 +190,6 @@ class UrlPost extends React.Component{
         aName: user.displayName,
         dateTime: new Date()
       }
-
       if(ownerAId === aId){
         db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
         .then(function(docRef) {
@@ -241,7 +235,7 @@ class UrlPost extends React.Component{
     let element = document.createElement("div")
     element.setAttribute("id", "url_input" + this.state.count)
     document.getElementById("url_input").appendChild(element)
-    ReactDOM.render(<UrlInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
+    ReactDOM.render(<URLInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
   }
   render(){
     return ([
@@ -264,7 +258,7 @@ class UrlPost extends React.Component{
 }
 
 
-class UrlInput extends React.Component{
+class URLInput extends React.Component{
   constructor(props){
     super(props)
     this.state = {
@@ -298,7 +292,7 @@ class UrlInput extends React.Component{
 
 
 var blob = null;
-class UrlFolderPost extends React.Component{
+class URLFolderPost extends React.Component{
   submit(){
     let file = document.urlset_form.urlbook_img.files[0]
     if(!folderSubmitValidation() && !blob) return; // validation
@@ -429,4 +423,4 @@ class UrlFolderPost extends React.Component{
   }
 }
 
-export {AddButton, AddPanel, UrlFolderPost, UrlPost}
+export {AddButton, AddPanel, URLFolderPost, URLPost}

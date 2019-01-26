@@ -10,7 +10,6 @@ var apiRouter = require('./routes/api_v1');
 var apiPaypalRouter = require('./routes/api_v1_paypal');
 
 const firebase = require('firebase');
-//var firebaseui = require('firebaseui');
 
 var app = express();
 

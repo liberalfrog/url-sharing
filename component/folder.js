@@ -1,6 +1,6 @@
 import React from 'react';
 import Urls from './url';
-import {SegueAnyToUrl, SegueAnyToUrlPost} from "./segue";
+import {segueURLFeed, segueURLPost} from "./segue";
 import {db, storage} from "./firebase";
 import {ViewFolderEdit} from "./view";
 
@@ -15,50 +15,10 @@ class Folder extends React.Component {
     }
   }
   putShow(){
-    let list = []
-    let d
-    let aId = localStorage.accountId
-    let query
-    switch(this.state.kind){
-      case "folders":
-        query = db.collection("account").doc(aId).collection("folders").doc(this.state.id).collection("urls")
-        break
-      case "myfreefolders":
-        query = db.collection("account").doc(aId).collection("myfreefolders")
-                  .doc(this.state.id).collection("urls")
-        break
-      case "freefolder":
-        query = db.collection("freefolder").doc(this.state.id).collection("urls")
-        break
-      default: break
-    }
-    query.get().then(snap => {
-      let for_saved_list = []
-      for(let i of snap.docs){
-        d = i.data()
-        d.id = i.id
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      sessionStorage.url_list = for_saved_list.join("-@-");
-      ReactDOM.render(<SegueAnyToUrl id={this.state.id} ownerAId={this.state.ownerAId} list={list}/>, document.getElementById("container"))
-    });
+    segueURLFeed(this.state.kind, this.state.id, this.state.ownerAId)
   }
   urlPost(){
-    let list = []
-    let d
-    db.collection("urlset").doc(this.state.id).collection("urlputs").get().then(snap => {
-      let for_saved_list = []
-      for(let i of snap.docs){
-        d = i.data()
-        d.id = i.id
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      sessionStorage.url_list = for_saved_list.join("-@-");
-      history.pushState('','',"folder?id=" + this.props.id);
-      ReactDOM.render(<SegueAnyToUrlPost id={this.state.id} list={list}/>, document.getElementById("main__container"))
-    });
+    segueURLPost(this.state.id, this.state.ownerAId, this.state.kind)
   }
   edit(){
     if(localStorage.accountId === this.state.ownerAId){
