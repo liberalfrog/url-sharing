@@ -47,9 +47,9 @@ function init(){
       }else if(!navigator.onLine && localStorage.accountId !== undefined){
         return localStorage.accountId 
       }else{
-        $("body").prepend('<div id="popover"></div>');
-        ReactDOM.render( <AccountRegister/>, document.getElementById("popover"));
-        return Promise.reject("Account doesn't exist.");
+        $("body").prepend('<div id="popover"></div>')
+        ReactDOM.render( <AccountRegister/>, document.getElementById("popover"))
+        return Promise.reject("Account doesn't exist.")
       }
     }).then(aId => {
       switch(location.pathname){
@@ -70,6 +70,7 @@ function init(){
             db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(snap => {
               if(snap.exists){
                 segueURLFeed("myfreefolders", folderId, localStorage.accountId)
+                document.getElementById("list-nav__button__profile").src = user.photoURL
                 throw 'Oh no!';
               }
               return db.collection("account").doc(aId).collection("folders").doc(folderId).get()

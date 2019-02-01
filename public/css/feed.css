@@ -31,6 +31,10 @@ button{
 /* For smart phone */
 @media screen and (max-width: 767px) {
 
+  #main__container{
+    margin-bottom: 8vh;
+  }
+
   .container__wrapper{
     margin: 0 4vw;
     display: flex;
@@ -85,6 +89,7 @@ button{
   }
   
   #add_button{
+    opacity: 0.9;
     position: fixed;
     bottom: 12vh;
     right: 25px;
@@ -230,7 +235,7 @@ button{
     left: 0;
     height: 8vh;
     z-index: 999;
-    border-top: 1px solid;
+    border-top: 1px solid gray;
   }
   
   .list-nav li{
@@ -238,16 +243,30 @@ button{
     width: 20vw;
     color:#BBB;
     line-height: 8vh;
-    font-size:19px;
     text-decoration: none;
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-weight: 400;
   }
 
-  .list-nav button.tb-active{
-    background: aqua;
+  .list-nav li button, .list-nav li a{
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-size: 24px;
   }
-  
+
+  .list-nav button.tb-active{ color: aqua; }
+
+  .list-nav__button-text{ display: none; }
+
+  #list-nav__button__profile{
+    width: 24px;
+    height: 24px;
+    border: 1px solid gray;
+    border-radius: 50%;
+    vertical-align: middle;
+    box-sizing: border-box;
+  }
   
   /* Begin Register Account */
   .centering_popover{
@@ -261,13 +280,14 @@ button{
   }
   
   footer{
-   position:absolute;
-   bottom: 2%;
-   left:50%;
-   transform:translateX(-50%);
-   color:silver;
-   font-size: 12px;
-   margin:0 0 0.2em 0;
+    position: fixed;
+    bottom: 0;
+    left:50%;
+    transform:translateX(-50%);
+    color:silver;
+    font-size: 12px;
+    margin:0 0 8vh 0;
+    z-index: -1;
   }
   /* End Register Account */
 }
@@ -466,9 +486,21 @@ button{
     font-weight: 400;
   }
 
-  .list-nav li button{
+  .list-nav li button, .list-nav li a{
     color:#BBB;
-    font-size:19px;
+    font-size:20px;
+  }
+
+  .list-nav__button-text{ 
+    font-size:18px;
+    padding-left: 0.4em;
+  }
+
+  #list-nav__button__profile{
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    vertical-align: middle;
   }
 
   .list-nav button.tb-active{
@@ -489,12 +521,13 @@ button{
   .list-nav{ width:1024px; }
   
   footer{
-   position:absolute;
-   left:50%;
-   transform:translateX(-50%);
-   color:silver;
-   font-size:1.6em;
-   margin:0 0 0.2em 0;
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: silver;
+    font-size: 16px;
+    margin: 0 0 0.2em 0;
+    z-index: -1;
   }
-  /* End Register Account */
 }
