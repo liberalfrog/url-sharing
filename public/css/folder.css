@@ -1,15 +1,23 @@
 @media screen and (max-width: 767px){
 
   .urlset_panel h3{
+    background: rgba(255, 255, 255, 0.5);
     font-size: 20px;
   }
 
+  .folder__mini-profile{
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    display: inline-block;
+    height: 32px;
+    line-height: 32px;
+    font-size: 14px;
+  }
+
   .profile-img{
-    position: relative;
-    top: 10px;
-    left: 10px;
-    width: 48px;
-    height: 48px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     z-index: 2;
   }
@@ -19,9 +27,14 @@
     z-index: 3;
   }
 
+  .urlset_panel .account_name{
+    vertical-align:top;
+    color: #000;
+  }
+
   /* @platong urlput outermost frame */
   .urlset_panel{
-    color:black;
+    color: black;
     position: relative;
     width: 48.5%;
     background-size: cover;
@@ -42,12 +55,12 @@
 
   .edit__folder{
     position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 2;
+    bottom: 12px;
+    right: 10px;
+    font-size: 16px;
+    z-index: 3;
     display: none;
   }
-
 }
 
 /* PC */

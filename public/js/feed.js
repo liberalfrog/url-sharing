@@ -2111,11 +2111,13 @@ var SideMenu = (function (_React$Component) {
 
     _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).call(this, props);
     this.state = {
+      profImg: _firebase.auth.currentUser.photoURL,
       profStyle: props.profStyle,
-      homeStyle: props.homeStyle,
-      foldersStyle: props.foldersStyle,
-      alertStyle: props.alertStyle,
-      instructStyle: props.instructStyle
+      homeStyle: props.homeStyle + " fas fa-home",
+      foldersStyle: props.foldersStyle + " far fa-folder",
+      notifiStyle: props.alertStyle + " far fa-bell",
+      instructStyle: props.instructStyle + " far fa-question-circle"
+
     };
     this.sideMenuActiveShift = this.sidemenuActiveShift.bind(this);
   }
@@ -2170,20 +2172,15 @@ var SideMenu = (function (_React$Component) {
         { className: "list-nav" },
         _react2["default"].createElement(
           "li",
-          { className: this.state.profStyle },
-          _react2["default"].createElement(
-            "a",
-            { href: "/account?aId=" + localStorage.getItem("accountId") },
-            "Profile"
-          )
-        ),
-        _react2["default"].createElement(
-          "li",
           null,
           _react2["default"].createElement(
             "button",
             { id: "list-nav__home", className: this.state.homeStyle, onClick: this.homeClicked.bind(this) },
-            "Home"
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "ホーム"
+            )
           )
         ),
         _react2["default"].createElement(
@@ -2192,7 +2189,11 @@ var SideMenu = (function (_React$Component) {
           _react2["default"].createElement(
             "button",
             { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
-            "folders"
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "フォルダ"
+            )
           )
         ),
         _react2["default"].createElement(
@@ -2201,7 +2202,11 @@ var SideMenu = (function (_React$Component) {
           _react2["default"].createElement(
             "button",
             { className: this.state.notifiStyle, onClick: this.notifiClicked.bind(this) },
-            "通知"
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "通知"
+            )
           )
         ),
         _react2["default"].createElement(
@@ -2210,7 +2215,25 @@ var SideMenu = (function (_React$Component) {
           _react2["default"].createElement(
             "button",
             { className: this.state.instructStyle, onClick: this.instructClicked.bind(this) },
-            "説明書"
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "ヘルプ"
+            )
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          { className: this.state.profStyle },
+          _react2["default"].createElement(
+            "a",
+            { href: "/account?aId=" + localStorage.getItem("accountId") },
+            _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "プロフィール"
+            )
           )
         )
       ), _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })];
@@ -2225,26 +2248,26 @@ exports["default"] = SideMenu;
 function switchButtonActive(targetElement) {
   var after = {
     profStyle: "",
-    homeStyle: "",
-    foldersStyle: "",
-    notifiStyle: "",
-    instructStyle: ""
+    homeStyle: " fas fa-home",
+    foldersStyle: " far fa-folder",
+    notifiStyle: " far fa-bell",
+    instructStyle: " far fa-question-circle"
   };
   switch (targetElement) {
     case "home":
-      after.homeStyle = "tb-active";
+      after.homeStyle += " tb-active";
       break;
     case "profile":
-      after.profStyle = "tb-active";
+      after.profStyle += " tb-active";
       break;
     case "folders":
-      after.foldersStyle = "tb-active";
+      after.foldersStyle += " tb-active";
       break;
     case "notification":
-      after.notifiStyle = "tb-active";
+      after.notifiStyle += " tb-active";
       break;
     case "instruction":
-      after.instructStyle = "tb-active";
+      after.instructStyle += " tb-active";
       break;
   }
   return after;
@@ -35089,6 +35112,7 @@ function init() {
               _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(function (snap) {
                 if (snap.exists) {
                   (0, _componentSegue.segueURLFeed)("myfreefolders", folderId, localStorage.accountId);
+                  document.getElementById("list-nav__button__profile").src = user.photoURL;
                   throw 'Oh no!';
                 }
                 return _componentFirebase.db.collection("account").doc(aId).collection("folders").doc(folderId).get();
