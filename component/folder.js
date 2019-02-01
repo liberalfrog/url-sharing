@@ -28,13 +28,14 @@ class Folder extends React.Component {
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
-        <button className="edit__folder" onClick={this.edit.bind(this)}>…</button>
-        <a href={"/account?aId=" + this.state.ownerAId} className="profile-img__link">
-          <img src={this.props.aProfileImg} className="profile-img" />
-        </a>
         <h3>{this.props.name}</h3>
-        <p className="account_name">{this.props.aName}</p>
+        <div className="folder__mini-profile">
+          <img src={this.props.aProfileImg} className="profile-img" />
+          <span className="account_name">{this.props.aName}</span>
+          <a href={"/account?aId=" + this.state.ownerAId} className="profile-img__link"></a>
+        </div>
         <a className="rigidFolder" onClick={this.state.putShow.bind(this)}></a>
+        <button className="edit__folder fas fa-cog" onClick={this.edit.bind(this)}></button>
       </div>
     )
   }

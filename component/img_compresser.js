@@ -1,5 +1,5 @@
 require("firebase/app")
-import generateUuid fron "./uuid"
+import generateUuid from "./uuid"
 import {db, storage, auth} from "./firebase"
 
 var blob;
