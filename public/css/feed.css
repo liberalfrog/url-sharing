@@ -289,15 +289,6 @@ button{
     height: 110px;
   }
   
-  /* @platong urlput outermost frame */
-  .urlset_panel{
-    color:black;
-    position: relative;
-    width: 23.5%;
-    background-size: cover;
-    margin: 8px 6px;
-  }
-  
   #container .urlset_panel:nth-child(4n){
     margin: 10px 0 0 0;
   }

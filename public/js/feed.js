@@ -1149,26 +1149,23 @@ var Folder = (function (_React$Component) {
         'div',
         { className: 'urlset_panel', id: this.props.id },
         _react2['default'].createElement(
-          'button',
-          { className: 'edit__folder', onClick: this.edit.bind(this) },
-          '…'
-        ),
-        _react2['default'].createElement(
-          'a',
-          { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' },
-          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' })
-        ),
-        _react2['default'].createElement(
           'h3',
           null,
           this.props.name
         ),
         _react2['default'].createElement(
-          'p',
-          { className: 'account_name' },
-          this.props.aName
+          'div',
+          { className: 'folder__mini-profile' },
+          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' }),
+          _react2['default'].createElement(
+            'span',
+            { className: 'account_name' },
+            this.props.aName
+          ),
+          _react2['default'].createElement('a', { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' })
         ),
-        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
+        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) }),
+        _react2['default'].createElement('button', { className: 'edit__folder fas fa-cog', onClick: this.edit.bind(this) })
       );
     }
   }]);
