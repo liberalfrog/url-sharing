@@ -255,7 +255,10 @@ button{
     font-size: 24px;
   }
 
-  .list-nav button.tb-active{ color: aqua; }
+  .list-nav button.tb-active{ 
+  color: aqua; 
+  border-bottom: 8px solid aqua;
+  }
 
   .list-nav__button-text{ display: none; }
 
