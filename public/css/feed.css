@@ -95,10 +95,10 @@ button{
     right: 25px;
     background: #00AA00;
     color: white;
-    width: 14vh;
-    height: 14vh;
+    width: 11vh;
+    height: 11vh;
     border-radius: 50%;
-    font-size: 60px;
+    font-size: 50px;
     z-index: 20;
   }
 
