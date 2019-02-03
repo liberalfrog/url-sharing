@@ -1,0 +1,25 @@
+{
+  "short_name": "URLSharing",
+  "name": "URL Sharing -１秒発信で次の世界へ-",
+  "icons": [
+    {
+      "src": "launcher-icon-1x.png",
+      "type": "image/png",
+      "sizes": "48x48"
+    },
+    {
+      "src": "launcher-icon-2x.png",
+      "type": "image/png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "launcher-icon-4x.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
+  "background_color": "#2196F3",
+  "display": "standalone",
+  "theme_color": "#2196F3",
+  "start_url": "/?utm_source=homescreen"
+}
