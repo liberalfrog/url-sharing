@@ -95,10 +95,10 @@ button{
     right: 25px;
     background: #00AA00;
     color: white;
-    width: 14vh;
-    height: 14vh;
+    width: 11vh;
+    height: 11vh;
     border-radius: 50%;
-    font-size: 60px;
+    font-size: 50px;
     z-index: 20;
   }
 
@@ -255,7 +255,10 @@ button{
     font-size: 24px;
   }
 
-  .list-nav button.tb-active{ color: aqua; }
+  .list-nav button.tb-active{ 
+  color: aqua; 
+  border-bottom: 8px solid aqua;
+  }
 
   .list-nav__button-text{ display: none; }
 
@@ -322,6 +325,25 @@ button{
     text-indent:-999px;
   }
   
+  .urlset_panel:hover{
+    transform: scale(1.02);
+    opacity: 0.8;
+  }
+
+  .urlset_panel:active{
+    animation: big 0.5s forwards;
+  }
+
+  @keyframes big{
+    0% {
+        transform: scale(1); 
+        opacity:1;
+       }
+  100% {
+        transform: scale(1.3);
+        opacity:0.4;
+       }
+  }
   
   /* Add Panel */
   .add_view{
@@ -494,6 +516,18 @@ button{
   .list-nav__button-text{ 
     font-size:18px;
     padding-left: 0.4em;
+  }
+ 
+  .list-nav__button-text:hover{ 
+    animation: hove 0.05s linear forwards;
+  }
+  @keyframes hove{
+    0% {
+    font-size: 1em;
+    }
+    100%{
+    font-size: 1.1em;
+    }
   }
 
   #list-nav__button__profile{
