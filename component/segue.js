@@ -1,5 +1,4 @@
 import React from "react";
-import URLs from "./url";
 import Folders from "./folder";
 import {AddButton, AddPanel, URLPost} from './add_button';
 import SideMenu from "./side_menu";

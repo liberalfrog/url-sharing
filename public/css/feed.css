@@ -305,6 +305,10 @@ button{
     flex-wrap: wrap;
   }
 
+  .folder-info__wrapper{
+    margin: 0 0 0 250px;
+  }
+
   .latest-container__title, .recommend-container__title{ margin: 0 0 0 250px; padding: 40px 0 0 0;}
   
   .urlset_panel, .post-folder__folder{
