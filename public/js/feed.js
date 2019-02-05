@@ -2150,7 +2150,7 @@ var SideMenu = (function (_React$Component) {
     key: "notifiClicked",
     value: function notifiClicked() {
       this.setState(switchButtonActive("notification"));
-      alert("すみません、通知機能はこれから実装されます。");
+      if (!sessionStorage.canNotification) alert("通知が許可されていません、ブラウザの設定を修正してください");else alert("通知表示画面はこれから実装されます。");
       var path = location.pathname.split("/")[1];
       if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));

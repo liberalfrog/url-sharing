@@ -16,10 +16,11 @@
   <!-- Global site tag (gtag.js) - Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=UA-131300251-1"></script>
   <script>
-  if ('serviceWorker' in navigator)
-    navigator.serviceWorker.register('./sw.js').then(function() { console.log('Service Worker Registered'); });
-  </script>
-  <script>
+    if ('serviceWorker' in navigator){
+      navigator.serviceWorker.register('./sw.js').then(function() { console.log('Service Worker Registered'); });
+      navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function() { console.log('Service Worker Registered'); });
+    }
+
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
@@ -34,6 +35,7 @@
   <script src="/common/js/5.0.0/firebase-storage.js"></script>
   <script src="/common/js/5.0.0/firebase-auth.js"></script>
   <script src="/common/js/5.7.0/firebase-firestore.js"></script>
+  <script src="/common/js/5.7.0/firebase-messaging.js"></script>
   <script>
     var config = {
       apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
@@ -46,6 +48,7 @@
     firebase.initializeApp(config);
   </script>
   <script src="/common/js/jquery-3.3.1.min.js"></script>
+  <script src="/js/msg.js"></script>
   <script src="/js/feed.js"></script>
 </body>
 </html>
