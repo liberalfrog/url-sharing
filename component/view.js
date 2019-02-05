@@ -154,12 +154,28 @@ class ViewURLFeed extends React.Component {
   openAddPanel(){ 
     segueURLfeedToURLPost(this.state.id, this.state.ownerAid)
   }
+  componentDidMount(){
+    let count = 0
+    db.collection("freefolder").doc(this.state.id).collection("urls").get().then(snaps => {
+      return snaps.forEach(snap => {
+        return db.collection("page_tracking").where("urlId", "==", snap.id).get().then(urlSnaps => {
+          count += urlSnaps.size
+        }).then(() => {
+          document.getElementById("folder__click__number").innerHTML = count;
+        })
+      })
+    })
+  }
   render(){
-    return(
+    return([
       <div className="container__wrapper">
         <URLs list={this.props.list} />
+      </div>,
+      <div className="folder-info__wrapper">
+        <h3>このフォルダの閲覧情報</h3>
+        <p>クリックされたURLの総回数: <span id="folder__click__number"></span></p>
       </div>
-    );  
+    ]);  
   }
 }
 

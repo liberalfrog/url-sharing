@@ -7,14 +7,26 @@ class URL extends React.Component {
     this.state = {
       title: props.title,
       href: props.href,
-      content: props.content
+      content: props.content,
+      id: props.id
     }
   }
   clickHandler(){
+    let query = location.search;
+    let hash = query.slice(1).split("&")
+    var parameters = []
+    hash.map(x => {
+      let array = x.split("=")
+      parameters.push(array[0])
+      parameters[array[0]] = array[1]
+    })
+    let folderId = parameters["id"]
     let aId = localStorage.getItem("accountId")
     let data = {
       href: this.state.href,
-      date: new Date()
+      date: new Date(),
+      urlId: this.state.id,
+      folderId: folderId
     }
     db.collection("account").doc(aId).collection("page_trackings").add(data);
   }
@@ -42,7 +54,7 @@ export default class URLs extends React.Component {
   render(){
     var return_html = []
     for(let [i, d] of this.state.list.entries()){
-      return_html.push( <URL key={i} title={d.title} content={d.content} href={d.href}/>);
+      return_html.push( <URL key={i} title={d.title} id={d.id} content={d.content} href={d.href}/>);
     }
     return return_html;
   }

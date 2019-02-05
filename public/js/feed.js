@@ -1282,10 +1282,6 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
-var _url = require("./url");
-
-var _url2 = _interopRequireDefault(_url);
-
 var _folder = require("./folder");
 
 var _folder2 = _interopRequireDefault(_folder);
@@ -2078,7 +2074,7 @@ exports.segueFolderToAddPanel = segueFolderToAddPanel;
 exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
 exports.segueURLPost = segueURLPost;
 
-},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./side_menu":8,"./url":9,"./view":11,"react":32}],8:[function(require,module,exports){
+},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./side_menu":8,"./view":11,"react":32}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2150,7 +2146,7 @@ var SideMenu = (function (_React$Component) {
     key: "notifiClicked",
     value: function notifiClicked() {
       this.setState(switchButtonActive("notification"));
-      if (!sessionStorage.canNotification) alert("通知が許可されていません、ブラウザの設定を修正してください");else alert("通知表示画面はこれから実装されます。");
+      if (sessionStorage.canNotification) alert("通知表示画面はこれから実装されます。");else alert("通知が許可されていません、ブラウザの設定を修正してください");
       var path = location.pathname.split("/")[1];
       if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));
@@ -2315,17 +2311,29 @@ var URL = (function (_React$Component) {
     this.state = {
       title: props.title,
       href: props.href,
-      content: props.content
+      content: props.content,
+      id: props.id
     };
   }
 
   _createClass(URL, [{
     key: "clickHandler",
     value: function clickHandler() {
+      var query = location.search;
+      var hash = query.slice(1).split("&");
+      var parameters = [];
+      hash.map(function (x) {
+        var array = x.split("=");
+        parameters.push(array[0]);
+        parameters[array[0]] = array[1];
+      });
+      var folderId = parameters["id"];
       var aId = localStorage.getItem("accountId");
       var data = {
         href: this.state.href,
-        date: new Date()
+        date: new Date(),
+        urlId: this.state.id,
+        folderId: folderId
       };
       _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
     }
@@ -2384,7 +2392,7 @@ var URLs = (function (_React$Component2) {
           var i = _step$value[0];
           var d = _step$value[1];
 
-          return_html.push(_react2["default"].createElement(URL, { key: i, title: d.title, content: d.content, href: d.href }));
+          return_html.push(_react2["default"].createElement(URL, { key: i, title: d.title, id: d.id, content: d.content, href: d.href }));
         }
       } catch (err) {
         _didIteratorError = true;
@@ -2777,13 +2785,41 @@ var ViewURLFeed = (function (_React$Component6) {
       (0, _segue.segueURLfeedToURLPost)(this.state.id, this.state.ownerAid);
     }
   }, {
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var count = 0;
+      _firebase.db.collection("freefolder").doc(this.state.id).collection("urls").get().then(function (snaps) {
+        return snaps.forEach(function (snap) {
+          return _firebase.db.collection("page_tracking").where("urlId", "==", snap.id).get().then(function (urlSnaps) {
+            count += urlSnaps.size;
+          }).then(function () {
+            document.getElementById("folder__click__number").innerHTML = count;
+          });
+        });
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
-      return _react2["default"].createElement(
+      return [_react2["default"].createElement(
         "div",
         { className: "container__wrapper" },
         _react2["default"].createElement(_url2["default"], { list: this.props.list })
-      );
+      ), _react2["default"].createElement(
+        "div",
+        { className: "folder-info__wrapper" },
+        _react2["default"].createElement(
+          "h3",
+          null,
+          "このフォルダの閲覧情報"
+        ),
+        _react2["default"].createElement(
+          "p",
+          null,
+          "クリックされたURLの総回数: ",
+          _react2["default"].createElement("span", { id: "folder__click__number" })
+        )
+      )];
     }
   }]);
 
