@@ -35,7 +35,10 @@ export default class SideMenu extends React.Component{
   }
   notifiClicked(){
     this.setState(switchButtonActive("notification"))
-    alert("すみません、通知機能はこれから実装されます。")
+    if(sessionStorage.canNotification)
+      alert("通知表示画面はこれから実装されます。")
+    else
+      alert("通知が許可されていません、ブラウザの設定を修正してください")
     let path = location.pathname.split("/")[1]
     if(path === "feed")
       path = "home"
