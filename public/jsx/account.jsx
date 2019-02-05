@@ -17,6 +17,8 @@ function init(){
     document.getElementById("account_profile_img").src =  d.img;
     document.getElementById("account_name").innerHTML= d.name;
     document.getElementById("account_intro").innerHTML= d.intro;
+    document.getElementById("follow__number").innerHTML= d.followee;
+    document.getElementById("follower__number").innerHTML= d.follower;
   });
 
   if(aId === targetAId){

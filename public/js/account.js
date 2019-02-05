@@ -2011,11 +2011,13 @@ var SideMenu = (function (_React$Component) {
 
     _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).call(this, props);
     this.state = {
+      profImg: _firebase.auth.currentUser.photoURL,
       profStyle: props.profStyle,
       homeStyle: props.homeStyle + " fas fa-home",
       foldersStyle: props.foldersStyle + " far fa-folder",
       notifiStyle: props.alertStyle + " far fa-bell",
       instructStyle: props.instructStyle + " far fa-question-circle"
+
     };
     this.sideMenuActiveShift = this.sidemenuActiveShift.bind(this);
   }
@@ -2048,7 +2050,7 @@ var SideMenu = (function (_React$Component) {
     key: "notifiClicked",
     value: function notifiClicked() {
       this.setState(switchButtonActive("notification"));
-      alert("すみません、通知機能はこれから実装されます。");
+      if (sessionStorage.canNotification) alert("通知表示画面はこれから実装されます。");else alert("通知が許可されていません、ブラウザの設定を修正してください");
       var path = location.pathname.split("/")[1];
       if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));
@@ -2126,7 +2128,12 @@ var SideMenu = (function (_React$Component) {
           _react2["default"].createElement(
             "a",
             { href: "/account?aId=" + localStorage.getItem("accountId") },
-            _react2["default"].createElement("img", { src: "", id: "list-nav__button__profile" })
+            _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "プロフィール"
+            )
           )
         )
       ), _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })];
@@ -34926,6 +34933,8 @@ function init() {
     document.getElementById("account_profile_img").src = d.img;
     document.getElementById("account_name").innerHTML = d.name;
     document.getElementById("account_intro").innerHTML = d.intro;
+    document.getElementById("follow__number").innerHTML = d.followee;
+    document.getElementById("follower__number").innerHTML = d.follower;
   });
 
   if (aId === targetAId) {
