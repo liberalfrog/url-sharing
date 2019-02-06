@@ -82,6 +82,7 @@ class ViewTop extends React.Component{
   }
   render(){
     return([
+    <div key="ViewTop">
       <div id="main__container">
         <div id="container__latest">
           <h1 className="latest-container__title">新着情報</h1>
@@ -99,7 +100,8 @@ class ViewTop extends React.Component{
       <div id="utility__area">
         <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
       </div>,
-      <SideMenu homeStyle="tb-active"/>
+      <SideMenu key="SideMenu" homeStyle="tb-active"/>
+    </div>
     ])
   }
 }
@@ -111,16 +113,16 @@ class ViewFolderFeed extends React.Component {
   }
   render(){
     return([
-      <div id="main__container"> 
+      <div id="main__container" key="ViewFolderFeed_main"> 
         <div className="container__wrapper">
           <Folders list={this.props.list} />
         </div>
       </div>,
-      <div id="utility__area">
+      <div id="utility__area" key="ViewFolderFeed_utility">
         <LaterButton />
         <AddButton func={this.openFolderPost} icon={"folder"} />
       </div>,
-      <SideMenu foldersStyle="tb-active"/>
+      <SideMenu key="SideMenu"foldersStyle="tb-active"/>
     ]);
   }
 }
@@ -168,10 +170,10 @@ class ViewURLFeed extends React.Component {
   }
   render(){
     return([
-      <div className="container__wrapper">
+      <div key="urls"className="container__wrapper">
         <URLs list={this.props.list} />
       </div>,
-      <div className="folder-info__wrapper">
+      <div key="urlsInfos"className="folder-info__wrapper">
         <h3>このフォルダの閲覧情報</h3>
         <p>クリックされたURLの総回数: <span id="folder__click__number"></span></p>
       </div>
@@ -186,7 +188,7 @@ class ViewURLPost extends React.Component {
       <div className="container__wrapper">
         <URLs list={this.props.list} />
         <URLPost id={this.props.id} ownerAId={this.props.ownerAId}/>
-        <SideMenu />
+        <SideMenu key="SideMenu"/>
       </div>
     );
   }

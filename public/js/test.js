@@ -614,8 +614,7 @@ var AddButton = (function (_React$Component) {
   _createClass(AddButton, [{
     key: "render",
     value: function render() {
-      console.log("addbutton");
-      return React.createElement("button", { id: "add_button", key: "aaa", className: this.state.kind, onClick: this.props.func });
+      return React.createElement("button", { id: "add_button", className: this.state.kind, onClick: this.props.func });
     }
   }]);
 
@@ -1267,7 +1266,6 @@ var Folders = (function (_React$Component2) {
     key: 'render',
     value: function render() {
       var return_html = [];
-      var i = 0;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
@@ -1434,7 +1432,7 @@ function segueURLFeed(kind, id, ownerAId) {
     sessionStorage.url_list = for_saved_list.join("-@-");
 
     if (document.getElementById("main__container")) {
-      ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id,
+      ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { id: id,
         ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
       ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: function () {
           return segueURLPost(id, ownerAId, kind);
@@ -1442,15 +1440,15 @@ function segueURLFeed(kind, id, ownerAId) {
     } else {
       ReactDOM.render([_react2["default"].createElement(
         "div",
-        { id: "main__container", key: "segueUrlFeedMain" },
+        { id: "main__container" },
         _react2["default"].createElement(_view.ViewURLFeed, { id: id, ownerAId: ownerAId, list: list })
       ), _react2["default"].createElement(
         "div",
-        { id: "utility__area", key: "segueUrlFeedUtility" },
+        { id: "utility__area" },
         _react2["default"].createElement(_add_button.AddButton, { func: function () {
             return segueURLPost(id, ownerAId, kind);
           }, icon: "url" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })], document.getElementById("container"));
+      ), _react2["default"].createElement(_side_menu2["default"], { foldersStyle: "tb-active" })], document.getElementById("container"));
     }
   });
 }
@@ -1660,7 +1658,7 @@ function segueURLPost(id, ownerAId, kind) {
       list = listStr.split("-@-").map(x => JSON.parse(x))
     else
       list = []*/
-    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { key: "segueUrlPost", list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
+    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
   });
 }
 
@@ -1773,7 +1771,7 @@ function segueFolderFeed() {
   var list = [];
   var for_saved_list = [];
   var aId = localStorage.getItem("accountId");
-  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], { key: "segueFolderFeedLaterButton" }), _react2["default"].createElement(_add_button.AddButton, { key: "segueFolderFeedAddButton", func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
+  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], null), _react2["default"].createElement(_add_button.AddButton, { func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
   _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
     var d = {};
     var _iteratorNormalCompletion10 = true;
@@ -1950,7 +1948,7 @@ function segueGlobal() {
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
     ReactDOM.render([_react2["default"].createElement(
       "div",
-      { id: "container__latest", key: "segueGlobalLatest" },
+      { id: "container__latest" },
       _react2["default"].createElement(
         "h1",
         { className: "latest-container__title" },
@@ -1963,7 +1961,7 @@ function segueGlobal() {
       )
     ), _react2["default"].createElement(
       "div",
-      { key: "segueGlobalRecommend" },
+      null,
       _react2["default"].createElement(
         "h1",
         { className: "recommend-container__title" },
@@ -2080,7 +2078,7 @@ function segueInitToGlobal() {
 
     ;
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list, key: "segueInitToGlobal" }), document.getElementById("container"));
+    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list }), document.getElementById("container"));
     var _iteratorNormalCompletion18 = true;
     var _didIteratorError18 = false;
     var _iteratorError18 = undefined;
@@ -2227,7 +2225,7 @@ var SideMenu = (function (_React$Component) {
     key: "notifiClicked",
     value: function notifiClicked() {
       this.setState(switchButtonActive("notification"));
-      if (sessionStorage.canNotification) alert("no zissou no life");else alert("通知が許可されていません、ブラウザの設定を修正してください");
+      if (sessionStorage.canNotification) console.log("tinin");else alert("通知が許可されていません、ブラウザの設定を修正してください");
       var path = location.pathname.split("/")[1];
       if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));
@@ -2245,77 +2243,75 @@ var SideMenu = (function (_React$Component) {
     key: "render",
     value: function render() {
       return [_react2["default"].createElement(
-        "div",
-        { key: "sideButtons" },
+        "ul",
+        { className: "list-nav" },
         _react2["default"].createElement(
-          "ul",
-          { className: "list-nav" },
+          "li",
+          null,
           _react2["default"].createElement(
-            "li",
-            null,
+            "button",
+            { id: "list-nav__home", className: this.state.homeStyle, onClick: this.homeClicked.bind(this) },
             _react2["default"].createElement(
-              "button",
-              { id: "list-nav__home", className: this.state.homeStyle, onClick: this.homeClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "ホーム"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
-              _react2["default"].createElement("span", { className: "list-nav__button-text" })
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { className: this.state.notifiStyle, onClick: this.notifiClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "通知"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { className: this.state.instructStyle, onClick: this.instructClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "ヘルプ"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            { className: this.state.profStyle },
-            _react2["default"].createElement(
-              "a",
-              { href: "/account?aId=" + localStorage.getItem("accountId") },
-              _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "プロフィール"
-              )
+              "span",
+              { className: "list-nav__button-text" },
+              "ホムホム"
             )
           )
         ),
-        ",",
-        _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })
-      )];
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "フォルダ"
+            )
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { className: this.state.notifiStyle, onClick: this.notifiClicked.bind(this) },
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "通知"
+            )
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          null,
+          _react2["default"].createElement(
+            "button",
+            { className: this.state.instructStyle, onClick: this.instructClicked.bind(this) },
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "ヘルプ"
+            )
+          )
+        ),
+        _react2["default"].createElement(
+          "li",
+          { className: this.state.profStyle },
+          _react2["default"].createElement(
+            "a",
+            { href: "/account?aId=" + localStorage.getItem("accountId") },
+            _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
+            _react2["default"].createElement(
+              "span",
+              { className: "list-nav__button-text" },
+              "プロフィール"
+            )
+          )
+        )
+      ), _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })];
     }
   }]);
 
@@ -2423,7 +2419,6 @@ var URL = (function (_React$Component) {
   }, {
     key: "render",
     value: function render() {
-      console.log("aaaaa");
       return _react2["default"].createElement(
         "div",
         { className: "urlput_panel" },
@@ -2476,7 +2471,7 @@ var URLs = (function (_React$Component2) {
           var i = _step$value[0];
           var d = _step$value[1];
 
-          return_html.push(_react2["default"].createElement(URL, { key: d.id, title: d.title, id: d.id, content: d.content, href: d.href }));
+          return_html.push(_react2["default"].createElement(URL, { key: i, title: d.title, id: d.id, content: d.content, href: d.href }));
         }
       } catch (err) {
         _didIteratorError = true;
@@ -2747,48 +2742,40 @@ var ViewTop = (function (_React$Component3) {
     value: function render() {
       return [_react2["default"].createElement(
         "div",
-        { key: "ViewTop" },
+        { id: "main__container" },
         _react2["default"].createElement(
           "div",
-          { id: "main__container" },
+          { id: "container__latest" },
           _react2["default"].createElement(
-            "div",
-            { id: "container__latest" },
-            _react2["default"].createElement(
-              "h1",
-              { className: "latest-container__title" },
-              "新着情報"
-            ),
-            _react2["default"].createElement(
-              "div",
-              { className: "container__wrapper" },
-              _react2["default"].createElement(_folder2["default"], { list: this.props.latest_list })
-            )
+            "h1",
+            { className: "latest-container__title" },
+            "新着情報"
           ),
           _react2["default"].createElement(
             "div",
-            null,
-            _react2["default"].createElement(
-              "h1",
-              { className: "recommend-container__title" },
-              "評価されている情報"
-            ),
-            _react2["default"].createElement(
-              "div",
-              { className: "container__wrapper" },
-              _react2["default"].createElement(_folder2["default"], { list: this.props.recommend_list })
-            )
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.props.latest_list })
           )
         ),
-        ",",
         _react2["default"].createElement(
           "div",
-          { id: "utility__area" },
-          _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
-        ),
-        ",",
-        _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", homeStyle: "tb-active" })
-      )];
+          null,
+          _react2["default"].createElement(
+            "h1",
+            { className: "recommend-container__title" },
+            "評価されている情報"
+          ),
+          _react2["default"].createElement(
+            "div",
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.props.recommend_list })
+          )
+        )
+      ), _react2["default"].createElement(
+        "div",
+        { id: "utility__area" },
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+      ), _react2["default"].createElement(_side_menu2["default"], { homeStyle: "tb-active" })];
     }
   }]);
 
@@ -2814,7 +2801,7 @@ var ViewFolderFeed = (function (_React$Component4) {
     value: function render() {
       return [_react2["default"].createElement(
         "div",
-        { id: "main__container", key: "ViewFolderFeed_main" },
+        { id: "main__container" },
         _react2["default"].createElement(
           "div",
           { className: "container__wrapper" },
@@ -2822,10 +2809,10 @@ var ViewFolderFeed = (function (_React$Component4) {
         )
       ), _react2["default"].createElement(
         "div",
-        { id: "utility__area", key: "ViewFolderFeed_utility" },
+        { id: "utility__area" },
         _react2["default"].createElement(_later_button2["default"], null),
         _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })];
+      ), _react2["default"].createElement(_side_menu2["default"], { foldersStyle: "tb-active" })];
     }
   }]);
 
@@ -2895,11 +2882,11 @@ var ViewURLFeed = (function (_React$Component6) {
     value: function render() {
       return [_react2["default"].createElement(
         "div",
-        { key: "aaa", className: "container__wrapper" },
+        { className: "container__wrapper" },
         _react2["default"].createElement(_url2["default"], { list: this.props.list })
       ), _react2["default"].createElement(
         "div",
-        { key: "test", className: "folder-info__wrapper" },
+        { className: "folder-info__wrapper" },
         _react2["default"].createElement(
           "h3",
           null,
@@ -2935,7 +2922,7 @@ var ViewURLPost = (function (_React$Component7) {
         { className: "container__wrapper" },
         _react2["default"].createElement(_url2["default"], { list: this.props.list }),
         _react2["default"].createElement(_add_button.URLPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
-        _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu" })
+        _react2["default"].createElement(_side_menu2["default"], null)
       );
     }
   }]);
