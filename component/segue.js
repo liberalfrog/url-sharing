@@ -50,7 +50,7 @@ function segueURLFeed(kind, id, ownerAId){
         <div id="utility__area" key="segueUrlFeedUtility">
           <AddButton func={() => segueURLPost(id, ownerAId, kind)} icon={"url"} />
         </div>,
-        <SideMenu key="SideMenu"foldersStyle="tb-active"/>
+        <SideMenu key="SideMenu" foldersStyle="tb-active"/>
       ], document.getElementById("container"))
     }
   });
