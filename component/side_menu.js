@@ -63,7 +63,7 @@ export default class SideMenu extends React.Component{
         </li>
         <li>
           <button id="list-nav__folders" className={this.state.foldersStyle} onClick={this.folderClicked.bind(this)}>
-            <span className="list-nav__button-text">フィルダ</span>
+            <span className="list-nav__button-text">フォルダ</span>
           </button>
         </li>
         <li>
