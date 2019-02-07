@@ -122,7 +122,7 @@ class ViewFolderFeed extends React.Component {
         <LaterButton />
         <AddButton func={this.openFolderPost} icon={"folder"} />
       </div>,
-      <SideMenu key="SideMenu"foldersStyle="tb-active"/>
+      <SideMenu key="SideMenu" foldersStyle="tb-active"/>
     ]);
   }
 }
@@ -170,10 +170,10 @@ class ViewURLFeed extends React.Component {
   }
   render(){
     return([
-      <div key="urls"className="container__wrapper">
+      <div key="urls" className="container__wrapper">
         <URLs list={this.props.list} />
       </div>,
-      <div key="urlsInfos"className="folder-info__wrapper">
+      <div key="urlsInfos" className="folder-info__wrapper">
         <h3>このフォルダの閲覧情報</h3>
         <p>クリックされたURLの総回数: <span id="folder__click__number"></span></p>
       </div>
