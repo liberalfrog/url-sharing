@@ -36,7 +36,7 @@ export default class SideMenu extends React.Component{
   notifiClicked(){
     this.setState(switchButtonActive("notification"))
     if(sessionStorage.canNotification)
-      alert("no zissou no life");
+      alert("通知表示画面はこれから実装されます。");
     else
       alert("通知が許可されていません、ブラウザの設定を修正してください")
     let path = location.pathname.split("/")[1]
@@ -46,7 +46,7 @@ export default class SideMenu extends React.Component{
   }
   instructClicked(){
     this.setState(switchButtonActive("instruction"))
-    alert("sorry、説明書はこれから実装されます。")
+    alert("すみません、説明書はこれから実装されます。")
     let path = location.pathname.split("/")[1]
     if(path === "feed")
       path = "home"
@@ -63,7 +63,7 @@ export default class SideMenu extends React.Component{
         </li>
         <li>
           <button id="list-nav__folders" className={this.state.foldersStyle} onClick={this.folderClicked.bind(this)}>
-            <span className="list-nav__button-text"></span>
+            <span className="list-nav__button-text">フィルダ</span>
           </button>
         </li>
         <li>
