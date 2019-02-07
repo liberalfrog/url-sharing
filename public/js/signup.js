@@ -187,6 +187,28 @@ process.umask = function() { return 0; };
 },{}],2:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+require('firebase/app');
+require('firebase/firestore');
+require('firebase/storage');
+require('firebase/auth');
+
+var db = firebase.firestore();
+var storage = firebase.storage();
+var auth = firebase.auth();
+
+var settings = { timestampsInSnapshots: true };
+db.settings(settings);
+
+exports.db = db;
+exports.storage = storage;
+exports.auth = auth;
+
+},{"firebase/app":12,"firebase/auth":13,"firebase/firestore":14,"firebase/storage":17}],3:[function(require,module,exports){
+'use strict';
+
 Object.defineProperty(exports, '__esModule', { value: true });
 
 var util = require('@firebase/util');
@@ -584,7 +606,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":9}],3:[function(require,module,exports){
+},{"@firebase/util":10}],4:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -910,7 +932,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":2}],4:[function(require,module,exports){
+},{"@firebase/app":3}],5:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -21999,7 +22021,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":2,"@firebase/logger":5,"@firebase/webchannel-wrapper":10,"_process":1,"tslib":17}],5:[function(require,module,exports){
+},{"@firebase/app":3,"@firebase/logger":6,"@firebase/webchannel-wrapper":11,"_process":1,"tslib":18}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -22187,7 +22209,7 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -23722,7 +23744,7 @@ var iterator = _wksExt.f('iterator');
  */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"whatwg-fetch":7}],7:[function(require,module,exports){
+},{"whatwg-fetch":8}],8:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -24190,7 +24212,7 @@ var iterator = _wksExt.f('iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -27651,7 +27673,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":2}],9:[function(require,module,exports){
+},{"@firebase/app":3}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -29429,7 +29451,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":17}],10:[function(require,module,exports){
+},{"tslib":18}],11:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -29554,7 +29576,7 @@ e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -29580,7 +29602,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":14,"@firebase/polyfill":6}],12:[function(require,module,exports){
+},{"@firebase/app":15,"@firebase/polyfill":7}],13:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -29601,7 +29623,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":3}],13:[function(require,module,exports){
+},{"@firebase/auth":4}],14:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -29622,7 +29644,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":4}],14:[function(require,module,exports){
+},{"@firebase/firestore":5}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30022,9 +30044,9 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":15}],15:[function(require,module,exports){
-arguments[4][9][0].apply(exports,arguments)
-},{"dup":9,"tslib":17}],16:[function(require,module,exports){
+},{"@firebase/util":16}],16:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10,"tslib":18}],17:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -30045,7 +30067,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":8}],17:[function(require,module,exports){
+},{"@firebase/storage":9}],18:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -30290,36 +30312,14 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],18:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-require('firebase/app');
-require('firebase/firestore');
-require('firebase/storage');
-require('firebase/auth');
-
-var db = firebase.firestore();
-var storage = firebase.storage();
-var auth = firebase.auth();
-
-var settings = { timestampsInSnapshots: true };
-db.settings(settings);
-
-exports.db = db;
-exports.storage = storage;
-exports.auth = auth;
-
-},{"firebase/app":11,"firebase/auth":12,"firebase/firestore":13,"firebase/storage":16}],19:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 "use strict";
 
-var _jsFirebase = require("../js/firebase");
+var _componentFirebase = require("../../component/firebase");
 
 require("firebase/app");
 
-_jsFirebase.auth.onAuthStateChanged(function (user) {
+_componentFirebase.auth.onAuthStateChanged(function (user) {
   if (user !== null) {
     var redirect_url = "/feed" + location.search;
     if (document.referrer) {
@@ -30328,7 +30328,7 @@ _jsFirebase.auth.onAuthStateChanged(function (user) {
     }
     location.href = redirect_url;
   } else {
-    var ui = new firebaseui.auth.AuthUI(_jsFirebase.auth);
+    var ui = new firebaseui.auth.AuthUI(_componentFirebase.auth);
 
     var uiConfig = {
       callbacks: {
@@ -30356,4 +30356,4 @@ _jsFirebase.auth.onAuthStateChanged(function (user) {
   }
 });
 
-},{"../js/firebase":18,"firebase/app":11}]},{},[19]);
+},{"../../component/firebase":2,"firebase/app":12}]},{},[19]);
