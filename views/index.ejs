@@ -4,8 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>URL Sharing</title>
-  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.css" /> 
-  <link rel="stylesheet" href="/css/top_page.css">
+  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
+  <script>
+    var config = {
+      apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
+      authDomain: "urlsharing-541c7.firebaseapp.com",
+      databaseURL: "https://urlsharing-541c7.firebaseio.com",
+      projectId: "urlsharing-541c7",
+      storageBucket: "urlsharing-541c7.appspot.com",
+      messagingSenderId: "756728507687"
+    };
+    firebase.initializeApp(config);
+    const auth = firebase.auth()
+
+    auth.onAuthStateChanged(function(user){
+      if(user !== null) {
+        var redirect_url = "/feed" + location.search;
+        if (document.referrer) {
+          var referrer = "referrer=" + encodeURIComponent(document.referrer);
+          redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
+        }
+        location.href = redirect_url;
+      }
+    })
+  </script>
+  <link rel="stylesheet" type="text/css" href="/css/top_page.css">
   <link rel="stylesheet" href="/css/basic_component.css">
   <link rel="icon" type="image/png" href="/favicon.png">
   <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -15,7 +39,7 @@
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'UA-131300251-1');
- </script>
+  </script>
 </head>
 <body>
   <nav id="globalnav">
@@ -78,22 +102,5 @@
       <span id="copyright">Copyright &copy; 2019 Real OZ Project org. All rights reserved.</span>
     </div>
   </footer>
-  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/5.0.0/firebase-storage.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/5.5.5/firebase-firestore.js"></script>
-  <script>
-    var config = {
-      apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
-      authDomain: "urlsharing-541c7.firebaseapp.com",
-      databaseURL: "https://urlsharing-541c7.firebaseio.com",
-      projectId: "urlsharing-541c7",
-      storageBucket: "urlsharing-541c7.appspot.com",
-      messagingSenderId: "756728507687"
-    };
-    firebase.initializeApp(config);
-  </script>
-  <script src="/js/index.js"></script>
 </body>
 </html>
