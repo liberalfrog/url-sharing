@@ -54,7 +54,7 @@ export default class URLs extends React.Component {
   render(){
     var return_html = []
     for(let [i, d] of this.state.list.entries()){
-      return_html.push( <URL key={i} title={d.title} id={d.id} content={d.content} href={d.href}/>);
+      return_html.push( <URL key={d.id} title={d.title} id={d.id} content={d.content} href={d.href}/>);
     }
     return return_html;
   }

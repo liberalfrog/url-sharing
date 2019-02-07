@@ -88,7 +88,7 @@ class AddButton extends React.Component{
     }
   }
   render(){
-    return( <button id="add_button" className={this.state.kind} onClick={this.props.func}></button>);
+    return( <button id="add_button" key="addButtons" className={this.state.kind} onClick={this.props.func}></button>);
   }
 }
 

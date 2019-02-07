@@ -38,19 +38,19 @@ function segueURLFeed(kind, id, ownerAId){
     sessionStorage.url_list = for_saved_list.join("-@-");
 
     if(document.getElementById("main__container")){
-      ReactDOM.render(<ViewURLFeed id={id} 
+      ReactDOM.render(<ViewURLFeed key="segueUrlFeed" id={id} 
           ownerAId={ownerAId} list={list}/>, document.getElementById("main__container"))
       ReactDOM.render(<AddButton func={() => segueURLPost(id, ownerAId, kind)} icon={"url"} />,
           document.getElementById("utility__area"))
     }else{
       ReactDOM.render([
-        <div id="main__container">
-          <ViewURLFeed id={id} ownerAId={ownerAId} list={list}/>
+        <div id="main__container" key="segueUrlFeedMain">
+          <ViewURLFeed  id={id} ownerAId={ownerAId} list={list}/>
         </div>,
-        <div id="utility__area">
+        <div id="utility__area" key="segueUrlFeedUtility">
           <AddButton func={() => segueURLPost(id, ownerAId, kind)} icon={"url"} />
         </div>,
-        <SideMenu foldersStyle="tb-active"/>
+        <SideMenu key="SideMenu" foldersStyle="tb-active"/>
       ], document.getElementById("container"))
     }
   });
@@ -152,7 +152,7 @@ function segueURLPost(id, ownerAId, kind){
     list = listStr.split("-@-").map(x => JSON.parse(x))
   else
     list = []*/
-    ReactDOM.render(<ViewURLPost list={list} id={id} ownerAId={ownerAId}/>, document.getElementById("main__container"))
+    ReactDOM.render(<ViewURLPost key="segueUrlPost" list={list} id={id} ownerAId={ownerAId}/>, document.getElementById("main__container"))
   })
 }
 
@@ -200,8 +200,8 @@ function segueFolderFeed(){
   let for_saved_list = []
   let aId = localStorage.getItem("accountId")
   ReactDOM.render([
-    <LaterButton />,
-    <AddButton func={segueFolderFeedToPostFolder} icon={"folder"} />
+    <LaterButton key="segueFolderFeedLaterButton"/>,
+    <AddButton key="segueFolderFeedAddButton" func={segueFolderFeedToPostFolder} icon={"folder"} />
   ], document.getElementById("utility__area"))
   db.collection("account").doc(aId).collection("folders").get().then(snap => {
     let d = {}
@@ -270,13 +270,13 @@ function segueGlobal(){
     };  
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
     ReactDOM.render([
-      <div id="container__latest">
+      <div id="container__latest" key="segueGlobalLatest">
         <h1 className="latest-container__title">新着情報</h1>
         <div className="container__wrapper">
           <Folders list={latest_list}/>
         </div>
       </div>,
-      <div>
+      <div key="segueGlobalRecommend">
         <h1 className="recommend-container__title">評価されている情報</h1>
         <div className="container__wrapper">
           <Folders list={recommend_list}/>
@@ -322,7 +322,7 @@ function segueInitToGlobal(){
       for_saved_list.push(JSON.stringify(d))
     };  
     sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(<ViewTop latest_list={latest_list} recommend_list={recommend_list}/>
+    ReactDOM.render(<ViewTop latest_list={latest_list} recommend_list={recommend_list} key="segueInitToGlobal"/> 
         , document.getElementById("container"))
     for(let d of recommend_list){
       let aId = localStorage.accountId

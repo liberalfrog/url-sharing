@@ -36,7 +36,7 @@ export default class SideMenu extends React.Component{
   notifiClicked(){
     this.setState(switchButtonActive("notification"))
     if(sessionStorage.canNotification)
-      alert("通知表示画面はこれから実装されます。")
+      alert("通知表示画面はこれから実装されます。");
     else
       alert("通知が許可されていません、ブラウザの設定を修正してください")
     let path = location.pathname.split("/")[1]
@@ -54,6 +54,7 @@ export default class SideMenu extends React.Component{
   }
   render(){
     return([
+      <div key="sideButtons">
       <ul className="list-nav">
         <li>
           <button id="list-nav__home" className={this.state.homeStyle} onClick={this.homeClicked.bind(this)}>
@@ -83,6 +84,7 @@ export default class SideMenu extends React.Component{
         </li>
       </ul>,
       <div id="list-nav__rigid" onClick={this.sideMenuActiveShift}></div>
+    </div>
     ])
   }
 }
