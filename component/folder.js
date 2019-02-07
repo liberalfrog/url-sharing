@@ -51,6 +51,8 @@ export default class Folders extends React.Component {
     var return_html = []
     let i=0;
     for(let d of this.state.list){
+      if(d.id===undefined)
+        continue
       return_html.push( <Folder key={d.id} name={d.name} aName={d.aName}
         post={this.props.post}  aId={d.aId} aProfileImg={d.aProfileImg} id={d.id} kind={d.kind}/>);
     }

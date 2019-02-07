@@ -117,8 +117,8 @@ class AddPanel extends React.Component{
       };
       sessionStorage.urlset_list = for_saved_list.join("-@-");
       sideMenuButtonShift("folders")
-      ReactDOM.render(<ViewPostFolder list={list}/>, document.getElementById("main__container"));
-      ReactDOM.render(<AddButton func={segueFolderFeedToPostFolder} icon={"folder"} />,
+      ReactDOM.render(<ViewPostFolder key="AddPanelView" list={list}/>, document.getElementById("main__container"));
+      ReactDOM.render(<AddButton func={segueFolderFeedToPostFolder} icon={"folder"} key="AddPanelAddButton"/>,
         document.getElementById("utility__area"))
       for(let d of list){
         $("#" + d.id ).css("background-image", "url(" + d.img + ")")
@@ -239,8 +239,8 @@ class URLPost extends React.Component{
   }
   render(){
     return ([
-      <div className="window-overlay" onClick={closePostView}></div>,
-      <div className="post__container">
+      <div className="window-overlay" onClick={closePostView} key="urlPostOverlay"></div>,
+      <div className="post__container" key="urlPostcontainer">
         <h1 className="view-title">URLを登録</h1>
         <form name="urlput_form">
           <div id="url_input">
@@ -393,8 +393,8 @@ class URLFolderPost extends React.Component{
   }
   render(){
     return ([
-      <div className="window-overlay" onClick={closePostView}></div>,
-      <div className="post__container">
+      <div className="window-overlay" onClick={closePostView} key="urlFolderPostOverlay"></div>,
+      <div className="post__container"key="urlFolderPostContainer">
         <h1 className="view-title">URLを入れるフォルダを作成</h1>
         <form action="" name="urlset_form">
           <div className="post-folder__preview">
