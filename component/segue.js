@@ -103,8 +103,8 @@ function segueAnyToURLPostFolderChoice(){
     }   
     sessionStorage.urlset_list = for_saved_list.join("-@-");
     ReactDOM.render([
-      <h1 className="title__folder-choice">URLを登録するフォルダを選択</h1>,
-      <div className="container__wrapper">
+      <h1 className="title__folder-choice" key="SAtitele">URLを登録するフォルダを選択</h1>,
+      <div className="container__wrapper" key= "SAcontainer">
         <Folders post={true} list={list} />
       </div>
     ], document.getElementById("main__container"));
