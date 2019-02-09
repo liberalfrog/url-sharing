@@ -310,11 +310,10 @@ button{
   
   .urlset_panel, .post-folder__folder{
     border-radius: 5px;
-    height: 110px;
   }
   
-  #container .urlset_panel:nth-child(4n){
-    margin: 10px 0 0 0;
+  #container .urlset_panel:nth-child(3n+2){
+    margin: 10px 6px 0 6px;
   }
   
   .urlset_panel a.rigidFolder{
