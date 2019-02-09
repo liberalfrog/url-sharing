@@ -28,14 +28,16 @@ class Folder extends React.Component {
   render(){
     return (
       <div className="urlset_panel" id={this.props.id}>
-        <h3>{this.props.name}</h3>
-        <div className="folder__mini-profile">
-          <img src={this.props.aProfileImg} className="profile-img" />
-          <span className="account_name">{this.props.aName}</span>
-          <a href={"/account?aId=" + this.state.ownerAId} className="profile-img__link"></a>
+        <div className="folder__description">
+          <h3>{this.props.name}</h3>
+          <div className="folder__mini-profile">
+            <img src={this.props.aProfileImg} className="profile-img" />
+            <span className="account_name">{this.props.aName}</span>
+            <a href={"/account?aId=" + this.state.ownerAId} className="profile-img__link"></a>
+          </div>
+          <button className="edit__folder fas fa-cog" onClick={this.edit.bind(this)}></button>
         </div>
         <a className="rigidFolder" onClick={this.state.putShow.bind(this)}></a>
-        <button className="edit__folder fas fa-cog" onClick={this.edit.bind(this)}></button>
       </div>
     )
   }
@@ -45,7 +47,7 @@ class Folder extends React.Component {
 export default class Folders extends React.Component {
   constructor(props){
     super(props)
-    this.state = { list: props.list };
+    this.state = { list: props.list }
   }
   render(){
     var return_html = []
