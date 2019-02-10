@@ -452,6 +452,8 @@ var _firebase = require("./firebase");
 
 var _side_menu = require("./side_menu");
 
+var _img_compressor = require("./img_compressor");
+
 // @platong For compressed image
 var THUMBNAIL_HEIGHT = 100;
 
@@ -623,8 +625,8 @@ var AddPanel = (function (_React$Component2) {
         ;
         sessionStorage.urlset_list = for_saved_list.join("-@-");
         (0, _side_menu.sideMenuButtonShift)("folders");
-        ReactDOM.render(React.createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
-        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder" }), document.getElementById("utility__area"));
+        ReactDOM.render(React.createElement(_view.ViewPostFolder, { key: "AddPanelView", list: list }), document.getElementById("main__container"));
+        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder", key: "AddPanelAddButton" }), document.getElementById("utility__area"));
         var _iteratorNormalCompletion3 = true;
         var _didIteratorError3 = false;
         var _iteratorError3 = undefined;
@@ -808,9 +810,9 @@ var URLPost = (function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlPostOverlay" }), React.createElement(
         "div",
-        { className: "post__container" },
+        { className: "post__container", key: "urlPostcontainer" },
         React.createElement(
           "h1",
           { className: "view-title" },
@@ -881,8 +883,6 @@ var URLInput = (function (_React$Component4) {
   return URLInput;
 })(React.Component);
 
-var blob = null;
-
 var URLFolderPost = (function (_React$Component5) {
   _inherits(URLFolderPost, _React$Component5);
 
@@ -895,114 +895,39 @@ var URLFolderPost = (function (_React$Component5) {
   _createClass(URLFolderPost, [{
     key: "submit",
     value: function submit() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (!folderSubmitValidation() && !blob) return; // validation
-      var storageRef = _firebase.storage.ref();
-      var imagesRef = storageRef.child('urlset_images');
-      var extension = file.name.split(".").slice(-1)[0];
-      var file_name = (0, _uuid2["default"])() + "." + extension;
-      file = blobToFile(blob);
-      var ref = storageRef.child('urlset_images/' + file_name);
-      var uploadTask = ref.put(file);
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function (snapshot) {
-        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED:
-            // or 'paused'
-            console.log('Upload is paused');
-            break;
-          case firebase.storage.TaskState.RUNNING:
-            // or 'running'
-            console.log('Upload is running');
-            break;
-        }
-      }, function (error) {
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            break;
-          case 'storage/canceled':
-            break;
-          case 'storage/unknown':
-            break;
-        }
-      }, function () {
+      var firestoreUpload = function firestoreUpload(downloadURL) {
         var user = _firebase.auth.currentUser;
-        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-          console.log('File available at', downloadURL);
-          var aId = localStorage.getItem("accountId");
-          var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
-
-          ref.add({
-            img: downloadURL,
-            name: document.urlset_form.title.value,
-            aId: localStorage.getItem("accountId"),
-            aProfileImg: user.photoURL,
-            aName: user.displayName,
-            dateTime: new Date()
-          }).then(function (docRef) {
-            closePostView();
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
+        var aId = localStorage.getItem("accountId");
+        var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
+        ref.add({
+          img: downloadURL,
+          name: document.urlset_form.title.value,
+          aId: localStorage.getItem("accountId"),
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        }).then(function (docRef) {
+          closePostView();
+        })["catch"](function (error) {
+          console.error("Error adding document: ", error);
         });
-      });
+      };
+      (0, _img_compressor.submitImgToCloudStorage)(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload);
     }
-  }, {
-    key: "fileChanged",
 
     // @platong If file is changed, file will be compressed.
+  }, {
+    key: "fileChanged",
     value: function fileChanged() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (file.type != 'image/jpeg' && file.type != 'image/png') {
-        file = null;
-        blob = null;
-        return;
-        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-      }
-      var image = new Image();
-      var reader = new FileReader();
-
-      reader.onload = function (e) {
-        image.onload = function () {
-          var width, height;
-          if (image.width > image.height) {
-            var ratio = image.width / image.height;
-            width = THUMBNAIL_HEIGHT * ratio;
-            height = THUMBNAIL_HEIGHT;
-          } else {
-            alert("縦長の画像はアップロードできません");
-            return;
-          }
-          var canvas = $('#ap_preview').attr('width', width).attr('height', height);
-          var ctx = canvas[0].getContext('2d');
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-
-          var base64 = canvas.get(0).toDataURL('image/jpeg');
-          var barr, bin, i, len;
-          bin = atob(base64.split('base64,')[1]);
-          len = bin.length;
-          barr = new Uint8Array(len);
-          i = 0;
-          while (i < len) {
-            barr[i] = bin.charCodeAt(i);
-            i++;
-          }
-          blob = new Blob([barr], { type: 'image/jpeg' });
-        };
-        image.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      buttonActiveSwitch();
+      console.log("Hello world");
+      (0, _img_compressor.imgCompressor)(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false);
     }
   }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlFolderPostOverlay" }), React.createElement(
         "div",
-        { className: "post__container" },
+        { className: "post__container", key: "urlFolderPostContainer" },
         React.createElement(
           "h1",
           { className: "view-title" },
@@ -1057,7 +982,7 @@ exports.AddPanel = AddPanel;
 exports.URLFolderPost = URLFolderPost;
 exports.URLPost = URLPost;
 
-},{"./firebase":4,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],4:[function(require,module,exports){
+},{"./firebase":4,"./img_compressor":6,"./segue":8,"./side_menu":9,"./uuid":11,"./view":12}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1079,7 +1004,7 @@ exports.db = db;
 exports.storage = storage;
 exports.auth = auth;
 
-},{"firebase/app":21,"firebase/auth":22,"firebase/firestore":23,"firebase/storage":26}],5:[function(require,module,exports){
+},{"firebase/app":22,"firebase/auth":23,"firebase/firestore":24,"firebase/storage":27}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1200,6 +1125,7 @@ var Folders = (function (_React$Component2) {
         for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var d = _step.value;
 
+          if (d.id === undefined) continue;
           return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
             post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
         }
@@ -1228,7 +1154,148 @@ var Folders = (function (_React$Component2) {
 exports['default'] = Folders;
 module.exports = exports['default'];
 
-},{"./firebase":4,"./segue":7,"./url":9,"./view":11,"react":32}],6:[function(require,module,exports){
+},{"./firebase":4,"./segue":8,"./url":10,"./view":12,"react":33}],6:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _uuid = require("./uuid");
+
+var _uuid2 = _interopRequireDefault(_uuid);
+
+var _firebase = require("./firebase");
+
+require("firebase/app");
+
+function blobToFile(theBlob, fileName) {
+  theBlob.lastModifiedDate = new Date();
+  theBlob.name = fileName;
+  return theBlob;
+}
+
+function updateProfileImg(downloadURL) {
+  var aId = localStorage.accountId;
+  var user = _firebase.auth.currentUser;
+  return _firebase.db.collection("account").doc(aId).update({
+    img: downloadURL
+  }).then(function (docRef) {
+    user.updateProfile({ photoURL: downloadURL }).then(function () {
+      console.log("All process is done");
+    })["catch"](function (err) {
+      console.error("Error: upload profile image: ", err);
+    });
+  })["catch"](function (err) {
+    console.error("Error adding document: ", err);
+  });
+}
+
+var blob = undefined;
+// @platong If file is changed, file will be compressed.
+function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload) {
+  var file = fileDomObj.files[0];
+  if (file.type != 'image/jpeg' && file.type != 'image/png') {
+    file = null;
+    blob = null;
+    return;
+    alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
+  }
+  var image = new Image();
+  var reader = new FileReader();
+  var IMG_MAX_WIDTH = maxWidth;
+
+  reader.onload = function (e) {
+    image.onload = function () {
+      var width, height, ratio;
+      if (image.width > image.height) {
+        ratio = image.height / image.width;
+        width = IMG_MAX_WIDTH;
+        height = IMG_MAX_WIDTH * ratio;
+      } else {
+        ratio = image.width / image.height;
+        width = IMG_MAX_WIDTH * ratio;
+        height = IMG_MAX_WIDTH;
+      }
+      var canvas = canvasDomObj.attr('width', width).attr('height', height);
+      var ctx = canvas[0].getContext('2d');
+      ctx.clearRect(0, 0, width, height);
+      ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
+
+      canvasDomObj.css("display", "block");
+
+      var base64 = canvas.get(0).toDataURL('image/jpeg');
+      var barr, bin, i, len;
+      bin = atob(base64.split('base64,')[1]);
+      len = bin.length;
+      barr = new Uint8Array(len);
+      i = 0;
+      while (i < len) {
+        barr[i] = bin.charCodeAt(i);
+        i++;
+      }
+      blob = new Blob([barr], { type: 'image/jpeg' });
+      if (isDirectlyUpload) submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg);
+      blob;
+    };
+    image.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
+  var file = fileDomObj.files[0];
+  if (!blob) return; // validation
+  var storageRef = _firebase.storage.ref();
+  var imagesRef = storageRef.child(bucket);
+  var extension = file.name.split(".").slice(-1)[0];
+  var file_name = (0, _uuid2["default"])() + "." + extension;
+  file = blobToFile(blob);
+  var ref = storageRef.child(bucket + '/' + file_name);
+  var uploadTask = ref.put(file);
+  // Listen for state changes, errors, and completion of the upload.
+  uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+  function (snapshot) {
+    // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+    var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
+    console.log('Upload is ' + progress + '% done');
+    switch (snapshot.state) {
+      case firebase.storage.TaskState.PAUSED:
+        // or 'paused'
+        console.log('Upload is paused');
+        break;
+      case firebase.storage.TaskState.RUNNING:
+        // or 'running'
+        console.log('Upload is running');
+        break;
+    }
+  }, function (error) {
+    // https://firebase.google.com/docs/storage/web/handle-errors
+    switch (error.code) {
+      case 'storage/unauthorized':
+        // User doesn't have permission to access the object
+        break;
+      case 'storage/canceled':
+        // User canceled the upload
+        break;
+      case 'storage/unknown':
+        // Unknown error occurred, inspect error.serverResponse
+        break;
+    }
+  }, function () {
+    // Upload completed successfully, now we can get the download URL
+    uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+      cloudStorageToFireStore(downloadURL);
+    });
+  });
+};
+
+exports.imgCompressor = imgCompressor;
+exports.submitImgToCloudStorage = submitImgToCloudStorage;
+
+},{"./firebase":4,"./uuid":11,"firebase/app":22}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1274,7 +1341,7 @@ var LaterButton = (function (_React$Component) {
 exports["default"] = LaterButton;
 module.exports = exports["default"];
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1491,11 +1558,11 @@ function segueAnyToURLPostFolderChoice() {
     sessionStorage.urlset_list = for_saved_list.join("-@-");
     ReactDOM.render([_react2["default"].createElement(
       "h1",
-      { className: "title__folder-choice" },
+      { className: "title__folder-choice", key: "SAtitele" },
       "URLを登録するフォルダを選択"
     ), _react2["default"].createElement(
       "div",
-      { className: "container__wrapper" },
+      { className: "container__wrapper", key: "SAcontainer" },
       _react2["default"].createElement(_folder2["default"], { post: true, list: list })
     )], document.getElementById("main__container"));
     ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
@@ -2079,7 +2146,7 @@ exports.segueFolderToAddPanel = segueFolderToAddPanel;
 exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
 exports.segueURLPost = segueURLPost;
 
-},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./side_menu":8,"./view":11,"react":32}],8:[function(require,module,exports){
+},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":7,"./side_menu":9,"./view":12,"react":33}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2287,7 +2354,7 @@ function sideMenuButtonShift(targetElement) {
 
 exports.sideMenuButtonShift = sideMenuButtonShift;
 
-},{"./firebase":4,"./segue":7,"react":32}],9:[function(require,module,exports){
+},{"./firebase":4,"./segue":8,"react":33}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2454,7 +2521,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"./firebase":4,"react":32}],10:[function(require,module,exports){
+},{"./firebase":4,"react":33}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2481,7 +2548,7 @@ function generateUuid() {
 
 module.exports = exports["default"];
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2878,7 +2945,7 @@ exports.ViewPostFolder = ViewPostFolder;
 exports.ViewURLFeed = ViewURLFeed;
 exports.ViewURLPost = ViewURLPost;
 
-},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"react":32}],12:[function(require,module,exports){
+},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":7,"./segue":8,"./side_menu":9,"./url":10,"react":33}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -3278,7 +3345,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":19}],13:[function(require,module,exports){
+},{"@firebase/util":20}],14:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -3604,7 +3671,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":12}],14:[function(require,module,exports){
+},{"@firebase/app":13}],15:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24693,7 +24760,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":12,"@firebase/logger":15,"@firebase/webchannel-wrapper":20,"_process":1,"tslib":33}],15:[function(require,module,exports){
+},{"@firebase/app":13,"@firebase/logger":16,"@firebase/webchannel-wrapper":21,"_process":1,"tslib":34}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -24881,7 +24948,7 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -26416,7 +26483,7 @@ var iterator = _wksExt.f('iterator');
  */
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"whatwg-fetch":17}],17:[function(require,module,exports){
+},{"whatwg-fetch":18}],18:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -26884,7 +26951,7 @@ var iterator = _wksExt.f('iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30345,7 +30412,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":12}],19:[function(require,module,exports){
+},{"@firebase/app":13}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -32123,7 +32190,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":33}],20:[function(require,module,exports){
+},{"tslib":34}],21:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -32248,7 +32315,7 @@ e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -32274,7 +32341,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":24,"@firebase/polyfill":16}],22:[function(require,module,exports){
+},{"@firebase/app":25,"@firebase/polyfill":17}],23:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -32295,7 +32362,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":13}],23:[function(require,module,exports){
+},{"@firebase/auth":14}],24:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -32316,7 +32383,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":14}],24:[function(require,module,exports){
+},{"@firebase/firestore":15}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -32716,9 +32783,9 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":25}],25:[function(require,module,exports){
-arguments[4][19][0].apply(exports,arguments)
-},{"dup":19,"tslib":33}],26:[function(require,module,exports){
+},{"@firebase/util":26}],26:[function(require,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"dup":20,"tslib":34}],27:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -32739,7 +32806,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":18}],27:[function(require,module,exports){
+},{"@firebase/storage":19}],28:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -32831,7 +32898,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -32926,7 +32993,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":29,"_process":1}],29:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":30,"_process":1}],30:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -32940,7 +33007,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -34773,7 +34840,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":1,"object-assign":27,"prop-types/checkPropTypes":28}],31:[function(require,module,exports){
+},{"_process":1,"object-assign":28,"prop-types/checkPropTypes":29}],32:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -34799,7 +34866,7 @@ _currentValue:a,_currentValue2:a,Provider:null,Consumer:null};a.Provider={$$type
 b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.1",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,
 assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":27}],32:[function(require,module,exports){
+},{"object-assign":28}],33:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34810,7 +34877,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":30,"./cjs/react.production.min.js":31,"_process":1}],33:[function(require,module,exports){
+},{"./cjs/react.development.js":31,"./cjs/react.production.min.js":32,"_process":1}],34:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -35055,7 +35122,7 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -35195,4 +35262,4 @@ function init() {
   });
 }
 
-},{"../../component/account_register":2,"../../component/firebase":4,"../../component/folder":5,"../../component/segue":7,"../../component/url":9,"react":32}]},{},[34]);
+},{"../../component/account_register":2,"../../component/firebase":4,"../../component/folder":5,"../../component/segue":8,"../../component/url":10,"react":33}]},{},[35]);

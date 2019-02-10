@@ -213,6 +213,8 @@ var _firebase = require("./firebase");
 
 var _side_menu = require("./side_menu");
 
+var _img_compressor = require("./img_compressor");
+
 // @platong For compressed image
 var THUMBNAIL_HEIGHT = 100;
 
@@ -384,8 +386,8 @@ var AddPanel = (function (_React$Component2) {
         ;
         sessionStorage.urlset_list = for_saved_list.join("-@-");
         (0, _side_menu.sideMenuButtonShift)("folders");
-        ReactDOM.render(React.createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
-        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder" }), document.getElementById("utility__area"));
+        ReactDOM.render(React.createElement(_view.ViewPostFolder, { key: "AddPanelView", list: list }), document.getElementById("main__container"));
+        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder", key: "AddPanelAddButton" }), document.getElementById("utility__area"));
         var _iteratorNormalCompletion3 = true;
         var _didIteratorError3 = false;
         var _iteratorError3 = undefined;
@@ -569,9 +571,9 @@ var URLPost = (function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlPostOverlay" }), React.createElement(
         "div",
-        { className: "post__container" },
+        { className: "post__container", key: "urlPostcontainer" },
         React.createElement(
           "h1",
           { className: "view-title" },
@@ -642,8 +644,6 @@ var URLInput = (function (_React$Component4) {
   return URLInput;
 })(React.Component);
 
-var blob = null;
-
 var URLFolderPost = (function (_React$Component5) {
   _inherits(URLFolderPost, _React$Component5);
 
@@ -656,114 +656,39 @@ var URLFolderPost = (function (_React$Component5) {
   _createClass(URLFolderPost, [{
     key: "submit",
     value: function submit() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (!folderSubmitValidation() && !blob) return; // validation
-      var storageRef = _firebase.storage.ref();
-      var imagesRef = storageRef.child('urlset_images');
-      var extension = file.name.split(".").slice(-1)[0];
-      var file_name = (0, _uuid2["default"])() + "." + extension;
-      file = blobToFile(blob);
-      var ref = storageRef.child('urlset_images/' + file_name);
-      var uploadTask = ref.put(file);
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function (snapshot) {
-        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED:
-            // or 'paused'
-            console.log('Upload is paused');
-            break;
-          case firebase.storage.TaskState.RUNNING:
-            // or 'running'
-            console.log('Upload is running');
-            break;
-        }
-      }, function (error) {
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            break;
-          case 'storage/canceled':
-            break;
-          case 'storage/unknown':
-            break;
-        }
-      }, function () {
+      var firestoreUpload = function firestoreUpload(downloadURL) {
         var user = _firebase.auth.currentUser;
-        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-          console.log('File available at', downloadURL);
-          var aId = localStorage.getItem("accountId");
-          var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
-
-          ref.add({
-            img: downloadURL,
-            name: document.urlset_form.title.value,
-            aId: localStorage.getItem("accountId"),
-            aProfileImg: user.photoURL,
-            aName: user.displayName,
-            dateTime: new Date()
-          }).then(function (docRef) {
-            closePostView();
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
-          });
+        var aId = localStorage.getItem("accountId");
+        var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
+        ref.add({
+          img: downloadURL,
+          name: document.urlset_form.title.value,
+          aId: localStorage.getItem("accountId"),
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        }).then(function (docRef) {
+          closePostView();
+        })["catch"](function (error) {
+          console.error("Error adding document: ", error);
         });
-      });
+      };
+      (0, _img_compressor.submitImgToCloudStorage)(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload);
     }
-  }, {
-    key: "fileChanged",
 
     // @platong If file is changed, file will be compressed.
+  }, {
+    key: "fileChanged",
     value: function fileChanged() {
-      var file = document.urlset_form.urlbook_img.files[0];
-      if (file.type != 'image/jpeg' && file.type != 'image/png') {
-        file = null;
-        blob = null;
-        return;
-        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-      }
-      var image = new Image();
-      var reader = new FileReader();
-
-      reader.onload = function (e) {
-        image.onload = function () {
-          var width, height;
-          if (image.width > image.height) {
-            var ratio = image.width / image.height;
-            width = THUMBNAIL_HEIGHT * ratio;
-            height = THUMBNAIL_HEIGHT;
-          } else {
-            alert("縦長の画像はアップロードできません");
-            return;
-          }
-          var canvas = $('#ap_preview').attr('width', width).attr('height', height);
-          var ctx = canvas[0].getContext('2d');
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-
-          var base64 = canvas.get(0).toDataURL('image/jpeg');
-          var barr, bin, i, len;
-          bin = atob(base64.split('base64,')[1]);
-          len = bin.length;
-          barr = new Uint8Array(len);
-          i = 0;
-          while (i < len) {
-            barr[i] = bin.charCodeAt(i);
-            i++;
-          }
-          blob = new Blob([barr], { type: 'image/jpeg' });
-        };
-        image.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      buttonActiveSwitch();
+      console.log("Hello world");
+      (0, _img_compressor.imgCompressor)(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false);
     }
   }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlFolderPostOverlay" }), React.createElement(
         "div",
-        { className: "post__container" },
+        { className: "post__container", key: "urlFolderPostContainer" },
         React.createElement(
           "h1",
           { className: "view-title" },
@@ -818,7 +743,7 @@ exports.AddPanel = AddPanel;
 exports.URLFolderPost = URLFolderPost;
 exports.URLPost = URLPost;
 
-},{"./firebase":3,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],3:[function(require,module,exports){
+},{"./firebase":3,"./img_compressor":5,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -910,23 +835,27 @@ var Folder = (function (_React$Component) {
         'div',
         { className: 'urlset_panel', id: this.props.id },
         _react2['default'].createElement(
-          'h3',
-          null,
-          this.props.name
-        ),
-        _react2['default'].createElement(
           'div',
-          { className: 'folder__mini-profile' },
-          _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' }),
+          { className: 'folder__description' },
           _react2['default'].createElement(
-            'span',
-            { className: 'account_name' },
-            this.props.aName
+            'h3',
+            null,
+            this.props.name
           ),
-          _react2['default'].createElement('a', { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' })
+          _react2['default'].createElement(
+            'div',
+            { className: 'folder__mini-profile' },
+            _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' }),
+            _react2['default'].createElement(
+              'span',
+              { className: 'account_name' },
+              this.props.aName
+            ),
+            _react2['default'].createElement('a', { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' })
+          ),
+          _react2['default'].createElement('button', { className: 'edit__folder fas fa-cog', onClick: this.edit.bind(this) })
         ),
-        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) }),
-        _react2['default'].createElement('button', { className: 'edit__folder fas fa-cog', onClick: this.edit.bind(this) })
+        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
       );
     }
   }]);
@@ -957,6 +886,7 @@ var Folders = (function (_React$Component2) {
         for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var d = _step.value;
 
+          if (d.id === undefined) continue;
           return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
             post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
         }
@@ -991,7 +921,6 @@ module.exports = exports['default'];
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports["default"] = fileChanged;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -1003,19 +932,31 @@ var _firebase = require("./firebase");
 
 require("firebase/app");
 
-var blob;
-
 function blobToFile(theBlob, fileName) {
   theBlob.lastModifiedDate = new Date();
   theBlob.name = fileName;
   return theBlob;
 }
 
-// @platong If file is changed, file will be compressed.
+function updateProfileImg(downloadURL) {
+  var aId = localStorage.accountId;
+  var user = _firebase.auth.currentUser;
+  return _firebase.db.collection("account").doc(aId).update({
+    img: downloadURL
+  }).then(function (docRef) {
+    user.updateProfile({ photoURL: downloadURL }).then(function () {
+      console.log("All process is done");
+    })["catch"](function (err) {
+      console.error("Error: upload profile image: ", err);
+    });
+  })["catch"](function (err) {
+    console.error("Error adding document: ", err);
+  });
+}
 
-function fileChanged(event) {
-  var fileDomObj = event.target.fileDomObj;
-  var canvasDomObj = event.target.canvasDomObj;
+var blob = undefined;
+// @platong If file is changed, file will be compressed.
+function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload) {
   var file = fileDomObj.files[0];
   if (file.type != 'image/jpeg' && file.type != 'image/png') {
     file = null;
@@ -1025,7 +966,7 @@ function fileChanged(event) {
   }
   var image = new Image();
   var reader = new FileReader();
-  var IMG_MAX_WIDTH = 96;
+  var IMG_MAX_WIDTH = maxWidth;
 
   reader.onload = function (e) {
     image.onload = function () {
@@ -1057,22 +998,23 @@ function fileChanged(event) {
         i++;
       }
       blob = new Blob([barr], { type: 'image/jpeg' });
-      submit(fileDomObj);
+      if (isDirectlyUpload) submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg);
+      blob;
     };
     image.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-function submit(fileDomObj) {
+function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
   var file = fileDomObj.files[0];
   if (!blob) return; // validation
   var storageRef = _firebase.storage.ref();
-  var imagesRef = storageRef.child('account_profile_imgs');
+  var imagesRef = storageRef.child(bucket);
   var extension = file.name.split(".").slice(-1)[0];
   var file_name = (0, _uuid2["default"])() + "." + extension;
   file = blobToFile(blob);
-  var ref = storageRef.child('account_profile_imgs/' + file_name);
+  var ref = storageRef.child(bucket + '/' + file_name);
   var uploadTask = ref.put(file);
   // Listen for state changes, errors, and completion of the upload.
   uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
@@ -1106,23 +1048,13 @@ function submit(fileDomObj) {
   }, function () {
     // Upload completed successfully, now we can get the download URL
     uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-      var aId = localStorage.accountId;
-      var user = _firebase.auth.currentUser;
-      return _firebase.db.collection("account").doc(aId).update({
-        img: downloadURL
-      }).then(function (docRef) {
-        user.updateProfile({ photoURL: downloadURL }).then(function () {
-          console.log("All process is done");
-        })["catch"](function (err) {
-          console.error("Error: Register account: ", err);
-        });
-      })["catch"](function (error) {
-        console.error("Error adding document: ", error);
-      });
+      cloudStorageToFireStore(downloadURL);
     });
   });
 };
-module.exports = exports["default"];
+
+exports.imgCompressor = imgCompressor;
+exports.submitImgToCloudStorage = submitImgToCloudStorage;
 
 },{"./firebase":3,"./uuid":10,"firebase/app":21}],6:[function(require,module,exports){
 "use strict";
@@ -1387,11 +1319,11 @@ function segueAnyToURLPostFolderChoice() {
     sessionStorage.urlset_list = for_saved_list.join("-@-");
     ReactDOM.render([_react2["default"].createElement(
       "h1",
-      { className: "title__folder-choice" },
+      { className: "title__folder-choice", key: "SAtitele" },
       "URLを登録するフォルダを選択"
     ), _react2["default"].createElement(
       "div",
-      { className: "container__wrapper" },
+      { className: "container__wrapper", key: "SAcontainer" },
       _react2["default"].createElement(_folder2["default"], { post: true, list: list })
     )], document.getElementById("main__container"));
     ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
@@ -34966,9 +34898,7 @@ var _componentFolder2 = _interopRequireDefault(_componentFolder);
 
 var _componentFirebase = require("../../component/firebase");
 
-var _componentImg_compresser = require("../../component/img_compresser");
-
-var _componentImg_compresser2 = _interopRequireDefault(_componentImg_compresser);
+var _componentImg_compressor = require("../../component/img_compressor");
 
 var isFollow;
 
@@ -35111,9 +35041,10 @@ $("#button_follow").on("click", function () {
   }
 });
 
-var inputElement = document.getElementById("changer__ap__profile-img");
-inputElement.addEventListener("change", _componentImg_compresser2['default'], false);
-inputElement.fileDomObj = document.getElementById("changer__ap__profile-img");
-inputElement.canvasDomObj = $("#preview");
+var fileChanged = function fileChanged() {
+  (0, _componentImg_compressor.imgCompressor)(document.getElementById("changer__ap__profile-img"), $("#preview"), 192, true);
+};
 
-},{"../../component/firebase":3,"../../component/folder":4,"../../component/img_compresser":5,"react":32}]},{},[34]);
+document.getElementById("changer__ap__profile-img").addEventListener("change", fileChanged, false);
+
+},{"../../component/firebase":3,"../../component/folder":4,"../../component/img_compressor":5,"react":32}]},{},[34]);

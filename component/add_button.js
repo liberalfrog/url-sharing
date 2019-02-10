@@ -3,6 +3,7 @@ import {ViewPostFolder} from "./view";
 import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
 import {sideMenuButtonShift} from "./side_menu";
+import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
 
 
 // @platong For compressed image
@@ -291,105 +292,31 @@ class URLInput extends React.Component{
 }
 
 
-var blob = null;
 class URLFolderPost extends React.Component{
   submit(){
-    let file = document.urlset_form.urlbook_img.files[0]
-    if(!folderSubmitValidation() && !blob) return; // validation
-    let storageRef = storage.ref();
-    let imagesRef = storageRef.child('urlset_images');
-    let extension = file.name.split(".").slice(-1)[0];
-    const file_name = generateUuid() + "." + extension
-    file = blobToFile(blob)
-    var ref = storageRef.child('urlset_images/' + file_name);
-    var uploadTask = ref.put(file)
-    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, 
-    function(snapshot) {
-      var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log('Upload is ' + progress + '% done');
-      switch (snapshot.state) {
-        case firebase.storage.TaskState.PAUSED: // or 'paused'
-        console.log('Upload is paused');
-        break;
-      case firebase.storage.TaskState.RUNNING: // or 'running'
-        console.log('Upload is running');
-        break;
-      }
-    }, function(error) { // https://firebase.google.com/docs/storage/web/handle-errors
-      switch (error.code) {
-        case 'storage/unauthorized': 
-          break;
-        case 'storage/canceled': 
-          break;
-        case 'storage/unknown': 
-          break;
-      }
-    }, function() { 
+    let firestoreUpload = function(downloadURL) { 
       let user = auth.currentUser;
-      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-        console.log('File available at', downloadURL);
-        let aId = localStorage.getItem("accountId")
-        let ref = db.collection("account").doc(aId).collection("myfreefolders")
-
-        ref.add({
-          img: downloadURL,
-          name: document.urlset_form.title.value,
-          aId: localStorage.getItem("accountId"),
-          aProfileImg: user.photoURL,
-          aName: user.displayName,
-          dateTime : new Date()
-        }).then(function(docRef) {
-          closePostView()
-        }).catch(function(error) {
-          console.error("Error adding document: ", error);
-        })
-      });
-    });
-  };
+      let aId = localStorage.getItem("accountId")
+      let ref = db.collection("account").doc(aId).collection("myfreefolders")
+      ref.add({
+        img: downloadURL,
+        name: document.urlset_form.title.value,
+        aId: localStorage.getItem("accountId"),
+        aProfileImg: user.photoURL,
+        aName: user.displayName,
+        dateTime : new Date()
+      }).then(docRef => {
+        closePostView()
+      }).catch(error => {
+        console.error("Error adding document: ", error);
+      })
+    }
+    submitImgToCloudStorage(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload)
+  }
   // @platong If file is changed, file will be compressed.
   fileChanged(){
-    let file = document.urlset_form.urlbook_img.files[0]
-    if (file.type != 'image/jpeg' && file.type != 'image/png') {
-      file = null;
-      blob = null;
-      return;
-     alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-    }
-    var image = new Image();
-    var reader = new FileReader();
-  
-    reader.onload = function(e) {
-      image.onload = function() {
-        var width, height;
-        if(image.width > image.height){
-          var ratio = image.width/ image.height;
-          width = THUMBNAIL_HEIGHT * ratio;
-          height = THUMBNAIL_HEIGHT;
-        } else {
-          alert("縦長の画像はアップロードできません");
-          return
-        }
-        var canvas = $('#ap_preview').attr('width', width).attr('height', height);
-        var ctx = canvas[0].getContext('2d');
-        ctx.clearRect(0,0,width,height);
-        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
-  
-        var base64 = canvas.get(0).toDataURL('image/jpeg');
-        var barr, bin, i, len;
-        bin = atob(base64.split('base64,')[1]);
-        len = bin.length;
-        barr = new Uint8Array(len);
-        i = 0;
-        while (i < len) {
-          barr[i] = bin.charCodeAt(i);
-          i++;
-        }
-        blob = new Blob([barr], {type: 'image/jpeg'});
-      }
-      image.src = e.target.result;
-    }
-    reader.readAsDataURL(file);
-    buttonActiveSwitch()
+    console.log("Hello world")
+    imgCompressor(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false)
   }
   render(){
     return ([

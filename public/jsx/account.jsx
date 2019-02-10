@@ -1,7 +1,7 @@
 import React from 'react';
 import Folders from '../../component/folder';
 import {storage, db} from "../../component/firebase";
-import fileChanged from "../../component/img_compresser";
+import {imgCompressor} from "../../component/img_compressor";
 
 var isFollow
 
@@ -98,7 +98,8 @@ $("#button_follow").on("click", function(){
   }
 });
 
-var inputElement = document.getElementById("changer__ap__profile-img");
-inputElement.addEventListener("change", fileChanged, false);
-inputElement.fileDomObj = document.getElementById("changer__ap__profile-img");
-inputElement.canvasDomObj = $("#preview");
+let fileChanged = function(){
+  imgCompressor(document.getElementById("changer__ap__profile-img"), $("#preview"), 192, true)
+}
+
+document.getElementById("changer__ap__profile-img").addEventListener("change", fileChanged, false)

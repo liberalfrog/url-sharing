@@ -2,7 +2,6 @@ require("firebase/app")
 import generateUuid from "./uuid"
 import {db, storage, auth} from "./firebase"
 
-var blob;
 
 function blobToFile(theBlob, fileName){
   theBlob.lastModifiedDate = new Date()
@@ -10,10 +9,27 @@ function blobToFile(theBlob, fileName){
   return theBlob
 }
 
+
+function updateProfileImg(downloadURL){
+  let aId = localStorage.accountId
+  let user = auth.currentUser
+  return db.collection("account").doc(aId).update({
+    img: downloadURL,
+  }).then(docRef => {
+    user.updateProfile({ photoURL: downloadURL }).then(() => {
+      console.log("All process is done");
+    }).catch(err => {
+      console.error("Error: upload profile image: ", err);
+    }); 
+  }).catch(err => {
+    console.error("Error adding document: ", err);
+  });
+}
+
+
+let blob
 // @platong If file is changed, file will be compressed.
-export default function fileChanged(event){
-  let fileDomObj = event.target.fileDomObj
-  let canvasDomObj = event.target.canvasDomObj
+function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload){
   let file = fileDomObj.files[0]
   if (file.type != 'image/jpeg' && file.type != 'image/png') {
     file = null
@@ -23,7 +39,7 @@ export default function fileChanged(event){
   }
   var image = new Image();
   var reader = new FileReader();
-  const IMG_MAX_WIDTH = 96;
+  const IMG_MAX_WIDTH = maxWidth
 
   reader.onload = function(e) {
     image.onload = function() {
@@ -55,22 +71,25 @@ export default function fileChanged(event){
         i++;
       }
       blob = new Blob([barr], {type: 'image/jpeg'});
-      submit(fileDomObj)
+      if(isDirectlyUpload)
+        submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg)
+        blob
     }
     image.src = e.target.result;
   }
   reader.readAsDataURL(file);
 }
 
-function submit(fileDomObj){
+
+function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore){
   let file = fileDomObj.files[0]
   if(!blob) return; // validation
   let storageRef = storage.ref();
-  let imagesRef = storageRef.child('account_profile_imgs');
+  let imagesRef = storageRef.child(bucket);
   let extension = file.name.split(".").slice(-1)[0];
   const file_name = generateUuid() + "." + extension
   file = blobToFile(blob)
-  var ref = storageRef.child('account_profile_imgs/' + file_name);
+  var ref = storageRef.child(bucket + '/' + file_name);
   var uploadTask = ref.put(file)
   // Listen for state changes, errors, and completion of the upload.
   uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
@@ -96,20 +115,10 @@ function submit(fileDomObj){
         break;
     }
   }, function() { // Upload completed successfully, now we can get the download URL
-    uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-      let aId = localStorage.accountId
-      let user = auth.currentUser
-      return db.collection("account").doc(aId).update({
-        img: downloadURL,
-      }).then(docRef => {
-        user.updateProfile({ photoURL: downloadURL }).then(() => {
-          console.log("All process is done");
-        }).catch(err => {
-          console.error("Error: Register account: ", err);
-        }); 
-      }).catch(function(error) {
-        console.error("Error adding document: ", error);
-      });
+    uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+      cloudStorageToFireStore(downloadURL)
     });
   });
 };
+
+export {imgCompressor, submitImgToCloudStorage};
