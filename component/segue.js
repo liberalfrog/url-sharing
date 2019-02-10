@@ -157,39 +157,7 @@ function segueURLPost(id, ownerAId, kind){
 }
 
 function segueInitFolderFeed(){
-  let list = []
-  let aId = localStorage.getItem("accountId")
-  db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
-    let d;
-    let for_saved_list = []
-    for(let i of snap1.docs){
-      d = i.data()
-      d.id = i.id
-      d.kind = "folders"
-      list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    };  
-    db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
-      let d;
-      for(let i of snap2.docs){
-        d = i.data()
-        d.id = i.id
-        d.kind = "myfreefolders"
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };  
-      sessionStorage.urlset_list = for_saved_list.join("-@-"); 
-      ReactDOM.render(<ViewFolderFeed list={list} />, document.getElementById("container"))
-      for(let d of list){
-        let aId = localStorage.accountId
-        if(d.aId === aId){
-          let selector = "#" + d.id + " .edit__folder"
-          $(selector).css("display", "block")
-        }
-        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      }   
-    })  
-  })
+  ReactDOM.render(<ViewFolderFeed />, document.getElementById("container"))
 }
 
 
