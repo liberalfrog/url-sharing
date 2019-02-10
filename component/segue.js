@@ -298,50 +298,7 @@ function segueGlobal(){
 
 
 function segueInitToGlobal(){
-  let aId = localStorage.accountId
-  let for_saved_list = []
-  let latest_list = []
-  let recommend_list = []
-  db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(snaps => {
-    let d = {}
-    for(let j of snaps.docs){
-      d = j.data()
-      d.id = j.id
-      d.kind = "freefolder"
-      latest_list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    }  
-    return db.collection("freefolder").orderBy("dateTime").limit(8).get()
-  }).then(snaps => {
-    let d = {}
-    for(let j of snaps.docs){
-      d = j.data()
-      d.id = j.id
-      d.kind = "freefolder"
-      recommend_list.push(d)
-      for_saved_list.push(JSON.stringify(d))
-    };  
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(<ViewTop latest_list={latest_list} recommend_list={recommend_list} key="segueInitToGlobal"/> 
-        , document.getElementById("container"))
-    for(let d of recommend_list){
-      let aId = localStorage.accountId
-      if(d.aId === aId){
-        let selector = "#" + d.id + " .edit__folder"
-        $(selector).css("display", "block")
-      }
-      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-    }
-    for(let d of latest_list){
-      let aId = localStorage.accountId
-      if(d.aId === aId){
-        let selector = "#" + d.id + " .edit__folder"
-        $(selector).css("display", "block")
-      }
-      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-    }
-    return true
-  })
+  ReactDOM.render(<ViewTop key="segueInitToGlobal"/>, document.getElementById("container"))
 }
 
 

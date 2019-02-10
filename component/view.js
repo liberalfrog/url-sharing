@@ -77,35 +77,95 @@ class ViewFolderEdit extends React.Component {
 
 
 class ViewTop extends React.Component{
+  constructor(props){
+    super(props)
+    this.state = {
+      latest_list: [],
+      recommend_list: []
+    }
+  }
   openAddPanel(){ 
     segueFolderToAddPanel()
   }
+  shouldComponentUpdate (nextProps, nextState){
+    let flag = !(this.state === nextState)
+    return flag
+  }
+  componentDidMount(){
+    let aId = localStorage.accountId
+    let for_saved_list = []
+    let latest_list = []
+    let recommend_list = []
+    db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(snaps => {
+      let d = {}
+      for(let j of snaps.docs){
+        d = j.data()
+        d.id = j.id
+        d.kind = "freefolder"
+        latest_list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      }   
+      return db.collection("freefolder").orderBy("dateTime").limit(8).get()
+    }).then(snaps => {
+      let d = {}
+      for(let j of snaps.docs){
+        d = j.data()
+        d.id = j.id
+        d.kind = "freefolder"
+        recommend_list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };  
+      sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+      this.setState(() => {
+        return {
+          latest_list: latest_list,
+          recommend_list: recommend_list
+        }
+      })
+      for(let d of recommend_list){
+        let aId = localStorage.accountId
+        if(d.aId === aId){
+          let selector = "#" + d.id + " .edit__folder"
+          $(selector).css("display", "block")
+        }   
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }   
+      for(let d of latest_list){
+        let aId = localStorage.accountId
+        if(d.aId === aId){
+          let selector = "#" + d.id + " .edit__folder"
+          $(selector).css("display", "block")
+        }
+        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+      }
+      return true
+    })
+  }
   render(){
     return([
-    <div key="ViewTop">
-      <div id="main__container">
+      <div id="main__container" key="MainContainer">
         <div id="container__latest">
           <h1 className="latest-container__title">新着情報</h1>
           <div className="container__wrapper">
-            <Folders list={this.props.latest_list}/>
+            <Folders list={this.state.latest_list}/>
           </div>
         </div>
         <div>
           <h1 className="recommend-container__title">評価されている情報</h1>
           <div className="container__wrapper"> 
-            <Folders list={this.props.recommend_list} />
+            <Folders list={this.state.recommend_list} />
           </div>
         </div>
       </div>,
-      <div id="utility__area">
+      <div id="utility__area" key="UtilityArea">
         <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
       </div>,
       <SideMenu key="SideMenu" homeStyle="tb-active"/>
-    </div>
     ])
   }
 }
 
+/* <div key="ViewTop"> </div>*/
 
 class ViewFolderFeed extends React.Component {
   openFolderPost(){
