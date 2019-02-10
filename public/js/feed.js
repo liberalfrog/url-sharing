@@ -1105,11 +1105,10 @@ var Folder = (function (_React$Component) {
 var Folders = (function (_React$Component2) {
   _inherits(Folders, _React$Component2);
 
-  function Folders(props) {
+  function Folders() {
     _classCallCheck(this, Folders);
 
-    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).call(this, props);
-    this.state = { list: props.list };
+    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).apply(this, arguments);
   }
 
   _createClass(Folders, [{
@@ -1122,7 +1121,7 @@ var Folders = (function (_React$Component2) {
       var _iteratorError = undefined;
 
       try {
-        for (var _iterator = this.state.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = this.props.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var d = _step.value;
 
           if (d.id === undefined) continue;
@@ -2002,138 +2001,7 @@ function segueGlobal() {
 }
 
 function segueInitToGlobal() {
-  var aId = localStorage.accountId;
-  var for_saved_list = [];
-  var latest_list = [];
-  var recommend_list = [];
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snaps) {
-    var d = {};
-    var _iteratorNormalCompletion16 = true;
-    var _didIteratorError16 = false;
-    var _iteratorError16 = undefined;
-
-    try {
-      for (var _iterator16 = snaps.docs[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-        var j = _step16.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        latest_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError16 = true;
-      _iteratorError16 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion16 && _iterator16["return"]) {
-          _iterator16["return"]();
-        }
-      } finally {
-        if (_didIteratorError16) {
-          throw _iteratorError16;
-        }
-      }
-    }
-
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-  }).then(function (snaps) {
-    var d = {};
-    var _iteratorNormalCompletion17 = true;
-    var _didIteratorError17 = false;
-    var _iteratorError17 = undefined;
-
-    try {
-      for (var _iterator17 = snaps.docs[Symbol.iterator](), _step17; !(_iteratorNormalCompletion17 = (_step17 = _iterator17.next()).done); _iteratorNormalCompletion17 = true) {
-        var j = _step17.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        recommend_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError17 = true;
-      _iteratorError17 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion17 && _iterator17["return"]) {
-          _iterator17["return"]();
-        }
-      } finally {
-        if (_didIteratorError17) {
-          throw _iteratorError17;
-        }
-      }
-    }
-
-    ;
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { latest_list: latest_list, recommend_list: recommend_list, key: "segueInitToGlobal" }), document.getElementById("container"));
-    var _iteratorNormalCompletion18 = true;
-    var _didIteratorError18 = false;
-    var _iteratorError18 = undefined;
-
-    try {
-      for (var _iterator18 = recommend_list[Symbol.iterator](), _step18; !(_iteratorNormalCompletion18 = (_step18 = _iterator18.next()).done); _iteratorNormalCompletion18 = true) {
-        var _d5 = _step18.value;
-
-        var _aId4 = localStorage.accountId;
-        if (_d5.aId === _aId4) {
-          var selector = "#" + _d5.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d5.id).css("background-image", "url(" + _d5.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError18 = true;
-      _iteratorError18 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion18 && _iterator18["return"]) {
-          _iterator18["return"]();
-        }
-      } finally {
-        if (_didIteratorError18) {
-          throw _iteratorError18;
-        }
-      }
-    }
-
-    var _iteratorNormalCompletion19 = true;
-    var _didIteratorError19 = false;
-    var _iteratorError19 = undefined;
-
-    try {
-      for (var _iterator19 = latest_list[Symbol.iterator](), _step19; !(_iteratorNormalCompletion19 = (_step19 = _iterator19.next()).done); _iteratorNormalCompletion19 = true) {
-        var _d6 = _step19.value;
-
-        var _aId5 = localStorage.accountId;
-        if (_d6.aId === _aId5) {
-          var selector = "#" + _d6.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d6.id).css("background-image", "url(" + _d6.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError19 = true;
-      _iteratorError19 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion19 && _iterator19["return"]) {
-          _iterator19["return"]();
-        }
-      } finally {
-        if (_didIteratorError19) {
-          throw _iteratorError19;
-        }
-      }
-    }
-
-    return true;
-  });
+  ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { key: "segueInitToGlobal" }), document.getElementById("container"));
 }
 
 exports.segueAnyToURLPostFolderChoice = segueAnyToURLPostFolderChoice;
@@ -2725,11 +2593,17 @@ var ViewFolderEdit = (function (_React$Component2) {
 var ViewTop = (function (_React$Component3) {
   _inherits(ViewTop, _React$Component3);
 
-  function ViewTop() {
+  function ViewTop(props) {
     _classCallCheck(this, ViewTop);
 
-    _get(Object.getPrototypeOf(ViewTop.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(ViewTop.prototype), "constructor", this).call(this, props);
+    this.state = {
+      latest_list: [],
+      recommend_list: []
+    };
   }
+
+  /* <div key="ViewTop"> </div>*/
 
   _createClass(ViewTop, [{
     key: "openAddPanel",
@@ -2737,52 +2611,193 @@ var ViewTop = (function (_React$Component3) {
       (0, _segue.segueFolderToAddPanel)();
     }
   }, {
+    key: "shouldComponentUpdate",
+    value: function shouldComponentUpdate(nextProps, nextState) {
+      var flag = !(this.state === nextState);
+      return flag;
+    }
+  }, {
+    key: "componentDidMount",
+    value: function componentDidMount() {
+      var _this = this;
+
+      var aId = localStorage.accountId;
+      var for_saved_list = [];
+      var latest_list = [];
+      var recommend_list = [];
+      _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snaps) {
+        var d = {};
+        var _iteratorNormalCompletion2 = true;
+        var _didIteratorError2 = false;
+        var _iteratorError2 = undefined;
+
+        try {
+          for (var _iterator2 = snaps.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var j = _step2.value;
+
+            d = j.data();
+            d.id = j.id;
+            d.kind = "freefolder";
+            latest_list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError2 = true;
+          _iteratorError2 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+              _iterator2["return"]();
+            }
+          } finally {
+            if (_didIteratorError2) {
+              throw _iteratorError2;
+            }
+          }
+        }
+
+        return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+      }).then(function (snaps) {
+        var d = {};
+        var _iteratorNormalCompletion3 = true;
+        var _didIteratorError3 = false;
+        var _iteratorError3 = undefined;
+
+        try {
+          for (var _iterator3 = snaps.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var j = _step3.value;
+
+            d = j.data();
+            d.id = j.id;
+            d.kind = "freefolder";
+            recommend_list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError3 = true;
+          _iteratorError3 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
+              _iterator3["return"]();
+            }
+          } finally {
+            if (_didIteratorError3) {
+              throw _iteratorError3;
+            }
+          }
+        }
+
+        ;
+        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+        _this.setState(function () {
+          return {
+            latest_list: latest_list,
+            recommend_list: recommend_list
+          };
+        });
+        var _iteratorNormalCompletion4 = true;
+        var _didIteratorError4 = false;
+        var _iteratorError4 = undefined;
+
+        try {
+          for (var _iterator4 = recommend_list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _d = _step4.value;
+
+            var _aId = localStorage.accountId;
+            if (_d.aId === _aId) {
+              var selector = "#" + _d.id + " .edit__folder";
+              $(selector).css("display", "block");
+            }
+            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+          }
+        } catch (err) {
+          _didIteratorError4 = true;
+          _iteratorError4 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
+              _iterator4["return"]();
+            }
+          } finally {
+            if (_didIteratorError4) {
+              throw _iteratorError4;
+            }
+          }
+        }
+
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
+
+        try {
+          for (var _iterator5 = latest_list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var _d2 = _step5.value;
+
+            var _aId2 = localStorage.accountId;
+            if (_d2.aId === _aId2) {
+              var selector = "#" + _d2.id + " .edit__folder";
+              $(selector).css("display", "block");
+            }
+            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+          }
+        } catch (err) {
+          _didIteratorError5 = true;
+          _iteratorError5 = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+              _iterator5["return"]();
+            }
+          } finally {
+            if (_didIteratorError5) {
+              throw _iteratorError5;
+            }
+          }
+        }
+
+        return true;
+      });
+    }
+  }, {
     key: "render",
     value: function render() {
       return [_react2["default"].createElement(
         "div",
-        { key: "ViewTop" },
+        { id: "main__container", key: "MainContainer" },
         _react2["default"].createElement(
           "div",
-          { id: "main__container" },
+          { id: "container__latest" },
           _react2["default"].createElement(
-            "div",
-            { id: "container__latest" },
-            _react2["default"].createElement(
-              "h1",
-              { className: "latest-container__title" },
-              "新着情報"
-            ),
-            _react2["default"].createElement(
-              "div",
-              { className: "container__wrapper" },
-              _react2["default"].createElement(_folder2["default"], { list: this.props.latest_list })
-            )
+            "h1",
+            { className: "latest-container__title" },
+            "新着情報"
           ),
           _react2["default"].createElement(
             "div",
-            null,
-            _react2["default"].createElement(
-              "h1",
-              { className: "recommend-container__title" },
-              "評価されている情報"
-            ),
-            _react2["default"].createElement(
-              "div",
-              { className: "container__wrapper" },
-              _react2["default"].createElement(_folder2["default"], { list: this.props.recommend_list })
-            )
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.state.latest_list })
           )
         ),
-        ",",
         _react2["default"].createElement(
           "div",
-          { id: "utility__area" },
-          _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
-        ),
-        ",",
-        _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", homeStyle: "tb-active" })
-      )];
+          null,
+          _react2["default"].createElement(
+            "h1",
+            { className: "recommend-container__title" },
+            "評価されている情報"
+          ),
+          _react2["default"].createElement(
+            "div",
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.state.recommend_list })
+          )
+        )
+      ), _react2["default"].createElement(
+        "div",
+        { id: "utility__area", key: "UtilityArea" },
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", homeStyle: "tb-active" })];
     }
   }]);
 

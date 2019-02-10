@@ -45,14 +45,10 @@ class Folder extends React.Component {
 
 
 export default class Folders extends React.Component {
-  constructor(props){
-    super(props)
-    this.state = { list: props.list }
-  }
   render(){
     var return_html = []
     let i=0;
-    for(let d of this.state.list){
+    for(let d of this.props.list){
       if(d.id===undefined)
         continue
       return_html.push( <Folder key={d.id} name={d.name} aName={d.aName}
