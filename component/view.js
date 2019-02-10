@@ -165,9 +165,51 @@ class ViewTop extends React.Component{
   }
 }
 
-/* <div key="ViewTop"> </div>*/
 
 class ViewFolderFeed extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = { list: [] }
+  }
+  shouldComponentUpdate (nextProps, nextState){
+    let flag = !(this.state === nextState)
+    return flag
+  }
+  componentDidMount(){
+    let list = []
+    let aId = localStorage.getItem("accountId")
+    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
+      let d;
+      let for_saved_list = []
+      for(let i of snap1.docs){
+        d = i.data()
+        d.id = i.id
+        d.kind = "folders"
+        list.push(d)
+        for_saved_list.push(JSON.stringify(d))
+      };
+      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
+        let d;
+        for(let i of snap2.docs){
+          d = i.data()
+          d.id = i.id
+          d.kind = "myfreefolders"
+          list.push(d)
+          for_saved_list.push(JSON.stringify(d))
+        };
+        sessionStorage.urlset_list = for_saved_list.join("-@-");
+        this.setState({list: list})
+        for(let d of list){
+          let aId = localStorage.accountId
+          if(d.aId === aId){
+            let selector = "#" + d.id + " .edit__folder"
+            $(selector).css("display", "block")
+          }
+          $("#" + d.id ).css("background-image", "url(" + d.img + ")")
+        }
+      })
+    })
+  }
   openFolderPost(){
     segueFolderFeedToPostFolder()
   }
@@ -175,7 +217,7 @@ class ViewFolderFeed extends React.Component {
     return([
       <div id="main__container" key="ViewFolderFeed_main"> 
         <div className="container__wrapper">
-          <Folders list={this.props.list} />
+          <Folders list={this.state.list} />
         </div>
       </div>,
       <div id="utility__area" key="ViewFolderFeed_utility">
