@@ -63,6 +63,7 @@
     height: 100%;
     width: 100%;
     background-image: url("/img/folder_curve.png");
+	background-size: cover;
   }
 
   .urlset_panel a.rigidFolder{
