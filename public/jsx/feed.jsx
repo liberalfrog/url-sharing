@@ -6,7 +6,7 @@ import {segueInitToGlobal, SegueAnyToURL, segueInitFolderFeed, segueURLFeed, seg
 import {auth, storage, db} from "../../component/firebase";
 
 // @plaong Use session storage ( like a iOS user defaults )
-// If anyone knows more smart ways, please tell me about that.
+// 2019-2-18 Had better use indexedDB!!
 
 
 window.addEventListener('popstate', function(e) {
@@ -70,7 +70,6 @@ function init(){
             db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(snap => {
               if(snap.exists){
                 segueURLFeed("myfreefolders", folderId, localStorage.accountId)
-                document.getElementById("list-nav__button__profile").src = user.photoURL
                 throw 'Oh no!';
               }
               return db.collection("account").doc(aId).collection("folders").doc(folderId).get()

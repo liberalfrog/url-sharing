@@ -1,4 +1,4 @@
-var cacheName = 'url-sharing-realozproject-201902201015-a';
+var cacheName = 'url-sharing-realozproject-201902201948-a';
 var filesToCache = [
   "/feed",
   "/account",
@@ -12,7 +12,6 @@ var filesToCache = [
   "/css/urlset.css",
   "/js/account.js",
   "/js/feed.js",
-  "/js/index.js",
   "/common/js/JSXTransformer.js",
   "/common/js/browser.min.js",
   "/common/js/firebase-firestore.js",

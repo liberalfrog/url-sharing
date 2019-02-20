@@ -1,5 +1,5 @@
 import {segueAnyToURLPostFolderChoice, segueFolderFeed, segueFolderFeedToPostFolder, segueURLPost} from "./segue";
-import {ViewPostFolder} from "./view";
+import {ViewPostFolder, ViewURLFeed} from "./view";
 import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
 import {sideMenuButtonShift} from "./side_menu";
@@ -27,11 +27,7 @@ function folderSubmitValidation(){
 
 // @platong If the url form can submit, return true.
 function urlSubmitValidation(){
-  let url = document.urlput_form.url.value;
-  let title = document.urlput_form.title.value;
-  if(url !== "" && title !== "")
-    return true;
-  return false;
+  return true;
 }
 
 
@@ -156,6 +152,7 @@ class URLPost extends React.Component{
       ownerAId: props.ownerAId,
       count: 0
     }
+    this.singleURLSubmit.bind(this)
   }
   urlConverter(num){
     let selector1 = 'input[name="url' + num + '"]'
@@ -172,64 +169,92 @@ class URLPost extends React.Component{
     .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
   getChanged(){ urlSubmitActiveSwitch(); }
-  urlputSubmit(){
+  singleURLSubmit(i){
     let aId = localStorage.accountId
     let t_id = this.state.id
     let user = auth.currentUser;
     let ownerAId = this.state.ownerAId
 
-    for(let i=0; i<=this.state.count; i++){
-      let url = $('input[name="url' + i + '"]').val()
-      let title = $('input[name="title' + i + '"]').val()
-      if(url === "" || title === "") continue
-      let data = {
-        title: title,
-        content: "",
-        href: url,
-        aId: aId,
-        aProfileImg: user.photoURL,
-        aName: user.displayName,
-        dateTime: new Date()
-      }
-      if(ownerAId === aId){
-        db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
-        .then(function(docRef) {
-          console.log("Document written with ID: ", docRef.id);
-          closePostView()
-        }).catch(function(error) {
-          console.error("Error adding document: ", error);
-        });
-      }else{
-        let myfolderRef = db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
-  
-        myfolderRef.get().then(snap => {
-          if(snap.exists){
-            return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
-          }else{
-            return db.collection("freefolder").doc(t_id).get().then(snap => {
-              return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data())
-            }).then(docRef => {
-              return db.collection("account").doc(aId).collection("folders").doc(t_id).delete()
-            }).then(() => {
-              return db.collection("freefolder").doc(t_id).collection("urls").get()
-            }).then(snaps => {
-              return snaps.forEach(x => {
-                db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
-                  .collection("urls").doc(x.id).set(x.data())
-              })
-            }).then(res => {
-              return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
-            })
-          }
-        }).then(docRef => {
-          console.log("Document written with ID: ", docRef.id);
-        }).catch(error => {
-          console.error("Error adding document: ", error);
-        });
-      }
-      closePostView()
+    let url = $('input[name="url' + i + '"]').val()
+    let title = $('input[name="title' + i + '"]').val()
+    if(url === "" || title === "") return
+    let data = {
+      title: title,
+      content: "",
+      href: url,
+      aId: aId,
+      aProfileImg: user.photoURL,
+      aName: user.displayName,
+      dateTime: new Date()
     }
+    if(ownerAId === aId){
+      return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(docRef => {
+		data.id = docRef.id
+		return data
+      }).catch(error => {
+        console.error("Error adding URL: ", error);
+      });
+    }else{
+      let myfolderRef = db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
+      return myfolderRef.get().then(snap => {
+        if(snap.exists){
+          return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
+		}else{
+          return db.collection("freefolder").doc(t_id).get().then(snap => {
+            return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data())
+          }).then(docRef => {
+            return db.collection("account").doc(aId).collection("folders").doc(t_id).delete()
+          }).then(() => {
+            return db.collection("freefolder").doc(t_id).collection("urls").get()
+          }).then(snaps => {
+            return snaps.forEach(x => {
+              db.collection("account").doc(aId).collection("myfreefolders").doc(t_id)
+                .collection("urls").doc(x.id).set(x.data())
+            })
+          }).then(res => {
+            return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data)
+          })
+        }
+      }).then(docRef => {
+        let url = $('input[name="url' + i + '"]').val()
+        let title = $('input[name="title' + i + '"]').val()
+        let user = auth.currentUser
+        return {
+	      id: docRef.id,
+          title: title,
+          content: "",
+          href: url,
+          aId: aId,
+          aProfileImg: user.photoURL,
+          aName: user.displayName,
+          dateTime: new Date()
+        }
+      }).catch(error => {
+          console.error("Error adding URL: ", error);
+        });
+      }
+  }
+  urlputSubmit(){
+	let promises = []
+    for(let i=0; i<=this.state.count; i++){
+      promises.push(this.singleURLSubmit(i))
+	}
     this.state.count = 0
+	Promise.all(promises).then(resultLists => {
+      console.log(resultLists)
+      let query = location.search
+      let hash = query.slice(1).split("&")
+      var parameters = []
+      hash.map(x => {
+        let array = x.split("=")
+        parameters.push(array[0])
+        parameters[array[0]] = array[1]
+      })
+      let id = parameters["id"]
+      let list = sessionStorage.url_list.split("-@-").map(x => { return JSON.parse(x)})
+      Array.prototype.push.apply(list, resultLists);
+      ReactDOM.render(<ViewURLFeed key="segueUrlFeed" id={id} list={list}/>, document.getElementById("main__container"))
+	})
   }
   morePost(){
     ++this.state.count
