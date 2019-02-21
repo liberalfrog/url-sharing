@@ -32,7 +32,7 @@ button{
 @media screen and (max-width: 767px) {
 
   #main__container{
-    margin-bottom: 8vh;
+    margin: 4vw 0 8vh 0;
   }
 
   .container__wrapper{

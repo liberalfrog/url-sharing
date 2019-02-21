@@ -48,10 +48,21 @@ function sendTokenToServer(currentToken){
   const settings = { timestampsInSnapshots: true };
   db.settings(settings);
 
-  var aId = localStorage.accountId
-  return db.collection("account").doc(aId).get().then(snap => {
-    var data = snap.data()
-    data.iid = currentToken
-    return db.collection("account").doc(aId).set(data, { merge: true })
-  })
+  var aId = localStorage.accountId;
+  if(aId){
+    return db.collection("account").doc(aId).get().then(snap => {
+   	  if(snap.exists){
+        var data = snap.data();
+        for(var i of data.iid){
+          if(currentToken === i)
+		    return;
+	    }
+        data.iid.push(currentToken);
+        return db.collection("account").doc(aId).set(data, { merge: true });
+	  }
+    })
+  }else{
+    localStorage.tokenSaved = currentToken;
+	return true;
+  }
 };
