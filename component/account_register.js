@@ -1,22 +1,5 @@
 import {db, storage, auth} from "./firebase";
-
-var blob;
-
-
-function blobToFile(theBlob, fileName){
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-}
-
-
-function getAccountId(user){
-  return db.collection("account").where("uId", "==", user.uid).get().then(querySnapshots  => {
-    for(let i of querySnapshots.docs){
-      return i.id
-    }
-  });
-}
+import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
 
 
 function accountRegisterSubmitValidation(){
@@ -40,113 +23,48 @@ function raButtonActiveSwitch(){
 
 
 export default class AccountRegister extends React.Component{
-  // @platong If file is changed, file will be compressed.
   fileChanged(){
-    let file = document.getElementById("ra_profile_img").files[0]
-    if (file.type != 'image/jpeg' && file.type != 'image/png') {
-      file = null;
-      blob = null;
-      return;
-     alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-    }
-    var image = new Image();
-    var reader = new FileReader();
-    const IMG_MAX_WIDTH = 96;
-
-    reader.onload = function(e) {
-      image.onload = function() {
-        var width, height, ratio;
-        if(image.width > image.height){
-          ratio = image.height / image.width;
-          width = IMG_MAX_WIDTH
-          height = IMG_MAX_WIDTH * ratio;
-        } else {
-          ratio = image.width/ image.height;
-          width = IMG_MAX_WIDTH * ratio;
-          height = IMG_MAX_WIDTH
-        }
-        var canvas = $('#ra_preview').attr('width', width).attr('height', height);
-        var ctx = canvas[0].getContext('2d');
-        ctx.clearRect(0,0,width,height);
-        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
-
-        var base64 = canvas.get(0).toDataURL('image/jpeg');
-        var barr, bin, i, len;
-        bin = atob(base64.split('base64,')[1]);
-        len = bin.length;
-        barr = new Uint8Array(len);
-        i = 0;
-        while (i < len) {
-          barr[i] = bin.charCodeAt(i);
-          i++;
-        }
-        blob = new Blob([barr], {type: 'image/jpeg'});
-      }
-      image.src = e.target.result;
-    }
-    reader.readAsDataURL(file);
-    raButtonActiveSwitch()
+	imgCompressor( document.getElementById("ra_profile_img"), $('#ra_preview'), 96, false)
   }
   submit(){
-    let file = document.getElementById("ra_profile_img").files[0]
-    if(!accountRegisterSubmitValidation() && !blob) return; // validation
-    let storage = firebase.storage();
-    let storageRef = storage.ref();
-    let imagesRef = storageRef.child('account_profile_imgs');
-    const file_name = file.name
-    file = blobToFile(blob)
-    var ref = storageRef.child('account_profile_imgs/' + file_name);
-    var uploadTask = ref.put(file)
-    // Listen for state changes, errors, and completion of the upload.
-    uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-    function(snapshot) {
-      // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-      var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-      console.log('Upload is ' + progress + '% done');
-      switch (snapshot.state) {
-        case firebase.storage.TaskState.PAUSED: // or 'paused'
-        console.log('Upload is paused');
-        break;
-      case firebase.storage.TaskState.RUNNING: // or 'running'
-        console.log('Upload is running');
-        break;
-      }
-    }, function(error) { // https://firebase.google.com/docs/storage/web/handle-errors
-      switch (error.code) {
-        case 'storage/unauthorized': // User doesn't have permission to access the object
-          break;
-        case 'storage/canceled': // User canceled the upload
-          break;
-        case 'storage/unknown': // Unknown error occurred, inspect error.serverResponse
-          break;
-      }
-    }, function() { // Upload completed successfully, now we can get the download URL
-      uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-        console.log('File available at', downloadURL);
-        let user = auth.currentUser;
-        let name = document.getElementById("ra_name").value
-        db.collection("account").add({
-          img: downloadURL,
-          name: name,
-          uId: user.uid,
-          followee: 0,
-          follower: 0,
-        }).then(docRef => {
-          user.updateProfile({
-            displayName: name,
-            photoURL: downloadURL
-          }).then(() => {
-            console.log("All process is done");
-            location.reload();
-          }).catch(err => {
-            console.error("Error: Register account: ", err);
-          });
-        }).catch(function(error) {
-          console.error("Error adding document: ", error);
-        });
+	let firestoreUpload = function(downloadURL){
+      let user = auth.currentUser;
+      db.collection("account").add({
+        img: downloadURL,
+        name: document.getElementById("ra_name").value,
+        uId: user.uid,
+        followee: 0,
+        follower: 0,
+      }).then(docRef => {
+		let currentToken = localStorage.tokenSaved
+        if(currentToken){
+	      return db.collection("account").doc(docRef.id).get().then(snap => {
+            let data = snap.data();
+			if(data.iid === undefined)
+			  data.iid = []
+            for(var i of data.iid){
+              if(currentToken === i)
+                return;
+            }   
+            data.iid.push(currentToken);
+            return db.collection("account").doc(docRef.id).set(data, { merge: true });  
+		  })
+        }
+		return true
+	  }).then(() => {
+        return user.updateProfile({
+          displayName: name,
+          photoURL: downloadURL
+        })
+	  }).then(() => {
+        console.log("All process is done");
+        location.reload();
+      }).catch(err => {
+        console.error("Error: Register account: ", err);
       });
-    });
-  };
+	}
+    submitImgToCloudStorage(document.getElementById("ra_profile_img"), "account_profile_imgs", firestoreUpload)
+  }
   render(){
     return(
       <div className="ra">

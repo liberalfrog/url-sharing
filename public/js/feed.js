@@ -15,42 +15,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 var _firebase = require("./firebase");
 
-var blob;
-
-function blobToFile(theBlob, fileName) {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
-}
-
-function getAccountId(user) {
-  return _firebase.db.collection("account").where("uId", "==", user.uid).get().then(function (querySnapshots) {
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = querySnapshots.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var i = _step.value;
-
-        return i.id;
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator["return"]) {
-          _iterator["return"]();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-  });
-}
+var _img_compressor = require("./img_compressor");
 
 function accountRegisterSubmitValidation() {
   var name = document.getElementById("ra_name").value;
@@ -80,122 +45,69 @@ var AccountRegister = (function (_React$Component) {
 
   _createClass(AccountRegister, [{
     key: "fileChanged",
-
-    // @platong If file is changed, file will be compressed.
     value: function fileChanged() {
-      var file = document.getElementById("ra_profile_img").files[0];
-      if (file.type != 'image/jpeg' && file.type != 'image/png') {
-        file = null;
-        blob = null;
-        return;
-        alert("画像でないものはアップロードできません。対応形式はjpegかpngです。");
-      }
-      var image = new Image();
-      var reader = new FileReader();
-      var IMG_MAX_WIDTH = 96;
-
-      reader.onload = function (e) {
-        image.onload = function () {
-          var width, height, ratio;
-          if (image.width > image.height) {
-            ratio = image.height / image.width;
-            width = IMG_MAX_WIDTH;
-            height = IMG_MAX_WIDTH * ratio;
-          } else {
-            ratio = image.width / image.height;
-            width = IMG_MAX_WIDTH * ratio;
-            height = IMG_MAX_WIDTH;
-          }
-          var canvas = $('#ra_preview').attr('width', width).attr('height', height);
-          var ctx = canvas[0].getContext('2d');
-          ctx.clearRect(0, 0, width, height);
-          ctx.drawImage(image, 0, 0, image.width, image.height, 0, 0, width, height);
-
-          var base64 = canvas.get(0).toDataURL('image/jpeg');
-          var barr, bin, i, len;
-          bin = atob(base64.split('base64,')[1]);
-          len = bin.length;
-          barr = new Uint8Array(len);
-          i = 0;
-          while (i < len) {
-            barr[i] = bin.charCodeAt(i);
-            i++;
-          }
-          blob = new Blob([barr], { type: 'image/jpeg' });
-        };
-        image.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-      raButtonActiveSwitch();
+      (0, _img_compressor.imgCompressor)(document.getElementById("ra_profile_img"), $('#ra_preview'), 96, false);
     }
   }, {
     key: "submit",
     value: function submit() {
-      var file = document.getElementById("ra_profile_img").files[0];
-      if (!accountRegisterSubmitValidation() && !blob) return; // validation
-      var storage = firebase.storage();
-      var storageRef = storage.ref();
-      var imagesRef = storageRef.child('account_profile_imgs');
-      var file_name = file.name;
-      file = blobToFile(blob);
-      var ref = storageRef.child('account_profile_imgs/' + file_name);
-      var uploadTask = ref.put(file);
-      // Listen for state changes, errors, and completion of the upload.
-      uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
-      function (snapshot) {
-        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-        var progress = snapshot.bytesTransferred / snapshot.totalBytes * 100;
-        console.log('Upload is ' + progress + '% done');
-        switch (snapshot.state) {
-          case firebase.storage.TaskState.PAUSED:
-            // or 'paused'
-            console.log('Upload is paused');
-            break;
-          case firebase.storage.TaskState.RUNNING:
-            // or 'running'
-            console.log('Upload is running');
-            break;
-        }
-      }, function (error) {
-        // https://firebase.google.com/docs/storage/web/handle-errors
-        switch (error.code) {
-          case 'storage/unauthorized':
-            // User doesn't have permission to access the object
-            break;
-          case 'storage/canceled':
-            // User canceled the upload
-            break;
-          case 'storage/unknown':
-            // Unknown error occurred, inspect error.serverResponse
-            break;
-        }
-      }, function () {
-        // Upload completed successfully, now we can get the download URL
-        uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
-          console.log('File available at', downloadURL);
-          var user = _firebase.auth.currentUser;
-          var name = document.getElementById("ra_name").value;
-          _firebase.db.collection("account").add({
-            img: downloadURL,
-            name: name,
-            uId: user.uid,
-            followee: 0,
-            follower: 0
-          }).then(function (docRef) {
-            user.updateProfile({
-              displayName: name,
-              photoURL: downloadURL
-            }).then(function () {
-              console.log("All process is done");
-              location.reload();
-            })["catch"](function (err) {
-              console.error("Error: Register account: ", err);
+      var firestoreUpload = function firestoreUpload(downloadURL) {
+        var user = _firebase.auth.currentUser;
+        _firebase.db.collection("account").add({
+          img: downloadURL,
+          name: document.getElementById("ra_name").value,
+          uId: user.uid,
+          followee: 0,
+          follower: 0
+        }).then(function (docRef) {
+          var currentToken = localStorage.tokenSaved;
+          if (currentToken) {
+            return _firebase.db.collection("account").doc(docRef.id).get().then(function (snap) {
+              var data = snap.data();
+              if (data.iid === undefined) data.iid = [];
+              var _iteratorNormalCompletion = true;
+              var _didIteratorError = false;
+              var _iteratorError = undefined;
+
+              try {
+                for (var _iterator = data.iid[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                  var i = _step.value;
+
+                  if (currentToken === i) return;
+                }
+              } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+              } finally {
+                try {
+                  if (!_iteratorNormalCompletion && _iterator["return"]) {
+                    _iterator["return"]();
+                  }
+                } finally {
+                  if (_didIteratorError) {
+                    throw _iteratorError;
+                  }
+                }
+              }
+
+              data.iid.push(currentToken);
+              return _firebase.db.collection("account").doc(docRef.id).set(data, { merge: true });
             });
-          })["catch"](function (error) {
-            console.error("Error adding document: ", error);
+          }
+          return true;
+        }).then(function () {
+          return user.updateProfile({
+            displayName: name,
+            photoURL: downloadURL
           });
+        }).then(function () {
+          console.log("All process is done");
+          location.reload();
+        })["catch"](function (err) {
+          console.error("Error: Register account: ", err);
         });
-      });
+      };
+      (0, _img_compressor.submitImgToCloudStorage)(document.getElementById("ra_profile_img"), "account_profile_imgs", firestoreUpload);
     }
   }, {
     key: "render",
@@ -237,7 +149,7 @@ var AccountRegister = (function (_React$Component) {
 exports["default"] = AccountRegister;
 module.exports = exports["default"];
 
-},{"./firebase":3}],2:[function(require,module,exports){
+},{"./firebase":3,"./img_compressor":5}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -267,9 +179,6 @@ var _firebase = require("./firebase");
 var _side_menu = require("./side_menu");
 
 var _img_compressor = require("./img_compressor");
-
-// @platong For compressed image
-var THUMBNAIL_HEIGHT = 100;
 
 function closePostView() {
   (0, _segue.segueFolderFeed)();
@@ -308,12 +217,6 @@ function urlSubmitActiveSwitch() {
     $("#url_submit").removeClass("submit_is_active");
     $("#url_submit").addClass("submit_is_disactive");
   }
-}
-
-function blobToFile(theBlob, fileName) {
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
 }
 
 var AddButton = (function (_React$Component) {
@@ -758,7 +661,6 @@ var URLFolderPost = (function (_React$Component5) {
   }, {
     key: "fileChanged",
     value: function fileChanged() {
-      console.log("Hello world");
       (0, _img_compressor.imgCompressor)(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false);
     }
   }, {

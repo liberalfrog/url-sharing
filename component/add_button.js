@@ -6,10 +6,6 @@ import {sideMenuButtonShift} from "./side_menu";
 import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
 
 
-// @platong For compressed image
-const THUMBNAIL_HEIGHT = 100;
-
-
 function closePostView(){ 
   segueFolderFeed()
 }
@@ -52,13 +48,6 @@ function urlSubmitActiveSwitch(){
     $("#url_submit").removeClass("submit_is_active");
     $("#url_submit").addClass("submit_is_disactive");
   }
-}
-
-
-function blobToFile(theBlob, fileName){
-  theBlob.lastModifiedDate = new Date();
-  theBlob.name = fileName;
-  return theBlob;
 }
 
 
@@ -340,7 +329,6 @@ class URLFolderPost extends React.Component{
   }
   // @platong If file is changed, file will be compressed.
   fileChanged(){
-    console.log("Hello world")
     imgCompressor(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false)
   }
   render(){
