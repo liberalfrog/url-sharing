@@ -48,7 +48,7 @@ function init(){
         return localStorage.accountId 
       }else{
         $("body").prepend('<div id="popover"></div>')
-        ReactDOM.render( <AccountRegister/>, document.getElementById("popover"))
+		location.href = "/walkthrough"
         return Promise.reject("Account doesn't exist.")
       }
     }).then(aId => {

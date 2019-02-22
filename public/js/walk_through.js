@@ -117,7 +117,7 @@ var AccountRegister = (function (_React$Component) {
           console.error("Error: Register account: ", err);
         });
       };
-      (0, _img_compressor.submitImgToCloudStorage)(document.getElementById("ra_profile_img"), "account_profile_imgs", firestoreUpload);
+      (0, _img_compressor.submitImgToCloudStorage)(document.getElementById("ra_preview"), "account_profile_imgs", firestoreUpload);
     }
   }, {
     key: "render",
@@ -151,581 +151,7 @@ var AccountRegister = (function (_React$Component) {
 exports["default"] = AccountRegister;
 module.exports = exports["default"];
 
-},{"./firebase":3,"./img_compressor":5}],2:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _segue = require("./segue");
-
-var _view = require("./view");
-
-var _uuid = require("./uuid");
-
-var _uuid2 = _interopRequireDefault(_uuid);
-
-var _firebase = require("./firebase");
-
-var _side_menu = require("./side_menu");
-
-var _img_compressor = require("./img_compressor");
-
-function closePostView() {
-  (0, _segue.segueFolderFeed)();
-}
-
-// @platong If the folder form can submit, return true.
-function folderSubmitValidation() {
-  var title = document.getElementById("ap_panel_title").value;
-  var file = document.urlset_form.urlbook_img.files[0];
-  if (title !== "" && file !== undefined) return true;
-  return false;
-}
-
-// @platong If the url form can submit, return true.
-function urlSubmitValidation() {
-  return true;
-}
-
-// @platong Change button color if the form can submit.
-function buttonActiveSwitch() {
-  if (folderSubmitValidation()) {
-    $("#ap_submit").addClass("submit_is_active");
-    $("#ap_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#ap_submit").removeClass("submit_is_active");
-    $("#ap_submit").addClass("submit_is_disactive");
-  }
-}
-
-// @platong Change button color if the form can submit.
-function urlSubmitActiveSwitch() {
-  if (urlSubmitValidation()) {
-    $("#url_submit").addClass("submit_is_active");
-    $("#url_submit").removeClass("submit_is_disactive");
-  } else {
-    $("#url_submit").removeClass("submit_is_active");
-    $("#url_submit").addClass("submit_is_disactive");
-  }
-}
-
-var AddButton = (function (_React$Component) {
-  _inherits(AddButton, _React$Component);
-
-  function AddButton(props) {
-    _classCallCheck(this, AddButton);
-
-    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).call(this, props);
-    this.state = {
-      "kind": undefined
-    };
-    switch (props.icon) {
-      case "+":
-        this.state.kind = "fa fa-plus";
-        break;
-      case "folder":
-        this.state.kind = "fa fa-folder-plus";
-        break;
-      case "url":
-        this.state.kind = "fa far fa-code";
-        break;
-
-      default:
-        this.state.kind = "fa";
-        break;
-    }
-  }
-
-  // @platong Appear if plus button is tapped or clicked.
-
-  _createClass(AddButton, [{
-    key: "render",
-    value: function render() {
-      return React.createElement("button", { id: "add_button", key: "addButtons", className: this.state.kind, onClick: this.props.func });
-    }
-  }]);
-
-  return AddButton;
-})(React.Component);
-
-var AddPanel = (function (_React$Component2) {
-  _inherits(AddPanel, _React$Component2);
-
-  function AddPanel() {
-    _classCallCheck(this, AddPanel);
-
-    _get(Object.getPrototypeOf(AddPanel.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  // @platong register URL
-
-  _createClass(AddPanel, [{
-    key: "folderCreate",
-    value: function folderCreate() {
-      history.pushState('', '', "folders");
-      var aId = localStorage.getItem("accountId");
-      var for_saved_list = [];
-      var list = [];
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
-
-            var d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator["return"]) {
-              _iterator["return"]();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        ;
-        return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-      }).then(function (snap) {
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var i = _step2.value;
-
-            var d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        (0, _side_menu.sideMenuButtonShift)("folders");
-        ReactDOM.render(React.createElement(_view.ViewPostFolder, { key: "AddPanelView", list: list }), document.getElementById("main__container"));
-        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder", key: "AddPanelAddButton" }), document.getElementById("utility__area"));
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var d = _step3.value;
-
-            $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-              _iterator3["return"]();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-      });
-    }
-  }, {
-    key: "urlCreate",
-    value: function urlCreate() {
-      (0, _side_menu.sideMenuButtonShift)("folders");
-      (0, _segue.segueAnyToURLPostFolderChoice)();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        { className: "add_view" },
-        React.createElement(
-          "div",
-          { className: "add_panel", onClick: this.folderCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add folder"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLを管理するフォルダを作成"
-          )
-        ),
-        React.createElement(
-          "div",
-          { className: "add_panel", onClick: this.urlCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add URL"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLをフォルダに追加"
-          )
-        )
-      );
-    }
-  }]);
-
-  return AddPanel;
-})(React.Component);
-
-var URLPost = (function (_React$Component3) {
-  _inherits(URLPost, _React$Component3);
-
-  function URLPost(props) {
-    _classCallCheck(this, URLPost);
-
-    _get(Object.getPrototypeOf(URLPost.prototype), "constructor", this).call(this, props);
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      count: 0
-    };
-    this.singleURLSubmit.bind(this);
-  }
-
-  _createClass(URLPost, [{
-    key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
-      $.ajax({
-        url: "/api_v1/url_to_title",
-        type: 'GET',
-        data: { "url": url }
-      }).done(function (data) {
-        var selector2 = 'input[name="title' + num + '"]';
-        $(selector2).val(data.title);
-      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
-    }
-  }, {
-    key: "getChanged",
-    value: function getChanged() {
-      urlSubmitActiveSwitch();
-    }
-  }, {
-    key: "singleURLSubmit",
-    value: function singleURLSubmit(i) {
-      var aId = localStorage.accountId;
-      var t_id = this.state.id;
-      var user = _firebase.auth.currentUser;
-      var ownerAId = this.state.ownerAId;
-
-      var url = $('input[name="url' + i + '"]').val();
-      var title = $('input[name="title' + i + '"]').val();
-      if (url === "" || title === "") return;
-      var data = {
-        title: title,
-        content: "",
-        href: url,
-        aId: aId,
-        aProfileImg: user.photoURL,
-        aName: user.displayName,
-        dateTime: new Date()
-      };
-      if (ownerAId === aId) {
-        return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(function (docRef) {
-          data.id = docRef.id;
-          return data;
-        })["catch"](function (error) {
-          console.error("Error adding URL: ", error);
-        });
-      } else {
-        var myfolderRef = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id);
-        return myfolderRef.get().then(function (snap) {
-          if (snap.exists) {
-            return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
-          } else {
-            return _firebase.db.collection("freefolder").doc(t_id).get().then(function (snap) {
-              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).set(snap.data());
-            }).then(function (docRef) {
-              return _firebase.db.collection("account").doc(aId).collection("folders").doc(t_id)["delete"]();
-            }).then(function () {
-              return _firebase.db.collection("freefolder").doc(t_id).collection("urls").get();
-            }).then(function (snaps) {
-              return snaps.forEach(function (x) {
-                _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").doc(x.id).set(x.data());
-              });
-            }).then(function (res) {
-              return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data);
-            });
-          }
-        }).then(function (docRef) {
-          var url = $('input[name="url' + i + '"]').val();
-          var title = $('input[name="title' + i + '"]').val();
-          var user = _firebase.auth.currentUser;
-          return {
-            id: docRef.id,
-            title: title,
-            content: "",
-            href: url,
-            aId: aId,
-            aProfileImg: user.photoURL,
-            aName: user.displayName,
-            dateTime: new Date()
-          };
-        })["catch"](function (error) {
-          console.error("Error adding URL: ", error);
-        });
-      }
-    }
-  }, {
-    key: "urlputSubmit",
-    value: function urlputSubmit() {
-      var promises = [];
-      for (var i = 0; i <= this.state.count; i++) {
-        promises.push(this.singleURLSubmit(i));
-      }
-      this.state.count = 0;
-      Promise.all(promises).then(function (resultLists) {
-        console.log(resultLists);
-        var query = location.search;
-        var hash = query.slice(1).split("&");
-        var parameters = [];
-        hash.map(function (x) {
-          var array = x.split("=");
-          parameters.push(array[0]);
-          parameters[array[0]] = array[1];
-        });
-        var id = parameters["id"];
-        var list = sessionStorage.url_list.split("-@-").map(function (x) {
-          return JSON.parse(x);
-        });
-        Array.prototype.push.apply(list, resultLists);
-        ReactDOM.render(React.createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id, list: list }), document.getElementById("main__container"));
-      });
-    }
-  }, {
-    key: "morePost",
-    value: function morePost() {
-      ++this.state.count;
-      var element = document.createElement("div");
-      element.setAttribute("id", "url_input" + this.state.count);
-      document.getElementById("url_input").appendChild(element);
-      ReactDOM.render(React.createElement(URLInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlPostOverlay" }), React.createElement(
-        "div",
-        { className: "post__container", key: "urlPostcontainer" },
-        React.createElement(
-          "h1",
-          { className: "view-title" },
-          "URLを登録"
-        ),
-        React.createElement(
-          "form",
-          { name: "urlput_form" },
-          React.createElement(
-            "div",
-            { id: "url_input" },
-            React.createElement(
-              "div",
-              { id: "url_input0" },
-              React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
-              React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
-            )
-          ),
-          React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "post__submit submit_is_disactive", id: "url_submit" })
-        ),
-        React.createElement("input", { type: "button", onClick: this.morePost.bind(this), value: "さらにURLを登録", className: "" })
-      )];
-    }
-  }]);
-
-  return URLPost;
-})(React.Component);
-
-var URLInput = (function (_React$Component4) {
-  _inherits(URLInput, _React$Component4);
-
-  function URLInput(props) {
-    _classCallCheck(this, URLInput);
-
-    _get(Object.getPrototypeOf(URLInput.prototype), "constructor", this).call(this, props);
-    this.state = {
-      urlName: "url" + this.props.num,
-      titleName: "title" + this.props.num
-    };
-  }
-
-  _createClass(URLInput, [{
-    key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
-      $.ajax({
-        url: "/api_v1/url_to_title",
-        type: 'GET',
-        data: { "url": url }
-      }).done(function (data) {
-        var selector = 'input[name="title' + num + '"]';
-        $(selector).val(data.title);
-      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "div",
-        null,
-        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
-        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
-      );
-    }
-  }]);
-
-  return URLInput;
-})(React.Component);
-
-var URLFolderPost = (function (_React$Component5) {
-  _inherits(URLFolderPost, _React$Component5);
-
-  function URLFolderPost() {
-    _classCallCheck(this, URLFolderPost);
-
-    _get(Object.getPrototypeOf(URLFolderPost.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(URLFolderPost, [{
-    key: "submit",
-    value: function submit() {
-      var firestoreUpload = function firestoreUpload(downloadURL) {
-        var user = _firebase.auth.currentUser;
-        var aId = localStorage.getItem("accountId");
-        var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
-        ref.add({
-          img: downloadURL,
-          name: document.urlset_form.title.value,
-          aId: localStorage.getItem("accountId"),
-          aProfileImg: user.photoURL,
-          aName: user.displayName,
-          dateTime: new Date()
-        }).then(function (docRef) {
-          closePostView();
-        })["catch"](function (error) {
-          console.error("Error adding document: ", error);
-        });
-      };
-      (0, _img_compressor.submitImgToCloudStorage)(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload);
-    }
-
-    // @platong If file is changed, file will be compressed.
-  }, {
-    key: "fileChanged",
-    value: function fileChanged() {
-      (0, _img_compressor.imgCompressor)(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlFolderPostOverlay" }), React.createElement(
-        "div",
-        { className: "post__container", key: "urlFolderPostContainer" },
-        React.createElement(
-          "h1",
-          { className: "view-title" },
-          "URLを入れるフォルダを作成"
-        ),
-        React.createElement(
-          "form",
-          { action: "", name: "urlset_form" },
-          React.createElement(
-            "div",
-            { className: "post-folder__preview" },
-            React.createElement("canvas", { id: "ap_preview", className: "post-folder__folder", width: "0", height: "0" }),
-            React.createElement(
-              "span",
-              { className: "post-folder__upload-message" },
-              "画像を選択する"
-            ),
-            React.createElement("input", { id: "ap_select_img", className: "post-folder__image", name: "urlbook_img", type: "file", onChange: this.fileChanged }),
-            React.createElement("input", { id: "ap_panel_title", className: "post-folder__title", name: "title", type: "text", onInput: buttonActiveSwitch, placeholder: "タイトルを入力", required: true })
-          ),
-          React.createElement(
-            "div",
-            { className: "post-folder__sub" },
-            React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
-            React.createElement(
-              "label",
-              { htmlFor: "paid" },
-              "販売する"
-            )
-          ),
-          React.createElement(
-            "div",
-            { className: "sell__section" },
-            React.createElement("input", { type: "text", name: "price" }),
-            React.createElement(
-              "label",
-              { htmlFor: "price" },
-              "円"
-            )
-          ),
-          React.createElement("input", { type: "button", onClick: this.submit, value: "作成", className: "post__submit submit_is_disactive", id: "ap_submit" })
-        )
-      )];
-    }
-  }]);
-
-  return URLFolderPost;
-})(React.Component);
-
-exports.AddButton = AddButton;
-exports.AddPanel = AddPanel;
-exports.URLFolderPost = URLFolderPost;
-exports.URLPost = URLPost;
-
-},{"./firebase":3,"./img_compressor":5,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],3:[function(require,module,exports){
+},{"./firebase":2,"./img_compressor":3}],2:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -747,156 +173,7 @@ exports.db = db;
 exports.storage = storage;
 exports.auth = auth;
 
-},{"firebase/app":104,"firebase/auth":105,"firebase/firestore":106,"firebase/storage":107}],4:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _url = require('./url');
-
-var _url2 = _interopRequireDefault(_url);
-
-var _segue = require("./segue");
-
-var _firebase = require("./firebase");
-
-var _view = require("./view");
-
-var Folder = (function (_React$Component) {
-  _inherits(Folder, _React$Component);
-
-  function Folder(props) {
-    _classCallCheck(this, Folder);
-
-    _get(Object.getPrototypeOf(Folder.prototype), 'constructor', this).call(this, props);
-    this.state = {
-      putShow: props.post ? this.urlPost : this.putShow,
-      id: props.id,
-      ownerAId: props.aId,
-      kind: props.kind
-    };
-  }
-
-  _createClass(Folder, [{
-    key: 'putShow',
-    value: function putShow() {
-      (0, _segue.segueURLFeed)(this.state.kind, this.state.id, this.state.ownerAId);
-    }
-  }, {
-    key: 'urlPost',
-    value: function urlPost() {
-      (0, _segue.segueURLPost)(this.state.id, this.state.ownerAId, this.state.kind);
-    }
-  }, {
-    key: 'edit',
-    value: function edit() {
-      if (localStorage.accountId === this.state.ownerAId) {
-        ReactDOM.render(_react2['default'].createElement(_view.ViewFolderEdit, { ownerAId: this.state.ownerAId, id: this.state.id }), document.getElementById("container"));
-      }
-    }
-  }, {
-    key: 'render',
-    value: function render() {
-      return _react2['default'].createElement(
-        'div',
-        { className: 'urlset_panel', id: this.props.id },
-        _react2['default'].createElement(
-          'div',
-          { className: 'folder__description' },
-          _react2['default'].createElement(
-            'h3',
-            null,
-            this.props.name
-          ),
-          _react2['default'].createElement(
-            'div',
-            { className: 'folder__mini-profile' },
-            _react2['default'].createElement('img', { src: this.props.aProfileImg, className: 'profile-img' }),
-            _react2['default'].createElement(
-              'span',
-              { className: 'account_name' },
-              this.props.aName
-            ),
-            _react2['default'].createElement('a', { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' })
-          ),
-          _react2['default'].createElement('button', { className: 'edit__folder fas fa-cog', onClick: this.edit.bind(this) })
-        ),
-        _react2['default'].createElement('a', { className: 'rigidFolder', onClick: this.state.putShow.bind(this) })
-      );
-    }
-  }]);
-
-  return Folder;
-})(_react2['default'].Component);
-
-var Folders = (function (_React$Component2) {
-  _inherits(Folders, _React$Component2);
-
-  function Folders() {
-    _classCallCheck(this, Folders);
-
-    _get(Object.getPrototypeOf(Folders.prototype), 'constructor', this).apply(this, arguments);
-  }
-
-  _createClass(Folders, [{
-    key: 'render',
-    value: function render() {
-      var return_html = [];
-      var i = 0;
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.props.list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var d = _step.value;
-
-          if (d.id === undefined) continue;
-          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
-            post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator['return']) {
-            _iterator['return']();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      return return_html;
-    }
-  }]);
-
-  return Folders;
-})(_react2['default'].Component);
-
-exports['default'] = Folders;
-module.exports = exports['default'];
-
-},{"./firebase":3,"./segue":7,"./url":9,"./view":11,"react":114}],5:[function(require,module,exports){
+},{"firebase/app":97,"firebase/auth":98,"firebase/firestore":99,"firebase/storage":100}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -912,6 +189,22 @@ var _uuid2 = _interopRequireDefault(_uuid);
 var _firebase = require("./firebase");
 
 require("firebase/app");
+
+function canvasToPNGBlob(canvas) {
+  canvas.getContext('2d');
+  var base64 = canvas.toDataURL('image/jpeg');
+  var barr, bin, i, len;
+  bin = atob(base64.split('base64,')[1]);
+  len = bin.length;
+  barr = new Uint8Array(len);
+  i = 0;
+  while (i < len) {
+    barr[i] = bin.charCodeAt(i);
+    i++;
+  }
+  blob = new Blob([barr], { type: 'image/png' });
+  return blob;
+}
 
 function blobToFile(theBlob, fileName) {
   theBlob.lastModifiedDate = new Date();
@@ -968,33 +261,27 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload) {
 
       canvasDomObj.css("display", "block");
 
-      var base64 = canvas.get(0).toDataURL('image/jpeg');
-      var barr, bin, i, len;
-      bin = atob(base64.split('base64,')[1]);
-      len = bin.length;
-      barr = new Uint8Array(len);
-      i = 0;
-      while (i < len) {
-        barr[i] = bin.charCodeAt(i);
-        i++;
-      }
-      blob = new Blob([barr], { type: 'image/jpeg' });
+      blob = canvasToPNGBlob(canvas);
       if (isDirectlyUpload) submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg);
-      blob;
     };
     image.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
-  var file = fileDomObj.files[0];
-  if (!blob) return; // validation
+function submitImgToCloudStorage(canvasDomObj, bucket, cloudStorageToFireStore) {
+  var file = undefined;
+  var extension = undefined;
+  if (blob) {
+    file = blobToFile(blob);
+    extension = file.name.split(".").slice(-1)[0];
+  } else {
+    file = blobToFile(canvasToPNGBlob(canvasDomObj));
+    extension = "png";
+  }
   var storageRef = _firebase.storage.ref();
   var imagesRef = storageRef.child(bucket);
-  var extension = file.name.split(".").slice(-1)[0];
   var file_name = (0, _uuid2["default"])() + "." + extension;
-  file = blobToFile(blob);
   var ref = storageRef.child(bucket + '/' + file_name);
   var uploadTask = ref.put(file);
   // Listen for state changes, errors, and completion of the upload.
@@ -1037,1003 +324,7 @@ function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
 exports.imgCompressor = imgCompressor;
 exports.submitImgToCloudStorage = submitImgToCloudStorage;
 
-},{"./firebase":3,"./uuid":10,"firebase/app":104}],6:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var LaterButton = (function (_React$Component) {
-  _inherits(LaterButton, _React$Component);
-
-  function LaterButton() {
-    _classCallCheck(this, LaterButton);
-
-    _get(Object.getPrototypeOf(LaterButton.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(LaterButton, [{
-    key: "laterButtonClicked",
-    value: function laterButtonClicked() {
-      alert("すみません、あとで読むは後日実装されます。");
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return React.createElement(
-        "button",
-        { id: "later_button", onClick: this.laterButtonClicked },
-        "Watch later"
-      );
-    }
-  }]);
-
-  return LaterButton;
-})(React.Component);
-
-exports["default"] = LaterButton;
-module.exports = exports["default"];
-
-},{}],7:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _folder = require("./folder");
-
-var _folder2 = _interopRequireDefault(_folder);
-
-var _add_button = require('./add_button');
-
-var _side_menu = require("./side_menu");
-
-var _side_menu2 = _interopRequireDefault(_side_menu);
-
-var _firebase = require("./firebase");
-
-var _view = require("./view");
-
-var _later_button = require("./later_button");
-
-var _later_button2 = _interopRequireDefault(_later_button);
-
-function segueURLFeed(kind, id, ownerAId) {
-  var list = [];
-  var d = undefined;
-  var aId = localStorage.accountId;
-  var query = undefined;
-  switch (kind) {
-    case "folders":
-      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
-      break;
-    case "myfreefolders":
-      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
-      break;
-    case "freefolder":
-      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
-      break;
-    default:
-      console.error("Some thing bug is occured at segueURLFeed.");
-      break;
-  }
-  query.get().then(function (snap) {
-    var for_saved_list = [];
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var i = _step.value;
-
-        d = i.data();
-        d.id = i.id;
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator["return"]) {
-          _iterator["return"]();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    ;
-    sessionStorage.url_list = for_saved_list.join("-@-");
-
-    if (document.getElementById("main__container")) {
-      ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id,
-        ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
-      ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: function () {
-          return segueURLPost(id, ownerAId, kind);
-        }, icon: "url" }), document.getElementById("utility__area"));
-    } else {
-      ReactDOM.render([_react2["default"].createElement(
-        "div",
-        { id: "main__container", key: "segueUrlFeedMain" },
-        _react2["default"].createElement(_view.ViewURLFeed, { id: id, ownerAId: ownerAId, list: list })
-      ), _react2["default"].createElement(
-        "div",
-        { id: "utility__area", key: "segueUrlFeedUtility" },
-        _react2["default"].createElement(_add_button.AddButton, { func: function () {
-            return segueURLPost(id, ownerAId, kind);
-          }, icon: "url" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })], document.getElementById("container"));
-    }
-  });
-}
-
-function segueFolderFeedToPostFolder() {
-  var list = sessionStorage.urlset_list.split("-@-");
-  list.map(function (x) {
-    JSON.parse(x);
-  });
-  ReactDOM.render(_react2["default"].createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var d = _step2.value;
-
-      var aId = localStorage.accountId;
-      if (d.aId === aId) {
-        var selector = "#" + d.id + " .edit__folder";
-        $(selector).css("display", "block");
-      }
-      $("#" + d.id).css("background-image", "url(" + d.img + ")");
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-        _iterator2["return"]();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-}
-
-function segueFolderToAddPanel() {
-  ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("utility__area"));
-}
-
-function segueAnyToURLPostFolderChoice() {
-  history.pushState('', '', "folders");
-  var list = [];
-  var aId = localStorage.getItem("accountId");
-  var for_saved_list = [];
-  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-    var d = undefined;
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-      for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-        var i = _step3.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "folders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError3 = true;
-      _iteratorError3 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-          _iterator3["return"]();
-        }
-      } finally {
-        if (_didIteratorError3) {
-          throw _iteratorError3;
-        }
-      }
-    }
-
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
-    var d = undefined;
-    var _iteratorNormalCompletion4 = true;
-    var _didIteratorError4 = false;
-    var _iteratorError4 = undefined;
-
-    try {
-      for (var _iterator4 = snap.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-        var i = _step4.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "myfreefolders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError4 = true;
-      _iteratorError4 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-          _iterator4["return"]();
-        }
-      } finally {
-        if (_didIteratorError4) {
-          throw _iteratorError4;
-        }
-      }
-    }
-
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render([_react2["default"].createElement(
-      "h1",
-      { className: "title__folder-choice", key: "SAtitele" },
-      "URLを登録するフォルダを選択"
-    ), _react2["default"].createElement(
-      "div",
-      { className: "container__wrapper", key: "SAcontainer" },
-      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
-    )], document.getElementById("main__container"));
-    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
-    var _iteratorNormalCompletion5 = true;
-    var _didIteratorError5 = false;
-    var _iteratorError5 = undefined;
-
-    try {
-      for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-        var _d = _step5.value;
-
-        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError5 = true;
-      _iteratorError5 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-          _iterator5["return"]();
-        }
-      } finally {
-        if (_didIteratorError5) {
-          throw _iteratorError5;
-        }
-      }
-    }
-  });
-}
-
-function segueURLPost(id, ownerAId, kind) {
-  var list = [];
-  var d = undefined;
-  var aId = localStorage.accountId;
-  var query = undefined;
-  switch (kind) {
-    case "folders":
-      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
-      break;
-    case "myfreefolders":
-      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
-      break;
-    case "freefolder":
-      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
-      break;
-    default:
-      console.log("Some thing bug is occured at segueURLFeed.");
-      break;
-  }
-  query.get().then(function (snap) {
-    var for_saved_list = [];
-    var _iteratorNormalCompletion6 = true;
-    var _didIteratorError6 = false;
-    var _iteratorError6 = undefined;
-
-    try {
-      for (var _iterator6 = snap.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-        var i = _step6.value;
-
-        d = i.data();
-        d.id = i.id;
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError6 = true;
-      _iteratorError6 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-          _iterator6["return"]();
-        }
-      } finally {
-        if (_didIteratorError6) {
-          throw _iteratorError6;
-        }
-      }
-    }
-
-    ;
-    sessionStorage.url_list = for_saved_list.join("-@-");
-
-    /*let listStr = sessionStorage.url_list
-    let list
-    if(listStr !== "")
-      list = listStr.split("-@-").map(x => JSON.parse(x))
-    else
-      list = []*/
-    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { key: "segueUrlPost", list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
-  });
-}
-
-function segueInitFolderFeed() {
-  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderFeed, null), document.getElementById("container"));
-}
-
-function segueFolderFeed() {
-  sessionStorage.udBeforeLocation = location.pathname;
-  history.pushState('', '', "folders");
-  var list = [];
-  var for_saved_list = [];
-  var aId = localStorage.getItem("accountId");
-  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], { key: "segueFolderFeedLaterButton" }), _react2["default"].createElement(_add_button.AddButton, { key: "segueFolderFeedAddButton", func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
-  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion7 = true;
-    var _didIteratorError7 = false;
-    var _iteratorError7 = undefined;
-
-    try {
-      for (var _iterator7 = snap.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-        var i = _step7.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "folders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError7 = true;
-      _iteratorError7 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-          _iterator7["return"]();
-        }
-      } finally {
-        if (_didIteratorError7) {
-          throw _iteratorError7;
-        }
-      }
-    }
-
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion8 = true;
-    var _didIteratorError8 = false;
-    var _iteratorError8 = undefined;
-
-    try {
-      for (var _iterator8 = snap.docs[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-        var i = _step8.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "myfreefolders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError8 = true;
-      _iteratorError8 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-          _iterator8["return"]();
-        }
-      } finally {
-        if (_didIteratorError8) {
-          throw _iteratorError8;
-        }
-      }
-    }
-
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render(_react2["default"].createElement(
-      "div",
-      { className: "container__wrapper" },
-      _react2["default"].createElement(_folder2["default"], { list: list })
-    ), document.getElementById("main__container"));
-    var _iteratorNormalCompletion9 = true;
-    var _didIteratorError9 = false;
-    var _iteratorError9 = undefined;
-
-    try {
-      for (var _iterator9 = list[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-        var _d2 = _step9.value;
-
-        var _aId = localStorage.accountId;
-        if (_d2.aId === _aId) {
-          var selector = "#" + _d2.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError9 = true;
-      _iteratorError9 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion9 && _iterator9["return"]) {
-          _iterator9["return"]();
-        }
-      } finally {
-        if (_didIteratorError9) {
-          throw _iteratorError9;
-        }
-      }
-    }
-  });
-}
-
-function segueGlobal() {
-  sessionStorage.udBeforeLocation = location.pathname;
-  history.pushState('', '', "feed");
-  var aId = localStorage.accountId;
-  var for_saved_list = [];
-  var latest_list = [];
-  var recommend_list = [];
-  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueFolderToAddPanel, icon: "+" }), document.getElementById("utility__area"));
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion10 = true;
-    var _didIteratorError10 = false;
-    var _iteratorError10 = undefined;
-
-    try {
-      for (var _iterator10 = snap.docs[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-        var j = _step10.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        latest_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError10 = true;
-      _iteratorError10 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion10 && _iterator10["return"]) {
-          _iterator10["return"]();
-        }
-      } finally {
-        if (_didIteratorError10) {
-          throw _iteratorError10;
-        }
-      }
-    }
-
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-  }).then(function (snap) {
-    var d = {};
-    var _iteratorNormalCompletion11 = true;
-    var _didIteratorError11 = false;
-    var _iteratorError11 = undefined;
-
-    try {
-      for (var _iterator11 = snap.docs[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-        var j = _step11.value;
-
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        recommend_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
-      }
-    } catch (err) {
-      _didIteratorError11 = true;
-      _iteratorError11 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion11 && _iterator11["return"]) {
-          _iterator11["return"]();
-        }
-      } finally {
-        if (_didIteratorError11) {
-          throw _iteratorError11;
-        }
-      }
-    }
-
-    ;
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-    ReactDOM.render([_react2["default"].createElement(
-      "div",
-      { id: "container__latest", key: "segueGlobalLatest" },
-      _react2["default"].createElement(
-        "h1",
-        { className: "latest-container__title" },
-        "新着情報"
-      ),
-      _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: latest_list })
-      )
-    ), _react2["default"].createElement(
-      "div",
-      { key: "segueGlobalRecommend" },
-      _react2["default"].createElement(
-        "h1",
-        { className: "recommend-container__title" },
-        "評価されている情報"
-      ),
-      _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: recommend_list })
-      )
-    )], document.getElementById("main__container"));
-    var list = latest_list.concat(recommend_list);
-    var _iteratorNormalCompletion12 = true;
-    var _didIteratorError12 = false;
-    var _iteratorError12 = undefined;
-
-    try {
-      for (var _iterator12 = list[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-        var _d3 = _step12.value;
-
-        var _aId2 = localStorage.accountId;
-        if (_d3.aId === _aId2) {
-          var selector = "#" + _d3.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError12 = true;
-      _iteratorError12 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
-          _iterator12["return"]();
-        }
-      } finally {
-        if (_didIteratorError12) {
-          throw _iteratorError12;
-        }
-      }
-    }
-
-    return true;
-  });
-}
-
-function segueInitToGlobal() {
-  ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { key: "segueInitToGlobal" }), document.getElementById("container"));
-}
-
-exports.segueAnyToURLPostFolderChoice = segueAnyToURLPostFolderChoice;
-exports.segueURLFeed = segueURLFeed;
-exports.segueInitFolderFeed = segueInitFolderFeed;
-exports.segueFolderFeed = segueFolderFeed;
-exports.segueInitToGlobal = segueInitToGlobal;
-exports.segueGlobal = segueGlobal;
-exports.segueFolderToAddPanel = segueFolderToAddPanel;
-exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
-exports.segueURLPost = segueURLPost;
-
-},{"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./side_menu":8,"./view":11,"react":114}],8:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _segue = require("./segue");
-
-var _firebase = require("./firebase");
-
-var SideMenu = (function (_React$Component) {
-  _inherits(SideMenu, _React$Component);
-
-  function SideMenu(props) {
-    _classCallCheck(this, SideMenu);
-
-    _get(Object.getPrototypeOf(SideMenu.prototype), "constructor", this).call(this, props);
-    this.state = {
-      profImg: _firebase.auth.currentUser.photoURL,
-      profStyle: props.profStyle,
-      homeStyle: props.homeStyle + " fas fa-home",
-      foldersStyle: props.foldersStyle + " far fa-folder",
-      notifiStyle: props.alertStyle + " far fa-bell",
-      instructStyle: props.instructStyle + " far fa-question-circle"
-
-    };
-    this.sideMenuActiveShift = this.sidemenuActiveShift.bind(this);
-  }
-
-  _createClass(SideMenu, [{
-    key: "sidemenuActiveShift",
-    value: function sidemenuActiveShift() {
-      var sideMenuState = JSON.parse(sessionStorage.udSideMenuState);
-      this.setState(sideMenuState);
-      sessionStorage.removeItem("udSideMenuState");
-    }
-  }, {
-    key: "profClicked",
-    value: function profClicked() {
-      this.setState(switchButtonActive("prof"));
-    }
-  }, {
-    key: "homeClicked",
-    value: function homeClicked() {
-      this.setState(switchButtonActive("home"));
-      (0, _segue.segueGlobal)();
-    }
-  }, {
-    key: "folderClicked",
-    value: function folderClicked() {
-      this.setState(switchButtonActive("folders"));
-      (0, _segue.segueFolderFeed)();
-    }
-  }, {
-    key: "notifiClicked",
-    value: function notifiClicked() {
-      this.setState(switchButtonActive("notification"));
-      if (sessionStorage.canNotification) alert("通知表示画面はこれから実装されます。");else alert("通知が許可されていません、ブラウザの設定を修正してください");
-      var path = location.pathname.split("/")[1];
-      if (path === "feed") path = "home";
-      this.setState(switchButtonActive(path));
-    }
-  }, {
-    key: "instructClicked",
-    value: function instructClicked() {
-      this.setState(switchButtonActive("instruction"));
-      alert("すみません、説明書はこれから実装されます。");
-      var path = location.pathname.split("/")[1];
-      if (path === "feed") path = "home";
-      this.setState(switchButtonActive(path));
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [_react2["default"].createElement(
-        "div",
-        { key: "sideButtons" },
-        _react2["default"].createElement(
-          "ul",
-          { className: "list-nav" },
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { id: "list-nav__home", className: this.state.homeStyle, onClick: this.homeClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "ホーム"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "フォルダ"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { className: this.state.notifiStyle, onClick: this.notifiClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "通知"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            null,
-            _react2["default"].createElement(
-              "button",
-              { className: this.state.instructStyle, onClick: this.instructClicked.bind(this) },
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "ヘルプ"
-              )
-            )
-          ),
-          _react2["default"].createElement(
-            "li",
-            { className: this.state.profStyle },
-            _react2["default"].createElement(
-              "a",
-              { href: "/account?aId=" + localStorage.getItem("accountId") },
-              _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
-              _react2["default"].createElement(
-                "span",
-                { className: "list-nav__button-text" },
-                "プロフィール"
-              )
-            )
-          )
-        ),
-        ",",
-        _react2["default"].createElement("div", { id: "list-nav__rigid", onClick: this.sideMenuActiveShift })
-      )];
-    }
-  }]);
-
-  return SideMenu;
-})(_react2["default"].Component);
-
-exports["default"] = SideMenu;
-
-function switchButtonActive(targetElement) {
-  var after = {
-    profStyle: "",
-    homeStyle: " fas fa-home",
-    foldersStyle: " far fa-folder",
-    notifiStyle: " far fa-bell",
-    instructStyle: " far fa-question-circle"
-  };
-  switch (targetElement) {
-    case "home":
-      after.homeStyle += " tb-active";
-      break;
-    case "profile":
-      after.profStyle += " tb-active";
-      break;
-    case "folders":
-      after.foldersStyle += " tb-active";
-      break;
-    case "notification":
-      after.notifiStyle += " tb-active";
-      break;
-    case "instruction":
-      after.instructStyle += " tb-active";
-      break;
-  }
-  return after;
-}
-
-function sideMenuButtonShift(targetElement) {
-  sessionStorage.udSideMenuState = JSON.stringify(switchButtonActive(targetElement));
-  $("#list-nav__rigid").click();
-}
-
-exports.sideMenuButtonShift = sideMenuButtonShift;
-
-},{"./firebase":3,"./segue":7,"react":114}],9:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _firebase = require("./firebase");
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var URL = (function (_React$Component) {
-  _inherits(URL, _React$Component);
-
-  function URL(props) {
-    _classCallCheck(this, URL);
-
-    _get(Object.getPrototypeOf(URL.prototype), "constructor", this).call(this, props);
-    this.state = {
-      title: props.title,
-      href: props.href,
-      content: props.content,
-      id: props.id
-    };
-  }
-
-  _createClass(URL, [{
-    key: "clickHandler",
-    value: function clickHandler() {
-      var query = location.search;
-      var hash = query.slice(1).split("&");
-      var parameters = [];
-      hash.map(function (x) {
-        var array = x.split("=");
-        parameters.push(array[0]);
-        parameters[array[0]] = array[1];
-      });
-      var folderId = parameters["id"];
-      var aId = localStorage.getItem("accountId");
-      var data = {
-        href: this.state.href,
-        date: new Date(),
-        urlId: this.state.id,
-        folderId: folderId
-      };
-      _firebase.db.collection("account").doc(aId).collection("page_trackings").add(data);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "urlput_panel" },
-        _react2["default"].createElement(
-          "div",
-          { className: "text_overflow_url" },
-          _react2["default"].createElement(
-            "h3",
-            null,
-            this.state.title
-          ),
-          _react2["default"].createElement("a", { href: this.state.href, target: "_blank", onClick: this.clickHandler.bind(this) })
-        ),
-        _react2["default"].createElement(
-          "p",
-          { className: "baloon" },
-          this.state.content
-        )
-      );
-    }
-  }]);
-
-  return URL;
-})(_react2["default"].Component);
-
-var URLs = (function (_React$Component2) {
-  _inherits(URLs, _React$Component2);
-
-  function URLs(props) {
-    _classCallCheck(this, URLs);
-
-    _get(Object.getPrototypeOf(URLs.prototype), "constructor", this).call(this);
-    this.state = {
-      list: props.list
-    };
-  }
-
-  _createClass(URLs, [{
-    key: "render",
-    value: function render() {
-      var return_html = [];
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = this.state.list.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = _slicedToArray(_step.value, 2);
-
-          var i = _step$value[0];
-          var d = _step$value[1];
-
-          return_html.push(_react2["default"].createElement(URL, { key: d.id, title: d.title, id: d.id, content: d.content, href: d.href }));
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      return return_html;
-    }
-  }]);
-
-  return URLs;
-})(_react2["default"].Component);
-
-exports["default"] = URLs;
-
-jQuery(function ($) {
-  $('.textOverflowURL').each(function () {
-    var $target = $(this);
-
-    var html = $target.html();
-
-    var $clone = $target.clone();
-    $clone.css({
-      display: 'none',
-      position: 'absolute',
-      overflow: 'visible'
-    }).width($target.width()).height('auto');
-
-    $target.after($clone);
-    while (html.length > 0 && $clone.height() > $target.height()) {
-      html = html.substr(0, html.length - 1);
-      $clone.html(html + '...');
-    }
-
-    $target.html($clone.html());
-    $clone.remove();
-  });
-});
-module.exports = exports["default"];
-
-},{"./firebase":3,"react":114}],10:[function(require,module,exports){
+},{"./firebase":2,"./uuid":4,"firebase/app":97}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2060,662 +351,7 @@ function generateUuid() {
 
 module.exports = exports["default"];
 
-},{}],11:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-var _react = require("react");
-
-var _react2 = _interopRequireDefault(_react);
-
-var _url = require("./url");
-
-var _url2 = _interopRequireDefault(_url);
-
-var _folder = require("./folder");
-
-var _folder2 = _interopRequireDefault(_folder);
-
-var _add_button = require('./add_button');
-
-var _side_menu = require("./side_menu");
-
-var _side_menu2 = _interopRequireDefault(_side_menu);
-
-var _firebase = require("./firebase");
-
-var _segue = require("./segue");
-
-var _later_button = require("./later_button");
-
-var _later_button2 = _interopRequireDefault(_later_button);
-
-/* Props list: cancel(function) title(string) content(html) */
-
-var TemplateViewNavTab = (function (_React$Component) {
-  _inherits(TemplateViewNavTab, _React$Component);
-
-  function TemplateViewNavTab() {
-    _classCallCheck(this, TemplateViewNavTab);
-
-    _get(Object.getPrototypeOf(TemplateViewNavTab.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(TemplateViewNavTab, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        null,
-        _react2["default"].createElement("div", { className: "window-overlay", onClick: this.props.cancel }),
-        _react2["default"].createElement(
-          "div",
-          { className: "post__container" },
-          _react2["default"].createElement(
-            "h1",
-            { className: "view-title" },
-            this.props.title
-          ),
-          this.props.content
-        )
-      );
-    }
-  }]);
-
-  return TemplateViewNavTab;
-})(_react2["default"].Component);
-
-var ViewFolderEdit = (function (_React$Component2) {
-  _inherits(ViewFolderEdit, _React$Component2);
-
-  function ViewFolderEdit(props) {
-    _classCallCheck(this, ViewFolderEdit);
-
-    _get(Object.getPrototypeOf(ViewFolderEdit.prototype), "constructor", this).call(this, props);
-    var list = sessionStorage.urlset_list.split("-@-").map(function (x) {
-      return JSON.parse(x);
-    });
-    var jsx = _react2["default"].createElement(
-      "div",
-      { className: "add_view" },
-      _react2["default"].createElement(
-        "div",
-        { className: "add_panel", onClick: this.deleteFolder.bind(this) },
-        _react2["default"].createElement(
-          "h3",
-          null,
-          "フォルダの削除"
-        ),
-        _react2["default"].createElement(
-          "p",
-          null,
-          "このフォルダを削除します"
-        )
-      )
-    );
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      list: list,
-      content: jsx
-    };
-  }
-
-  _createClass(ViewFolderEdit, [{
-    key: "deleteFolder",
-    value: function deleteFolder() {
-      _firebase.db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id)["delete"]();
-      (0, _segue.segueInitFolderFeed)();
-    }
-  }, {
-    key: "cancel",
-    value: function cancel() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement("segueInitFolderFeed", { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var d = _step.value;
-
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(TemplateViewNavTab, { content: this.state.content, title: this.state.id, cancel: this.cancel })
-      );
-    }
-  }]);
-
-  return ViewFolderEdit;
-})(_react2["default"].Component);
-
-var ViewTop = (function (_React$Component3) {
-  _inherits(ViewTop, _React$Component3);
-
-  function ViewTop(props) {
-    _classCallCheck(this, ViewTop);
-
-    _get(Object.getPrototypeOf(ViewTop.prototype), "constructor", this).call(this, props);
-    this.state = {
-      latest_list: [],
-      recommend_list: []
-    };
-  }
-
-  _createClass(ViewTop, [{
-    key: "openAddPanel",
-    value: function openAddPanel() {
-      (0, _segue.segueFolderToAddPanel)();
-    }
-  }, {
-    key: "shouldComponentUpdate",
-    value: function shouldComponentUpdate(nextProps, nextState) {
-      var flag = !(this.state === nextState);
-      return flag;
-    }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var _this = this;
-
-      var aId = localStorage.accountId;
-      var for_saved_list = [];
-      var latest_list = [];
-      var recommend_list = [];
-      _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snaps) {
-        var d = {};
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snaps.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var j = _step2.value;
-
-            d = j.data();
-            d.id = j.id;
-            d.kind = "freefolder";
-            latest_list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-      }).then(function (snaps) {
-        var d = {};
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = snaps.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var j = _step3.value;
-
-            d = j.data();
-            d.id = j.id;
-            d.kind = "freefolder";
-            recommend_list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-              _iterator3["return"]();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-        _this.setState(function () {
-          return {
-            latest_list: latest_list,
-            recommend_list: recommend_list
-          };
-        });
-        var _iteratorNormalCompletion4 = true;
-        var _didIteratorError4 = false;
-        var _iteratorError4 = undefined;
-
-        try {
-          for (var _iterator4 = recommend_list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var _d = _step4.value;
-
-            var _aId = localStorage.accountId;
-            if (_d.aId === _aId) {
-              var selector = "#" + _d.id + " .edit__folder";
-              $(selector).css("display", "block");
-            }
-            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError4 = true;
-          _iteratorError4 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion4 && _iterator4["return"]) {
-              _iterator4["return"]();
-            }
-          } finally {
-            if (_didIteratorError4) {
-              throw _iteratorError4;
-            }
-          }
-        }
-
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
-
-        try {
-          for (var _iterator5 = latest_list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var _d2 = _step5.value;
-
-            var _aId2 = localStorage.accountId;
-            if (_d2.aId === _aId2) {
-              var selector = "#" + _d2.id + " .edit__folder";
-              $(selector).css("display", "block");
-            }
-            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-              _iterator5["return"]();
-            }
-          } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
-            }
-          }
-        }
-
-        return true;
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [_react2["default"].createElement(
-        "div",
-        { id: "main__container", key: "MainContainer" },
-        _react2["default"].createElement(
-          "div",
-          { id: "container__latest" },
-          _react2["default"].createElement(
-            "h1",
-            { className: "latest-container__title" },
-            "新着情報"
-          ),
-          _react2["default"].createElement(
-            "div",
-            { className: "container__wrapper" },
-            _react2["default"].createElement(_folder2["default"], { list: this.state.latest_list })
-          )
-        ),
-        _react2["default"].createElement(
-          "div",
-          null,
-          _react2["default"].createElement(
-            "h1",
-            { className: "recommend-container__title" },
-            "評価されている情報"
-          ),
-          _react2["default"].createElement(
-            "div",
-            { className: "container__wrapper" },
-            _react2["default"].createElement(_folder2["default"], { list: this.state.recommend_list })
-          )
-        )
-      ), _react2["default"].createElement(
-        "div",
-        { id: "utility__area", key: "UtilityArea" },
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", homeStyle: "tb-active" })];
-    }
-  }]);
-
-  return ViewTop;
-})(_react2["default"].Component);
-
-var ViewFolderFeed = (function (_React$Component4) {
-  _inherits(ViewFolderFeed, _React$Component4);
-
-  function ViewFolderFeed(props) {
-    _classCallCheck(this, ViewFolderFeed);
-
-    _get(Object.getPrototypeOf(ViewFolderFeed.prototype), "constructor", this).call(this, props);
-    this.state = { list: [] };
-  }
-
-  _createClass(ViewFolderFeed, [{
-    key: "shouldComponentUpdate",
-    value: function shouldComponentUpdate(nextProps, nextState) {
-      var flag = !(this.state === nextState);
-      return flag;
-    }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var _this2 = this;
-
-      var list = [];
-      var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion6 = true;
-        var _didIteratorError6 = false;
-        var _iteratorError6 = undefined;
-
-        try {
-          for (var _iterator6 = snap1.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-            var i = _step6.value;
-
-            d = i.data();
-            d.id = i.id;
-            d.kind = "folders";
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError6 = true;
-          _iteratorError6 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-              _iterator6["return"]();
-            }
-          } finally {
-            if (_didIteratorError6) {
-              throw _iteratorError6;
-            }
-          }
-        }
-
-        ;
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-          var d = undefined;
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
-
-          try {
-            for (var _iterator7 = snap2.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var i = _step7.value;
-
-              d = i.data();
-              d.id = i.id;
-              d.kind = "myfreefolders";
-              list.push(d);
-              for_saved_list.push(JSON.stringify(d));
-            }
-          } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-                _iterator7["return"]();
-              }
-            } finally {
-              if (_didIteratorError7) {
-                throw _iteratorError7;
-              }
-            }
-          }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          _this2.setState({ list: list });
-          var _iteratorNormalCompletion8 = true;
-          var _didIteratorError8 = false;
-          var _iteratorError8 = undefined;
-
-          try {
-            for (var _iterator8 = list[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-              var _d3 = _step8.value;
-
-              var _aId3 = localStorage.accountId;
-              if (_d3.aId === _aId3) {
-                var selector = "#" + _d3.id + " .edit__folder";
-                $(selector).css("display", "block");
-              }
-              $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError8 = true;
-            _iteratorError8 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-                _iterator8["return"]();
-              }
-            } finally {
-              if (_didIteratorError8) {
-                throw _iteratorError8;
-              }
-            }
-          }
-        });
-      });
-    }
-  }, {
-    key: "openFolderPost",
-    value: function openFolderPost() {
-      (0, _segue.segueFolderFeedToPostFolder)();
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [_react2["default"].createElement(
-        "div",
-        { id: "main__container", key: "ViewFolderFeed_main" },
-        _react2["default"].createElement(
-          "div",
-          { className: "container__wrapper" },
-          _react2["default"].createElement(_folder2["default"], { list: this.state.list })
-        )
-      ), _react2["default"].createElement(
-        "div",
-        { id: "utility__area", key: "ViewFolderFeed_utility" },
-        _react2["default"].createElement(_later_button2["default"], null),
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })];
-    }
-  }]);
-
-  return ViewFolderFeed;
-})(_react2["default"].Component);
-
-var ViewPostFolder = (function (_React$Component5) {
-  _inherits(ViewPostFolder, _React$Component5);
-
-  function ViewPostFolder(props) {
-    _classCallCheck(this, ViewPostFolder);
-
-    _get(Object.getPrototypeOf(ViewPostFolder.prototype), "constructor", this).call(this, props);
-    this.state = { list: this.props.list };
-  }
-
-  _createClass(ViewPostFolder, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_add_button.URLFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
-      );
-    }
-  }]);
-
-  return ViewPostFolder;
-})(_react2["default"].Component);
-
-var ViewURLFeed = (function (_React$Component6) {
-  _inherits(ViewURLFeed, _React$Component6);
-
-  function ViewURLFeed(props) {
-    _classCallCheck(this, ViewURLFeed);
-
-    _get(Object.getPrototypeOf(ViewURLFeed.prototype), "constructor", this).call(this, props);
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId
-    };
-    history.pushState('', '', "folders?id=" + this.props.id);
-  }
-
-  _createClass(ViewURLFeed, [{
-    key: "openAddPanel",
-    value: function openAddPanel() {
-      (0, _segue.segueURLfeedToURLPost)(this.state.id, this.state.ownerAid);
-    }
-  }, {
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      var count = 0;
-      _firebase.db.collection("freefolder").doc(this.state.id).collection("urls").get().then(function (snaps) {
-        return snaps.forEach(function (snap) {
-          return _firebase.db.collection("page_tracking").where("urlId", "==", snap.id).get().then(function (urlSnaps) {
-            count += urlSnaps.size;
-          }).then(function () {
-            document.getElementById("folder__click__number").innerHTML = count;
-          });
-        });
-      });
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      return [_react2["default"].createElement(
-        "div",
-        { key: "urls", className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list })
-      ), _react2["default"].createElement(
-        "div",
-        { key: "urlsInfos", className: "folder-info__wrapper" },
-        _react2["default"].createElement(
-          "h3",
-          null,
-          "このフォルダの閲覧情報"
-        ),
-        _react2["default"].createElement(
-          "p",
-          null,
-          "クリックされたURLの総回数: ",
-          _react2["default"].createElement("span", { id: "folder__click__number" })
-        )
-      )];
-    }
-  }]);
-
-  return ViewURLFeed;
-})(_react2["default"].Component);
-
-var ViewURLPost = (function (_React$Component7) {
-  _inherits(ViewURLPost, _React$Component7);
-
-  function ViewURLPost() {
-    _classCallCheck(this, ViewURLPost);
-
-    _get(Object.getPrototypeOf(ViewURLPost.prototype), "constructor", this).apply(this, arguments);
-  }
-
-  _createClass(ViewURLPost, [{
-    key: "render",
-    value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_url2["default"], { list: this.props.list }),
-        _react2["default"].createElement(_add_button.URLPost, { id: this.props.id, ownerAId: this.props.ownerAId }),
-        _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu" })
-      );
-    }
-  }]);
-
-  return ViewURLPost;
-})(_react2["default"].Component);
-
-exports.TemplateViewNavTab = TemplateViewNavTab;
-exports.ViewFolderEdit = ViewFolderEdit;
-exports.ViewTop = ViewTop;
-exports.ViewFolderFeed = ViewFolderFeed;
-exports.ViewPostFolder = ViewPostFolder;
-exports.ViewURLFeed = ViewURLFeed;
-exports.ViewURLPost = ViewURLPost;
-
-},{"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"react":114}],12:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -3117,7 +753,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":19}],13:[function(require,module,exports){
+},{"@firebase/util":12}],6:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -3475,7 +1111,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":12}],14:[function(require,module,exports){
+},{"@firebase/app":5}],7:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24498,7 +22134,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":12,"@firebase/logger":15,"@firebase/util":19,"@firebase/webchannel-wrapper":20,"_process":117,"tslib":115}],15:[function(require,module,exports){
+},{"@firebase/app":5,"@firebase/logger":8,"@firebase/util":12,"@firebase/webchannel-wrapper":13,"_process":110,"tslib":108}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -24688,7 +22324,7 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],16:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 require('whatwg-fetch');
@@ -24718,7 +22354,7 @@ require('core-js/fn/symbol/iterator');
  * limitations under the License.
  */
 
-},{"core-js/fn/array/find":22,"core-js/fn/array/find-index":21,"core-js/fn/object/assign":23,"core-js/fn/string/repeat":24,"core-js/fn/string/starts-with":25,"core-js/fn/symbol":26,"core-js/fn/symbol/iterator":27,"promise-polyfill/lib/polyfill":109,"whatwg-fetch":17}],17:[function(require,module,exports){
+},{"core-js/fn/array/find":15,"core-js/fn/array/find-index":14,"core-js/fn/object/assign":16,"core-js/fn/string/repeat":17,"core-js/fn/string/starts-with":18,"core-js/fn/symbol":19,"core-js/fn/symbol/iterator":20,"promise-polyfill/lib/polyfill":102,"whatwg-fetch":10}],10:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -25186,7 +22822,7 @@ require('core-js/fn/symbol/iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],18:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -28675,7 +26311,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":12}],19:[function(require,module,exports){
+},{"@firebase/app":5}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30468,7 +28104,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":115}],20:[function(require,module,exports){
+},{"tslib":108}],13:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -30609,45 +28245,45 @@ cd.prototype.createWebChannel=cd.prototype.cf;W.prototype.send=W.prototype.send;
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 require('../../modules/es6.array.find-index');
 module.exports = require('../../modules/_core').Array.findIndex;
 
-},{"../../modules/_core":37,"../../modules/es6.array.find-index":92}],22:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.array.find-index":85}],15:[function(require,module,exports){
 require('../../modules/es6.array.find');
 module.exports = require('../../modules/_core').Array.find;
 
-},{"../../modules/_core":37,"../../modules/es6.array.find":93}],23:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.array.find":86}],16:[function(require,module,exports){
 require('../../modules/es6.object.assign');
 module.exports = require('../../modules/_core').Object.assign;
 
-},{"../../modules/_core":37,"../../modules/es6.object.assign":95}],24:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.object.assign":88}],17:[function(require,module,exports){
 require('../../modules/es6.string.repeat');
 module.exports = require('../../modules/_core').String.repeat;
 
-},{"../../modules/_core":37,"../../modules/es6.string.repeat":98}],25:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.string.repeat":91}],18:[function(require,module,exports){
 require('../../modules/es6.string.starts-with');
 module.exports = require('../../modules/_core').String.startsWith;
 
-},{"../../modules/_core":37,"../../modules/es6.string.starts-with":99}],26:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.string.starts-with":92}],19:[function(require,module,exports){
 require('../../modules/es6.symbol');
 require('../../modules/es6.object.to-string');
 require('../../modules/es7.symbol.async-iterator');
 require('../../modules/es7.symbol.observable');
 module.exports = require('../../modules/_core').Symbol;
 
-},{"../../modules/_core":37,"../../modules/es6.object.to-string":96,"../../modules/es6.symbol":100,"../../modules/es7.symbol.async-iterator":101,"../../modules/es7.symbol.observable":102}],27:[function(require,module,exports){
+},{"../../modules/_core":30,"../../modules/es6.object.to-string":89,"../../modules/es6.symbol":93,"../../modules/es7.symbol.async-iterator":94,"../../modules/es7.symbol.observable":95}],20:[function(require,module,exports){
 require('../../modules/es6.string.iterator');
 require('../../modules/web.dom.iterable');
 module.exports = require('../../modules/_wks-ext').f('iterator');
 
-},{"../../modules/_wks-ext":90,"../../modules/es6.string.iterator":97,"../../modules/web.dom.iterable":103}],28:[function(require,module,exports){
+},{"../../modules/_wks-ext":83,"../../modules/es6.string.iterator":90,"../../modules/web.dom.iterable":96}],21:[function(require,module,exports){
 module.exports = function (it) {
   if (typeof it != 'function') throw TypeError(it + ' is not a function!');
   return it;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = require('./_wks')('unscopables');
 var ArrayProto = Array.prototype;
@@ -30656,14 +28292,14 @@ module.exports = function (key) {
   ArrayProto[UNSCOPABLES][key] = true;
 };
 
-},{"./_hide":49,"./_wks":91}],30:[function(require,module,exports){
+},{"./_hide":42,"./_wks":84}],23:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
 };
 
-},{"./_is-object":54}],31:[function(require,module,exports){
+},{"./_is-object":47}],24:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = require('./_to-iobject');
@@ -30688,7 +28324,7 @@ module.exports = function (IS_INCLUDES) {
   };
 };
 
-},{"./_to-absolute-index":82,"./_to-iobject":84,"./_to-length":85}],32:[function(require,module,exports){
+},{"./_to-absolute-index":75,"./_to-iobject":77,"./_to-length":78}],25:[function(require,module,exports){
 // 0 -> Array#forEach
 // 1 -> Array#map
 // 2 -> Array#filter
@@ -30734,7 +28370,7 @@ module.exports = function (TYPE, $create) {
   };
 };
 
-},{"./_array-species-create":34,"./_ctx":38,"./_iobject":52,"./_to-length":85,"./_to-object":86}],33:[function(require,module,exports){
+},{"./_array-species-create":27,"./_ctx":31,"./_iobject":45,"./_to-length":78,"./_to-object":79}],26:[function(require,module,exports){
 var isObject = require('./_is-object');
 var isArray = require('./_is-array');
 var SPECIES = require('./_wks')('species');
@@ -30752,7 +28388,7 @@ module.exports = function (original) {
   } return C === undefined ? Array : C;
 };
 
-},{"./_is-array":53,"./_is-object":54,"./_wks":91}],34:[function(require,module,exports){
+},{"./_is-array":46,"./_is-object":47,"./_wks":84}],27:[function(require,module,exports){
 // 9.4.2.3 ArraySpeciesCreate(originalArray, length)
 var speciesConstructor = require('./_array-species-constructor');
 
@@ -30760,7 +28396,7 @@ module.exports = function (original, length) {
   return new (speciesConstructor(original))(length);
 };
 
-},{"./_array-species-constructor":33}],35:[function(require,module,exports){
+},{"./_array-species-constructor":26}],28:[function(require,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = require('./_cof');
 var TAG = require('./_wks')('toStringTag');
@@ -30785,18 +28421,18 @@ module.exports = function (it) {
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
 
-},{"./_cof":36,"./_wks":91}],36:[function(require,module,exports){
+},{"./_cof":29,"./_wks":84}],29:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = function (it) {
   return toString.call(it).slice(8, -1);
 };
 
-},{}],37:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 var core = module.exports = { version: '2.5.5' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
-},{}],38:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 // optional / simple context binding
 var aFunction = require('./_a-function');
 module.exports = function (fn, that, length) {
@@ -30818,20 +28454,20 @@ module.exports = function (fn, that, length) {
   };
 };
 
-},{"./_a-function":28}],39:[function(require,module,exports){
+},{"./_a-function":21}],32:[function(require,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function (it) {
   if (it == undefined) throw TypeError("Can't call method on  " + it);
   return it;
 };
 
-},{}],40:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function () {
   return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_fails":46}],41:[function(require,module,exports){
+},{"./_fails":39}],34:[function(require,module,exports){
 var isObject = require('./_is-object');
 var document = require('./_global').document;
 // typeof document.createElement is 'object' in old IE
@@ -30840,13 +28476,13 @@ module.exports = function (it) {
   return is ? document.createElement(it) : {};
 };
 
-},{"./_global":47,"./_is-object":54}],42:[function(require,module,exports){
+},{"./_global":40,"./_is-object":47}],35:[function(require,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
 
-},{}],43:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 // all enumerable object keys, includes symbols
 var getKeys = require('./_object-keys');
 var gOPS = require('./_object-gops');
@@ -30863,7 +28499,7 @@ module.exports = function (it) {
   } return result;
 };
 
-},{"./_object-gops":69,"./_object-keys":72,"./_object-pie":73}],44:[function(require,module,exports){
+},{"./_object-gops":62,"./_object-keys":65,"./_object-pie":66}],37:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var hide = require('./_hide');
@@ -30908,7 +28544,7 @@ $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library`
 module.exports = $export;
 
-},{"./_core":37,"./_ctx":38,"./_global":47,"./_hide":49,"./_redefine":75}],45:[function(require,module,exports){
+},{"./_core":30,"./_ctx":31,"./_global":40,"./_hide":42,"./_redefine":68}],38:[function(require,module,exports){
 var MATCH = require('./_wks')('match');
 module.exports = function (KEY) {
   var re = /./;
@@ -30922,7 +28558,7 @@ module.exports = function (KEY) {
   } return true;
 };
 
-},{"./_wks":91}],46:[function(require,module,exports){
+},{"./_wks":84}],39:[function(require,module,exports){
 module.exports = function (exec) {
   try {
     return !!exec();
@@ -30931,7 +28567,7 @@ module.exports = function (exec) {
   }
 };
 
-},{}],47:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self
@@ -30939,13 +28575,13 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
   : Function('return this')();
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
-},{}],48:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
 
-},{}],49:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 var dP = require('./_object-dp');
 var createDesc = require('./_property-desc');
 module.exports = require('./_descriptors') ? function (object, key, value) {
@@ -30955,16 +28591,16 @@ module.exports = require('./_descriptors') ? function (object, key, value) {
   return object;
 };
 
-},{"./_descriptors":40,"./_object-dp":64,"./_property-desc":74}],50:[function(require,module,exports){
+},{"./_descriptors":33,"./_object-dp":57,"./_property-desc":67}],43:[function(require,module,exports){
 var document = require('./_global').document;
 module.exports = document && document.documentElement;
 
-},{"./_global":47}],51:[function(require,module,exports){
+},{"./_global":40}],44:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function () {
   return Object.defineProperty(require('./_dom-create')('div'), 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_descriptors":40,"./_dom-create":41,"./_fails":46}],52:[function(require,module,exports){
+},{"./_descriptors":33,"./_dom-create":34,"./_fails":39}],45:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
 // eslint-disable-next-line no-prototype-builtins
@@ -30972,19 +28608,19 @@ module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
 
-},{"./_cof":36}],53:[function(require,module,exports){
+},{"./_cof":29}],46:[function(require,module,exports){
 // 7.2.2 IsArray(argument)
 var cof = require('./_cof');
 module.exports = Array.isArray || function isArray(arg) {
   return cof(arg) == 'Array';
 };
 
-},{"./_cof":36}],54:[function(require,module,exports){
+},{"./_cof":29}],47:[function(require,module,exports){
 module.exports = function (it) {
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
 
-},{}],55:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 // 7.2.8 IsRegExp(argument)
 var isObject = require('./_is-object');
 var cof = require('./_cof');
@@ -30994,7 +28630,7 @@ module.exports = function (it) {
   return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
 };
 
-},{"./_cof":36,"./_is-object":54,"./_wks":91}],56:[function(require,module,exports){
+},{"./_cof":29,"./_is-object":47,"./_wks":84}],49:[function(require,module,exports){
 'use strict';
 var create = require('./_object-create');
 var descriptor = require('./_property-desc');
@@ -31009,7 +28645,7 @@ module.exports = function (Constructor, NAME, next) {
   setToStringTag(Constructor, NAME + ' Iterator');
 };
 
-},{"./_hide":49,"./_object-create":63,"./_property-desc":74,"./_set-to-string-tag":76,"./_wks":91}],57:[function(require,module,exports){
+},{"./_hide":42,"./_object-create":56,"./_property-desc":67,"./_set-to-string-tag":69,"./_wks":84}],50:[function(require,module,exports){
 'use strict';
 var LIBRARY = require('./_library');
 var $export = require('./_export');
@@ -31080,18 +28716,18 @@ module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE
   return methods;
 };
 
-},{"./_export":44,"./_hide":49,"./_iter-create":56,"./_iterators":59,"./_library":60,"./_object-gpo":70,"./_redefine":75,"./_set-to-string-tag":76,"./_wks":91}],58:[function(require,module,exports){
+},{"./_export":37,"./_hide":42,"./_iter-create":49,"./_iterators":52,"./_library":53,"./_object-gpo":63,"./_redefine":68,"./_set-to-string-tag":69,"./_wks":84}],51:[function(require,module,exports){
 module.exports = function (done, value) {
   return { value: value, done: !!done };
 };
 
-},{}],59:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 module.exports = {};
 
-},{}],60:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports = false;
 
-},{}],61:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 var META = require('./_uid')('meta');
 var isObject = require('./_is-object');
 var has = require('./_has');
@@ -31146,7 +28782,7 @@ var meta = module.exports = {
   onFreeze: onFreeze
 };
 
-},{"./_fails":46,"./_has":48,"./_is-object":54,"./_object-dp":64,"./_uid":88}],62:[function(require,module,exports){
+},{"./_fails":39,"./_has":41,"./_is-object":47,"./_object-dp":57,"./_uid":81}],55:[function(require,module,exports){
 'use strict';
 // 19.1.2.1 Object.assign(target, source, ...)
 var getKeys = require('./_object-keys');
@@ -31182,7 +28818,7 @@ module.exports = !$assign || require('./_fails')(function () {
   } return T;
 } : $assign;
 
-},{"./_fails":46,"./_iobject":52,"./_object-gops":69,"./_object-keys":72,"./_object-pie":73,"./_to-object":86}],63:[function(require,module,exports){
+},{"./_fails":39,"./_iobject":45,"./_object-gops":62,"./_object-keys":65,"./_object-pie":66,"./_to-object":79}],56:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject = require('./_an-object');
 var dPs = require('./_object-dps');
@@ -31225,7 +28861,7 @@ module.exports = Object.create || function create(O, Properties) {
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":30,"./_dom-create":41,"./_enum-bug-keys":42,"./_html":50,"./_object-dps":65,"./_shared-key":77}],64:[function(require,module,exports){
+},{"./_an-object":23,"./_dom-create":34,"./_enum-bug-keys":35,"./_html":43,"./_object-dps":58,"./_shared-key":70}],57:[function(require,module,exports){
 var anObject = require('./_an-object');
 var IE8_DOM_DEFINE = require('./_ie8-dom-define');
 var toPrimitive = require('./_to-primitive');
@@ -31243,7 +28879,7 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
   return O;
 };
 
-},{"./_an-object":30,"./_descriptors":40,"./_ie8-dom-define":51,"./_to-primitive":87}],65:[function(require,module,exports){
+},{"./_an-object":23,"./_descriptors":33,"./_ie8-dom-define":44,"./_to-primitive":80}],58:[function(require,module,exports){
 var dP = require('./_object-dp');
 var anObject = require('./_an-object');
 var getKeys = require('./_object-keys');
@@ -31258,7 +28894,7 @@ module.exports = require('./_descriptors') ? Object.defineProperties : function 
   return O;
 };
 
-},{"./_an-object":30,"./_descriptors":40,"./_object-dp":64,"./_object-keys":72}],66:[function(require,module,exports){
+},{"./_an-object":23,"./_descriptors":33,"./_object-dp":57,"./_object-keys":65}],59:[function(require,module,exports){
 var pIE = require('./_object-pie');
 var createDesc = require('./_property-desc');
 var toIObject = require('./_to-iobject');
@@ -31276,7 +28912,7 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   if (has(O, P)) return createDesc(!pIE.f.call(O, P), O[P]);
 };
 
-},{"./_descriptors":40,"./_has":48,"./_ie8-dom-define":51,"./_object-pie":73,"./_property-desc":74,"./_to-iobject":84,"./_to-primitive":87}],67:[function(require,module,exports){
+},{"./_descriptors":33,"./_has":41,"./_ie8-dom-define":44,"./_object-pie":66,"./_property-desc":67,"./_to-iobject":77,"./_to-primitive":80}],60:[function(require,module,exports){
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 var toIObject = require('./_to-iobject');
 var gOPN = require('./_object-gopn').f;
@@ -31297,7 +28933,7 @@ module.exports.f = function getOwnPropertyNames(it) {
   return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
 };
 
-},{"./_object-gopn":68,"./_to-iobject":84}],68:[function(require,module,exports){
+},{"./_object-gopn":61,"./_to-iobject":77}],61:[function(require,module,exports){
 // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
 var $keys = require('./_object-keys-internal');
 var hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
@@ -31306,10 +28942,10 @@ exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
   return $keys(O, hiddenKeys);
 };
 
-},{"./_enum-bug-keys":42,"./_object-keys-internal":71}],69:[function(require,module,exports){
+},{"./_enum-bug-keys":35,"./_object-keys-internal":64}],62:[function(require,module,exports){
 exports.f = Object.getOwnPropertySymbols;
 
-},{}],70:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has = require('./_has');
 var toObject = require('./_to-object');
@@ -31324,7 +28960,7 @@ module.exports = Object.getPrototypeOf || function (O) {
   } return O instanceof Object ? ObjectProto : null;
 };
 
-},{"./_has":48,"./_shared-key":77,"./_to-object":86}],71:[function(require,module,exports){
+},{"./_has":41,"./_shared-key":70,"./_to-object":79}],64:[function(require,module,exports){
 var has = require('./_has');
 var toIObject = require('./_to-iobject');
 var arrayIndexOf = require('./_array-includes')(false);
@@ -31343,7 +28979,7 @@ module.exports = function (object, names) {
   return result;
 };
 
-},{"./_array-includes":31,"./_has":48,"./_shared-key":77,"./_to-iobject":84}],72:[function(require,module,exports){
+},{"./_array-includes":24,"./_has":41,"./_shared-key":70,"./_to-iobject":77}],65:[function(require,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys = require('./_object-keys-internal');
 var enumBugKeys = require('./_enum-bug-keys');
@@ -31352,10 +28988,10 @@ module.exports = Object.keys || function keys(O) {
   return $keys(O, enumBugKeys);
 };
 
-},{"./_enum-bug-keys":42,"./_object-keys-internal":71}],73:[function(require,module,exports){
+},{"./_enum-bug-keys":35,"./_object-keys-internal":64}],66:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
 
-},{}],74:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 module.exports = function (bitmap, value) {
   return {
     enumerable: !(bitmap & 1),
@@ -31365,7 +29001,7 @@ module.exports = function (bitmap, value) {
   };
 };
 
-},{}],75:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 var global = require('./_global');
 var hide = require('./_hide');
 var has = require('./_has');
@@ -31398,7 +29034,7 @@ require('./_core').inspectSource = function (it) {
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
 
-},{"./_core":37,"./_global":47,"./_has":48,"./_hide":49,"./_uid":88}],76:[function(require,module,exports){
+},{"./_core":30,"./_global":40,"./_has":41,"./_hide":42,"./_uid":81}],69:[function(require,module,exports){
 var def = require('./_object-dp').f;
 var has = require('./_has');
 var TAG = require('./_wks')('toStringTag');
@@ -31407,14 +29043,14 @@ module.exports = function (it, tag, stat) {
   if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
 };
 
-},{"./_has":48,"./_object-dp":64,"./_wks":91}],77:[function(require,module,exports){
+},{"./_has":41,"./_object-dp":57,"./_wks":84}],70:[function(require,module,exports){
 var shared = require('./_shared')('keys');
 var uid = require('./_uid');
 module.exports = function (key) {
   return shared[key] || (shared[key] = uid(key));
 };
 
-},{"./_shared":78,"./_uid":88}],78:[function(require,module,exports){
+},{"./_shared":71,"./_uid":81}],71:[function(require,module,exports){
 var global = require('./_global');
 var SHARED = '__core-js_shared__';
 var store = global[SHARED] || (global[SHARED] = {});
@@ -31422,7 +29058,7 @@ module.exports = function (key) {
   return store[key] || (store[key] = {});
 };
 
-},{"./_global":47}],79:[function(require,module,exports){
+},{"./_global":40}],72:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
 // true  -> String#at
@@ -31441,7 +29077,7 @@ module.exports = function (TO_STRING) {
   };
 };
 
-},{"./_defined":39,"./_to-integer":83}],80:[function(require,module,exports){
+},{"./_defined":32,"./_to-integer":76}],73:[function(require,module,exports){
 // helper for String#{startsWith, endsWith, includes}
 var isRegExp = require('./_is-regexp');
 var defined = require('./_defined');
@@ -31451,7 +29087,7 @@ module.exports = function (that, searchString, NAME) {
   return String(defined(that));
 };
 
-},{"./_defined":39,"./_is-regexp":55}],81:[function(require,module,exports){
+},{"./_defined":32,"./_is-regexp":48}],74:[function(require,module,exports){
 'use strict';
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
@@ -31465,7 +29101,7 @@ module.exports = function repeat(count) {
   return res;
 };
 
-},{"./_defined":39,"./_to-integer":83}],82:[function(require,module,exports){
+},{"./_defined":32,"./_to-integer":76}],75:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var max = Math.max;
 var min = Math.min;
@@ -31474,7 +29110,7 @@ module.exports = function (index, length) {
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
 
-},{"./_to-integer":83}],83:[function(require,module,exports){
+},{"./_to-integer":76}],76:[function(require,module,exports){
 // 7.1.4 ToInteger
 var ceil = Math.ceil;
 var floor = Math.floor;
@@ -31482,7 +29118,7 @@ module.exports = function (it) {
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
 
-},{}],84:[function(require,module,exports){
+},{}],77:[function(require,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = require('./_iobject');
 var defined = require('./_defined');
@@ -31490,7 +29126,7 @@ module.exports = function (it) {
   return IObject(defined(it));
 };
 
-},{"./_defined":39,"./_iobject":52}],85:[function(require,module,exports){
+},{"./_defined":32,"./_iobject":45}],78:[function(require,module,exports){
 // 7.1.15 ToLength
 var toInteger = require('./_to-integer');
 var min = Math.min;
@@ -31498,14 +29134,14 @@ module.exports = function (it) {
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
 
-},{"./_to-integer":83}],86:[function(require,module,exports){
+},{"./_to-integer":76}],79:[function(require,module,exports){
 // 7.1.13 ToObject(argument)
 var defined = require('./_defined');
 module.exports = function (it) {
   return Object(defined(it));
 };
 
-},{"./_defined":39}],87:[function(require,module,exports){
+},{"./_defined":32}],80:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -31519,14 +29155,14 @@ module.exports = function (it, S) {
   throw TypeError("Can't convert object to primitive value");
 };
 
-},{"./_is-object":54}],88:[function(require,module,exports){
+},{"./_is-object":47}],81:[function(require,module,exports){
 var id = 0;
 var px = Math.random();
 module.exports = function (key) {
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
 
-},{}],89:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var LIBRARY = require('./_library');
@@ -31537,10 +29173,10 @@ module.exports = function (name) {
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: wksExt.f(name) });
 };
 
-},{"./_core":37,"./_global":47,"./_library":60,"./_object-dp":64,"./_wks-ext":90}],90:[function(require,module,exports){
+},{"./_core":30,"./_global":40,"./_library":53,"./_object-dp":57,"./_wks-ext":83}],83:[function(require,module,exports){
 exports.f = require('./_wks');
 
-},{"./_wks":91}],91:[function(require,module,exports){
+},{"./_wks":84}],84:[function(require,module,exports){
 var store = require('./_shared')('wks');
 var uid = require('./_uid');
 var Symbol = require('./_global').Symbol;
@@ -31553,7 +29189,7 @@ var $exports = module.exports = function (name) {
 
 $exports.store = store;
 
-},{"./_global":47,"./_shared":78,"./_uid":88}],92:[function(require,module,exports){
+},{"./_global":40,"./_shared":71,"./_uid":81}],85:[function(require,module,exports){
 'use strict';
 // 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -31569,7 +29205,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":29,"./_array-methods":32,"./_export":44}],93:[function(require,module,exports){
+},{"./_add-to-unscopables":22,"./_array-methods":25,"./_export":37}],86:[function(require,module,exports){
 'use strict';
 // 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -31585,7 +29221,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":29,"./_array-methods":32,"./_export":44}],94:[function(require,module,exports){
+},{"./_add-to-unscopables":22,"./_array-methods":25,"./_export":37}],87:[function(require,module,exports){
 'use strict';
 var addToUnscopables = require('./_add-to-unscopables');
 var step = require('./_iter-step');
@@ -31621,13 +29257,13 @@ addToUnscopables('keys');
 addToUnscopables('values');
 addToUnscopables('entries');
 
-},{"./_add-to-unscopables":29,"./_iter-define":57,"./_iter-step":58,"./_iterators":59,"./_to-iobject":84}],95:[function(require,module,exports){
+},{"./_add-to-unscopables":22,"./_iter-define":50,"./_iter-step":51,"./_iterators":52,"./_to-iobject":77}],88:[function(require,module,exports){
 // 19.1.3.1 Object.assign(target, source)
 var $export = require('./_export');
 
 $export($export.S + $export.F, 'Object', { assign: require('./_object-assign') });
 
-},{"./_export":44,"./_object-assign":62}],96:[function(require,module,exports){
+},{"./_export":37,"./_object-assign":55}],89:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = require('./_classof');
@@ -31639,7 +29275,7 @@ if (test + '' != '[object z]') {
   }, true);
 }
 
-},{"./_classof":35,"./_redefine":75,"./_wks":91}],97:[function(require,module,exports){
+},{"./_classof":28,"./_redefine":68,"./_wks":84}],90:[function(require,module,exports){
 'use strict';
 var $at = require('./_string-at')(true);
 
@@ -31658,7 +29294,7 @@ require('./_iter-define')(String, 'String', function (iterated) {
   return { value: point, done: false };
 });
 
-},{"./_iter-define":57,"./_string-at":79}],98:[function(require,module,exports){
+},{"./_iter-define":50,"./_string-at":72}],91:[function(require,module,exports){
 var $export = require('./_export');
 
 $export($export.P, 'String', {
@@ -31666,7 +29302,7 @@ $export($export.P, 'String', {
   repeat: require('./_string-repeat')
 });
 
-},{"./_export":44,"./_string-repeat":81}],99:[function(require,module,exports){
+},{"./_export":37,"./_string-repeat":74}],92:[function(require,module,exports){
 // 21.1.3.18 String.prototype.startsWith(searchString [, position ])
 'use strict';
 var $export = require('./_export');
@@ -31686,7 +29322,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(STARTS_WITH), 'Str
   }
 });
 
-},{"./_export":44,"./_fails-is-regexp":45,"./_string-context":80,"./_to-length":85}],100:[function(require,module,exports){
+},{"./_export":37,"./_fails-is-regexp":38,"./_string-context":73,"./_to-length":78}],93:[function(require,module,exports){
 'use strict';
 // ECMAScript 6 symbols shim
 var global = require('./_global');
@@ -31922,13 +29558,13 @@ setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
 
-},{"./_an-object":30,"./_descriptors":40,"./_enum-keys":43,"./_export":44,"./_fails":46,"./_global":47,"./_has":48,"./_hide":49,"./_is-array":53,"./_is-object":54,"./_library":60,"./_meta":61,"./_object-create":63,"./_object-dp":64,"./_object-gopd":66,"./_object-gopn":68,"./_object-gopn-ext":67,"./_object-gops":69,"./_object-keys":72,"./_object-pie":73,"./_property-desc":74,"./_redefine":75,"./_set-to-string-tag":76,"./_shared":78,"./_to-iobject":84,"./_to-primitive":87,"./_uid":88,"./_wks":91,"./_wks-define":89,"./_wks-ext":90}],101:[function(require,module,exports){
+},{"./_an-object":23,"./_descriptors":33,"./_enum-keys":36,"./_export":37,"./_fails":39,"./_global":40,"./_has":41,"./_hide":42,"./_is-array":46,"./_is-object":47,"./_library":53,"./_meta":54,"./_object-create":56,"./_object-dp":57,"./_object-gopd":59,"./_object-gopn":61,"./_object-gopn-ext":60,"./_object-gops":62,"./_object-keys":65,"./_object-pie":66,"./_property-desc":67,"./_redefine":68,"./_set-to-string-tag":69,"./_shared":71,"./_to-iobject":77,"./_to-primitive":80,"./_uid":81,"./_wks":84,"./_wks-define":82,"./_wks-ext":83}],94:[function(require,module,exports){
 require('./_wks-define')('asyncIterator');
 
-},{"./_wks-define":89}],102:[function(require,module,exports){
+},{"./_wks-define":82}],95:[function(require,module,exports){
 require('./_wks-define')('observable');
 
-},{"./_wks-define":89}],103:[function(require,module,exports){
+},{"./_wks-define":82}],96:[function(require,module,exports){
 var $iterators = require('./es6.array.iterator');
 var getKeys = require('./_object-keys');
 var redefine = require('./_redefine');
@@ -31988,7 +29624,7 @@ for (var collections = getKeys(DOMIterables), i = 0; i < collections.length; i++
   }
 }
 
-},{"./_global":47,"./_hide":49,"./_iterators":59,"./_object-keys":72,"./_redefine":75,"./_wks":91,"./es6.array.iterator":94}],104:[function(require,module,exports){
+},{"./_global":40,"./_hide":42,"./_iterators":52,"./_object-keys":65,"./_redefine":68,"./_wks":84,"./es6.array.iterator":87}],97:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -32015,7 +29651,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":12,"@firebase/polyfill":16}],105:[function(require,module,exports){
+},{"@firebase/app":5,"@firebase/polyfill":9}],98:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -32037,7 +29673,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":13}],106:[function(require,module,exports){
+},{"@firebase/auth":6}],99:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -32059,7 +29695,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":14}],107:[function(require,module,exports){
+},{"@firebase/firestore":7}],100:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -32081,7 +29717,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":18}],108:[function(require,module,exports){
+},{"@firebase/storage":11}],101:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -32173,7 +29809,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],109:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
 (function (global,setImmediate){
 'use strict';
 
@@ -32437,7 +30073,7 @@ if (!globalNS.Promise) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":118}],110:[function(require,module,exports){
+},{"timers":111}],103:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -32543,7 +30179,7 @@ checkPropTypes.resetWarningCache = function() {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":111,"_process":117}],111:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":104,"_process":110}],104:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -32557,7 +30193,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],112:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 (function (process){
 /** @license React v16.8.2
  * react.development.js
@@ -34462,7 +32098,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":117,"object-assign":108,"prop-types/checkPropTypes":110}],113:[function(require,module,exports){
+},{"_process":110,"object-assign":101,"prop-types/checkPropTypes":103}],106:[function(require,module,exports){
 /** @license React v16.8.2
  * react.production.min.js
  *
@@ -34489,7 +32125,7 @@ b,d){return W().useImperativeHandle(a,b,d)},useDebugValue:function(){},useLayout
 b){void 0!==b.ref&&(h=b.ref,f=J.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)K.call(b,c)&&!L.hasOwnProperty(c)&&(e[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)e.children=d;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];e.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:e,_owner:f}},createFactory:function(a){var b=M.bind(null,a);b.type=a;return b},isValidElement:N,version:"16.8.2",
 unstable_ConcurrentMode:x,unstable_Profiler:u,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentDispatcher:I,ReactCurrentOwner:J,assign:k}},Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":108}],114:[function(require,module,exports){
+},{"object-assign":101}],107:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34500,7 +32136,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":112,"./cjs/react.production.min.js":113,"_process":117}],115:[function(require,module,exports){
+},{"./cjs/react.development.js":105,"./cjs/react.production.min.js":106,"_process":110}],108:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -34745,146 +32381,134 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],116:[function(require,module,exports){
-'use strict';
+},{}],109:[function(require,module,exports){
+"use strict";
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _componentFolder = require('../../component/folder');
-
-var _componentFolder2 = _interopRequireDefault(_componentFolder);
-
-var _componentUrl = require('../../component/url');
-
-var _componentUrl2 = _interopRequireDefault(_componentUrl);
-
-var _componentAccount_register = require('../../component/account_register');
+var _componentAccount_register = require("../../component/account_register");
 
 var _componentAccount_register2 = _interopRequireDefault(_componentAccount_register);
 
-var _componentSegue = require('../../component/segue');
+var _react = require("react");
 
-var _componentFirebase = require("../../component/firebase");
+var _react2 = _interopRequireDefault(_react);
 
-// @plaong Use session storage ( like a iOS user defaults )
-// 2019-2-18 Had better use indexedDB!!
+ReactDOM.render(React.createElement(_componentAccount_register2["default"], null), document.getElementById("account__registration"));
+(function ($) {
+	var $onboard = $('.onboard');
+	var $slider = $('.slides');
+	var $slides = $('.slide');
 
-window.addEventListener('popstate', function (e) {
-  backBefore();
-});
+	var curIndex = 0;
 
-function backBefore() {
-  var path = sessionStorage.udBeforeLocation.split("/")[1];
-  if (path === "feed") {
-    path = "home";
-  }
-  var selector = "#list-nav__" + path;
-  $(selector).click();
-}
+	function supportsCSS(type) {
+		var prefixes = 'transform WebkitTransform MozTransform OTransform msTransform'.split(' ');
+		if (type === 'transition') {
+			prefixes = 'transition WebkitTransition MozTransition OTransition msTransition'.split(' ');
+		}
+		for (var i = 0; i < prefixes.length; i++) {
+			if (document.createElement('div').style[prefixes[i]] !== undefined) {
+				if (type === 'transform') {
+					return prefixes[i] === 'transform' ? prefixes[i] : '-' + prefixes[i].replace('T', '-t').toLowerCase();
+				} else if (type === 'transition') {
+					return prefixes[i] === 'transition' ? prefixes[i] : '-' + prefixes[i].replace('T', '-t').toLowerCase();
+				}
+			}
+		}
+		return false;
+	}
 
-init();
+	var cssTransforms = supportsCSS('transform'),
+	    transformString = '';
+	if (cssTransforms) {
+		transformString = cssTransforms + ': translate3d(-{{offset}}vw, 0, 0); ';
+	} else {
+		transformString = 'left: -{{offset}}px; ';
+	}
 
-function init() {
-  _componentFirebase.auth.onAuthStateChanged(function (user) {
-    if (user === null) {
-      var redirect_url = "/" + location.search;
-      localStorage.removeItem("accountId");
-      if (document.referrer) {
-        var referrer = "referrer=" + encodeURIComponent(document.referrer);
-        redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
-      }
-      location.href = redirect_url;
-    }
+	function addNavigation() {
+		var navHtml = '<ul class="nav">';
+		for (var i = 0; i < $slides.length; i++) {
+			navHtml += '<li></li>';
+		}
+		navHtml += '</ul><a class="skip" href="#">すぐに始める ></a>';
+		$onboard.append(navHtml);
+		$('.nav').children().bind('click', function () {
+			if (curIndex === 3) return false;
+			slide($(this).index());
+		}).first().addClass('active');
+	}
 
-    _componentFirebase.db.collection("account").where("uId", "==", user.uid).get().then(function (snap) {
-      if (!snap.empty) {
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
+	function slide(index) {
+		curIndex = index;
+		var transform = !index ? '' : transformString.replace('{{offset}}', curIndex * 100);
+		$slider.attr('style', transform).addClass('slidesAnim');
+		setTimeout(function () {
+			$slider.attr('class', 'slides');
+			$onboard.attr('class', 'onboard active-slide--' + curIndex);
+		}, 200);
+		$('.nav li').removeAttr('class').eq(curIndex).addClass('active');
+		$slider.offset().height;
+	}
 
-        try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
+	function dragSlides() {
+		var diff = 0,
+		    direction,
+		    origMouseX;
 
-            localStorage.setItem("accountId", i.id);
-            return i.id;
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator['return']) {
-              _iterator['return']();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-      } else if (!navigator.onLine && localStorage.accountId !== undefined) {
-        return localStorage.accountId;
-      } else {
-        $("body").prepend('<div id="popover"></div>');
-        location.href = "/walkthrough";
-        return Promise.reject("Account doesn't exist.");
-      }
-    }).then(function (aId) {
-      switch (location.pathname) {
-        case "/feed":
-          (0, _componentSegue.segueInitToGlobal)();
-          break;
-        case "/folders":
-          var query = location.search;
-          if (query !== "") {
-            var parameters;
+		function dragStart(event) {
+			var orig = event.type === 'mousedown' ? event.originalEvent : event.originalEvent.touches[0];
+			origMouseX = orig.pageX;
+			$slider.bind('touchmove', dragMove).bind('mousemove', dragMove).bind('mouseleave', dragOff).bind('mouseup', dragOff).bind('touchend', dragOff).bind('touchcancel', dragOff);
+		}
 
-            (function () {
-              var hash = query.slice(1).split("&");
-              parameters = [];
+		function dragMove(event) {
+			var origEv = event.type === 'touchmove' ? event.originalEvent.touches[0] : event.originalEvent;
+			var mouseX = origEv.pageX;
+			diff = Math.round(mouseX - origMouseX);
+			direction = diff < 0 ? '<' : '>';
+			// @platong めくる速さはこの倍率をいじる
+			var offset = Math.abs(curIndex * 100 - diff / 20);
+			if (direction === '>' && curIndex === 0 || direction === '<' && curIndex === 3) return;
+			$slider.attr('style', transformString.replace('{{offset}}', offset));
+		}
 
-              hash.map(function (x) {
-                var array = x.split("=");
-                parameters.push(array[0]);
-                parameters[array[0]] = array[1];
-              });
-              var folderId = parameters["id"];
-              _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(function (snap) {
-                if (snap.exists) {
-                  (0, _componentSegue.segueURLFeed)("myfreefolders", folderId, localStorage.accountId);
-                  throw 'Oh no!';
-                }
-                return _componentFirebase.db.collection("account").doc(aId).collection("folders").doc(folderId).get();
-              }).then(function (snap) {
-                if (snap.exists) {
-                  (0, _componentSegue.segueURLFeed)("folders", folderId, localStorage.accountId);
-                  throw 'Oh no!';
-                }
-                return _componentFirebase.db.collection("freefolder").doc(folderId).get();
-              }).then(function (snap) {
-                if (snap.exists) {
-                  var data = snap.data();
-                  (0, _componentSegue.segueURLFeed)("freefolder", folderId, data.ownerAId);
-                } else {
-                  console.log("URL folder is not found.");
-                }
-              });
-            })();
-          } else {
-            (0, _componentSegue.segueInitFolderFeed)();
-          }
-          break;
-      }
-    });
-  });
-}
+		function dragOff(event) {
+			var newIndex = direction === '<' ? curIndex + 1 : curIndex - 1,
+			    origEv = event.type === 'touchend' || event.type === 'touchcancel' ? event.originalEvent.changedTouches[0] : event.originalEvent;
+			var mouseX = origEv.pageX,
+			    offset = curIndex * 100;
+			diff = Math.round(mouseX - origMouseX);
+			$slider.unbind('touchmove', dragMove).unbind('mousemove', dragMove).unbind('mouseleave', dragOff).unbind('mouseup', dragOff).unbind('touchend', dragOff).unbind('touchcancel', dragOff);
+			if (direction === '>' && curIndex === 0 || direction === '<' && curIndex === 3) return;
+			if (newIndex !== 4 && diff != 0) {
+				// @platong 何％めくったら次に飛ぶかはこの辺はいじる
+				if (diff > 80 * 2 || diff < -80 * 2) {
+					slide(newIndex);
+					return;
+				}
+				$slider.attr('style', transformString.replace('{{offset}}', offset)).addClass('slidesAnim');
+				setTimeout(function () {
+					$slider.removeClass('slidesAnim');
+				}, 200);
+			}
+		}
 
-},{"../../component/account_register":1,"../../component/firebase":3,"../../component/folder":4,"../../component/segue":7,"../../component/url":9,"react":114}],117:[function(require,module,exports){
+		$slides.bind('touchstart', dragStart);
+		$slides.bind('mousedown', dragStart);
+	}
+
+	addNavigation();
+	dragSlides();
+	$('.skip').bind('click', function (event) {
+		event.preventDefault();
+		if (curIndex === 3) return false;
+		slide(3);
+	});
+})(jQuery);
+
+},{"../../component/account_register":1,"react":107}],110:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -35070,7 +32694,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],118:[function(require,module,exports){
+},{}],111:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -35149,4 +32773,4 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":117,"timers":118}]},{},[116]);
+},{"process/browser.js":110,"timers":111}]},{},[109]);
