@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <script src="/common/js/react.development.js" crossorigin></script>
+  <script src="/common/js/react-dom.development.js" crossorigin></script>
+  <link rel="stylesheet" href="/css/walk_through.css" media="all">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NCQ465J');</script>
+  <!-- End Google Tag Manager -->
+
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-131300251-1"></script>
+  <script>
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('./sw.js').then(function() { console.log('Service Worker Registered'); });
+      navigator.serviceWorker.register('./firebase-messaging-sw.js').then(function() { console.log('Service Worker Registered'); });
+    }
+
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-131300251-1');
+  </script>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="manifest" href="/manifest.json">
+</head>
+<body>
+<div class='phone'>
+	<div class='onboard'>
+    <div class='progress'><div></div></div>
+		<ul class='slides'>
+		  <li class='slide slide1'>
+        <div class="walk__key-img">
+          <i class="fas fa-retweet"></i>
+        </div>
+        <h1>みんなの役に立った<wbr>ページを共有</h1>
+			</li>
+			<li class='slide slide2'>
+        <div class="walk__key-img">
+          <i class="far fa-file"></i>
+        </div>
+				<h1>読んだページから直接スキルを証明</h1>
+			</li>
+			<li class='slide slide3'>
+        <div class="walk__key-img">
+          <i class="fas fa-money-bill"></i>
+        </div>
+				<h1>本当に素晴らしいページは販売する</h1>
+			</li>
+			<li class='slide slide4' id="account__registration">
+			</li>
+		</ul>
+	</div>
+</div>	
+<script src="/common/js/5.7.0/firebase-app.js"></script>
+<script src="/common/js/5.0.0/firebase-storage.js"></script>
+<script src="/common/js/5.0.0/firebase-auth.js"></script>
+<script src="/common/js/5.7.0/firebase-firestore.js"></script>
+<script>
+  var config = {
+    apiKey: "AIzaSyDifH0dRKR2w8XRZIeXgKOZANnP3iv2qsc",
+    authDomain: "urlsharing-541c7.firebaseapp.com",
+    databaseURL: "https://urlsharing-541c7.firebaseio.com",
+    projectId: "urlsharing-541c7",
+    storageBucket: "urlsharing-541c7.appspot.com",
+    messagingSenderId: "756728507687"
+  };
+  firebase.initializeApp(config);
+</script>
+<script src="/common/js/jquery-3.3.1.min.js"></script>
+<script src="/js/walk_through.js"></script>
+</body>
+</html>

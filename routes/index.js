@@ -18,4 +18,8 @@ router.get('/folders', function(req, res, next) {
   res.render('feed', {});
 });
 
+router.get('/walkthrough', function(req, res, next) { 
+  res.render('walk_through', {});
+});
+
 module.exports = router;

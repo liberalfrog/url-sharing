@@ -4,10 +4,9 @@ import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
 
 function accountRegisterSubmitValidation(){
   let name = document.getElementById("ra_name").value;
-  let file = document.getElementById("ra_profile_img").files[0];
-  if(name!=="" && file!==undefined)
-    return true;
-  return false;
+  if(name !== "")
+    return true
+  return false
 }
 
 
@@ -23,10 +22,20 @@ function raButtonActiveSwitch(){
 
 
 export default class AccountRegister extends React.Component{
+  componentDidMount(){
+	let img = new Image()
+	img.src = "/common/img/apple.jpg"
+	let ctx = document.getElementById("ra_preview").getContext("2d");
+	img.onload = function(){
+      ctx.drawImage(img,0,0)
+	}
+  }
   fileChanged(){
-	imgCompressor( document.getElementById("ra_profile_img"), $('#ra_preview'), 96, false)
+	imgCompressor( document.getElementById("ra_profile_img"), $('#ra_preview'), 128, false)
   }
   submit(){
+    if(!accountRegisterSubmitValidation())
+	  return
 	let firestoreUpload = function(downloadURL){
       let user = auth.currentUser;
       db.collection("account").add({
@@ -44,7 +53,7 @@ export default class AccountRegister extends React.Component{
 			  data.iid = []
             for(var i of data.iid){
               if(currentToken === i)
-                return;
+               return;
             }   
             data.iid.push(currentToken);
             return db.collection("account").doc(docRef.id).set(data, { merge: true });  
@@ -58,27 +67,25 @@ export default class AccountRegister extends React.Component{
         })
 	  }).then(() => {
         console.log("All process is done");
-        location.reload();
+        location.href = "/feed";
       }).catch(err => {
         console.error("Error: Register account: ", err);
       });
 	}
-    submitImgToCloudStorage(document.getElementById("ra_profile_img"), "account_profile_imgs", firestoreUpload)
+    submitImgToCloudStorage(document.getElementById("ra_preview"), "account_profile_imgs", firestoreUpload)
   }
   render(){
     return(
       <div className="ra">
-        <div className="window-overlay"></div>
         <div className="centering_popover">
-          <h2>Register an account</h2>
           <form>
+		    <div className="register-account__profile-img">
+              <canvas id="ra_preview" width="128" height="128"></canvas>
+              <input type="file" id="ra_profile_img" name="ra_profile_img" onChange={this.fileChanged} />
+		    </div>
             <input type="text" id="ra_name" style={{display: "block"}} placeholder="表示名（アカウント名）" onInput={raButtonActiveSwitch}/>
-            <label htmlFor="ra_profile_img">プロフィール画像を選択</label>
-            <input type="file" id="ra_profile_img" name="ra_profile_img" onChange={this.fileChanged} />
-            <input type="text" id="ra_intro" placeholder="自己紹介" />
-            <input type="button" onClick={this.submit} value="登録" className="submit_is_disactive" id="ra_submit"/>
+            <input type="button" onClick={this.submit} value="新しい世界を楽しむ" className="submit_is_disactive" id="ra_submit"/>
           </form>
-          <canvas id="ra_preview" width="96" height="96"></canvas>
         </div>
       </div>
     );

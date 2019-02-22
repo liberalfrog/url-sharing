@@ -3,6 +3,24 @@ import generateUuid from "./uuid"
 import {db, storage, auth} from "./firebase"
 
 
+function canvasToPNGBlob(canvas){
+  canvas.getContext('2d');
+  var base64 = canvas.toDataURL('image/jpeg');
+  var barr, bin, i, len;
+  bin = atob(base64.split('base64,')[1]);
+  len = bin.length;
+  barr = new Uint8Array(len);
+  i = 0;
+  while (i < len) {
+    barr[i] = bin.charCodeAt(i);
+    i++;
+  }
+  blob = new Blob([barr], {type: 'image/png'});
+  return blob
+}
+
+
+
 function blobToFile(theBlob, fileName){
   theBlob.lastModifiedDate = new Date()
   theBlob.name = fileName
@@ -60,20 +78,9 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload){
 
       canvasDomObj.css("display", "block");
 
-      var base64 = canvas.get(0).toDataURL('image/jpeg');
-      var barr, bin, i, len;
-      bin = atob(base64.split('base64,')[1]);
-      len = bin.length;
-      barr = new Uint8Array(len);
-      i = 0;
-      while (i < len) {
-        barr[i] = bin.charCodeAt(i);
-        i++;
-      }
-      blob = new Blob([barr], {type: 'image/jpeg'});
+      blob = canvasToPNGBlob(canvas)
       if(isDirectlyUpload)
         submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg)
-        blob
     }
     image.src = e.target.result;
   }
@@ -81,14 +88,19 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload){
 }
 
 
-function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore){
-  let file = fileDomObj.files[0]
-  if(!blob) return; // validation
+function submitImgToCloudStorage(canvasDomObj, bucket, cloudStorageToFireStore){
+  let file
+  let extension
+  if(blob){
+    file = blobToFile(blob)
+	extension = file.name.split(".").slice(-1)[0];
+  } else{
+	file = blobToFile(canvasToPNGBlob(canvasDomObj))
+	extension = "png"
+  }
   let storageRef = storage.ref();
   let imagesRef = storageRef.child(bucket);
-  let extension = file.name.split(".").slice(-1)[0];
-  const file_name = generateUuid() + "." + extension
-  file = blobToFile(blob)
+  let file_name = generateUuid() + "." + extension
   var ref = storageRef.child(bucket + '/' + file_name);
   var uploadTask = ref.put(file)
   // Listen for state changes, errors, and completion of the upload.
