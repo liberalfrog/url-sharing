@@ -119,12 +119,10 @@ class AddPanel extends React.Component{
     return(
       <div className="add_view">
         <div className="add_panel" onClick={this.folderCreate}>
-          <h3>Add folder</h3>
-          <p>URLを管理するフォルダを作成</p>
+          <i class="fas fa-folder-plus"></i>
         </div>
         <div className="add_panel" onClick={this.urlCreate}>
-          <h3>Add URL</h3>
-          <p>URLをフォルダに追加</p>
+          <i class="fas fa-code"></i>
         </div>
       </div>
     );
