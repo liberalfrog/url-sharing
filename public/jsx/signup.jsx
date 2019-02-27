@@ -3,7 +3,7 @@ import {auth, db} from "../../component/firebase";
 
 auth.onAuthStateChanged(user => {
   if(user !== null) {
-    var redirect_url = "/feed" + location.search;
+    var redirect_url = "/home" + location.search;
     if (document.referrer) {
       var referrer = "referrer=" + encodeURIComponent(document.referrer);
       redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;
@@ -27,7 +27,7 @@ auth.onAuthStateChanged(user => {
       },
       // リダイレクトではなく、ポップアップでサインインフローを表示
       signInFlow: 'popup',
-      signInSuccessUrl: 'feed',
+      signInSuccessUrl: 'home',
       signInOptions: [
         // サポートするプロバイダ(メールアドレス)を指定
         firebase.auth.EmailAuthProvider.PROVIDER_ID,

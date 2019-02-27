@@ -4,8 +4,10 @@ import Folders from "./folder";
 import {AddButton,  URLFolderPost, URLPost} from './add_button';
 import SideMenu from "./side_menu";
 import {db} from "./firebase";
-import {segueFolderFeedToPostFolder, segueInitFolderFeed, segueFolderToAddPanel, segueURLfeedToURLPost} from "./segue";
+import {segueInitFolderFeed, segueFolderToAddPanel, segueURLfeedToURLPost} from "./segue";
 import LaterButton from "./later_button";
+import {vSegueHome2AddPanel, vSegueFolder2FolderPost} from "./vector_segue";
+import {backBefore, folderEdit} from "../lib/spa_router";
 
 
 /* Props list: cancel(function) title(string) content(html) */
@@ -27,51 +29,64 @@ class TemplateViewNavTab extends React.Component {
 class ViewFolderEdit extends React.Component {
   constructor(props){
     super(props)
-    let list = sessionStorage.urlset_list.split("-@-").map(x => { 
-      return JSON.parse(x) 
-    })
-    let jsx = (
-      <div className="add_view">
-        <div className="add_panel" onClick={this.deleteFolder.bind(this)}>
-          <h3>フォルダの削除</h3>
-          <p>このフォルダを削除します</p>
+	this.state = {
+	  id: sessionStorage.folderedit_id,
+	  aId: sessionStorage.folderedit_aId,
+	  content: (
+        <div className="add_view">
+          <div className="add_panel" onClick={this.deleteFolder.bind(this)}>
+            <h3>フォルダの削除</h3>
+            <p>このフォルダを削除します</p>
+          </div>
         </div>
-      </div>
-    )
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      list: list,
-      content: jsx
-    }
+      )
+	}
+    sessionStorage.removeItem("folderedit_id")
+    sessionStorage.removeItem("folderedit_aId")
+	this.cancel.bind(this)
   }
   deleteFolder(){ 
-    db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id).delete()
-    segueInitFolderFeed()
+    db.collection("account").doc(this.state.aId).collection("myfreefolders").doc(this.state.id).delete().then(() => {
+	  sessionStorage.folderedit_isManipulateType = "delete"
+	  backBefore(false)
+	})
   }
   cancel(){
-    ReactDOM.unmountComponentAtNode(document.getElementById("container"))
-    let list = sessionStorage.urlset_list.split("-@-")
-    for(let i=0; i<list.length; i++){
-      list[i] = JSON.parse(list[i])
-    }
-    ReactDOM.render(<segueInitFolderFeed list={list} />, document.getElementById("container"))
-    for(let d of list){
-      $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      let aId = localStorage.accountId
-      if(d.aId === aId){
-        let selector = "#" + d.id + " .edit__folder"
-        $(selector).css("display", "block")
-      }
-    }
+	sessionStorage.folderedit_isManipulateType = ""
+    backBefore(false)
   }
   render(){
-    return(
-      <div className="container__wrapper">
-        <Folders list={this.state.list} />
-        <TemplateViewNavTab content={this.state.content} title={this.state.id} cancel={this.cancel}/>
-      </div>
-    );
+	let folderEditComponent
+	switch(this.props.pageInfo.locate){
+	  case "home":
+	    folderEditComponent = ([
+          <div id="container__latest" key="segueGlobalLatest">
+            <h1 className="latest-container__title">新着情報</h1>
+            <div className="container__wrapper">
+              <Folders list={this.props.pageInfo.latestFolderList}/>
+            </div>
+          </div>,
+          <div key="segueGlobalRecommend">
+            <h1 className="recommend-container__title">評価されている情報</h1>
+            <div className="container__wrapper">
+              <Folders list={this.props.pageInfo.recommendFolderList}/>
+            </div>
+          </div>,
+          <TemplateViewNavTab key="folderEdit" content={this.state.content} title={this.state.id} cancel={this.cancel}/>
+        ])
+	    break
+	  case "folder":
+	    folderEditComponent = (
+          <div className="container__wrapper">
+            <Folders list={this.props.pageInfo.folderList} />
+            <TemplateViewNavTab content={this.state.content} title={this.state.id} cancel={this.cancel}/>
+          </div>
+		)
+		break
+	  default:
+		console.error("Error at folder edit component")
+	}
+    return folderEditComponent;
   }
 }
 
@@ -85,7 +100,7 @@ class ViewTop extends React.Component{
     }
   }
   openAddPanel(){ 
-    segueFolderToAddPanel()
+	vSegueHome2AddPanel(false)
   }
   shouldComponentUpdate (nextProps, nextState){
     let flag = !(this.state === nextState)
@@ -211,7 +226,7 @@ class ViewFolderFeed extends React.Component {
     })
   }
   openFolderPost(){
-    segueFolderFeedToPostFolder()
+	vSegueFolder2FolderPost(false)
   }
   render(){
     return([
@@ -224,7 +239,7 @@ class ViewFolderFeed extends React.Component {
         <LaterButton />
         <AddButton func={this.openFolderPost} icon={"folder"} />
       </div>,
-      <SideMenu key="SideMenu" foldersStyle="tb-active"/>
+      <SideMenu key="SideMenu" folderStyle="tb-active"/>
     ]);
   }
 }
@@ -253,7 +268,6 @@ class ViewURLFeed extends React.Component {
       id: props.id,
       ownerAId: props.ownerAId
     }   
-    history.pushState('','',"folders?id=" + this.props.id)
   }
   openAddPanel(){ 
     segueURLfeedToURLPost(this.state.id, this.state.ownerAid)

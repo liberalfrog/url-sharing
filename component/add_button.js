@@ -1,14 +1,10 @@
-import {segueAnyToURLPostFolderChoice, segueFolderFeed, segueFolderFeedToPostFolder, segueURLPost} from "./segue";
+import {segueAnyToURLPostFolderChoice, segueFolderFeed, segueURLPost} from "./segue";
 import {ViewPostFolder, ViewURLFeed} from "./view";
 import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
 import {sideMenuButtonShift} from "./side_menu";
 import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
-
-
-function closePostView(){ 
-  segueFolderFeed()
-}
+import {vSegueAddPanel2FolderPost, vSegueAddPanel2FolderChoice, vSegueURLPost2URL, vSegueFolderPost2Folder} from "./vector_segue";
 
 
 // @platong If the folder form can submit, return true.
@@ -82,38 +78,11 @@ class AddButton extends React.Component{
 // @platong Appear if plus button is tapped or clicked.
 class AddPanel extends React.Component{
   folderCreate(){
-    history.pushState('','',"folders")
-    let aId = localStorage.getItem("accountId")
-    let for_saved_list = []
-    let list = []
-    db.collection("account").doc(aId).collection("folders").get().then(snap => {
-      for(let i of snap.docs){
-        let d = i.data()
-        d.id = i.id
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      return db.collection("account").doc(aId).collection("myfreefolders").get()
-    }).then(snap => {
-      for(let i of snap.docs){
-        let d = i.data()
-        d.id = i.id
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      sessionStorage.urlset_list = for_saved_list.join("-@-");
-      sideMenuButtonShift("folders")
-      ReactDOM.render(<ViewPostFolder key="AddPanelView" list={list}/>, document.getElementById("main__container"));
-      ReactDOM.render(<AddButton func={segueFolderFeedToPostFolder} icon={"folder"} key="AddPanelAddButton"/>,
-        document.getElementById("utility__area"))
-      for(let d of list){
-        $("#" + d.id ).css("background-image", "url(" + d.img + ")")
-      }
-    })
+	vSegueAddPanel2FolderPost(false)
   }
   urlCreate(){
     sideMenuButtonShift("folders")
-    segueAnyToURLPostFolderChoice()
+    vSegueAddPanel2FolderChoice(false)
   }
   render(){
     return(
@@ -230,19 +199,9 @@ class URLPost extends React.Component{
 	}
     this.state.count = 0
 	Promise.all(promises).then(resultLists => {
-      console.log(resultLists)
-      let query = location.search
-      let hash = query.slice(1).split("&")
-      var parameters = []
-      hash.map(x => {
-        let array = x.split("=")
-        parameters.push(array[0])
-        parameters[array[0]] = array[1]
-      })
-      let id = parameters["id"]
-      let list = sessionStorage.url_list.split("-@-").map(x => { return JSON.parse(x)})
-      Array.prototype.push.apply(list, resultLists);
-      ReactDOM.render(<ViewURLFeed key="segueUrlFeed" id={id} list={list}/>, document.getElementById("main__container"))
+	  sessionStorage.urlpost_uploadURLList = resultLists.map(x => {return JSON.stringify(x)}).join("-@-")
+	  sessionStorage.urlpost_isUpload = "true"
+	  vSegueURLPost2URL(false)
 	})
   }
   morePost(){
@@ -252,9 +211,13 @@ class URLPost extends React.Component{
     document.getElementById("url_input").appendChild(element)
     ReactDOM.render(<URLInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
   }
+  postCancel(){
+	sessionStorage.urlpost_isUpload = ""
+	vSegueURLPost2URL(false)
+  }
   render(){
     return ([
-      <div className="window-overlay" onClick={closePostView} key="urlPostOverlay"></div>,
+      <div className="window-overlay" onClick={this.postCancel.bind(this)} key="urlPostOverlay"></div>,
       <div className="post__container" key="urlPostcontainer">
         <h1 className="view-title">URLを登録</h1>
         <form name="urlput_form">
@@ -312,28 +275,34 @@ class URLFolderPost extends React.Component{
       let user = auth.currentUser;
       let aId = localStorage.getItem("accountId")
       let ref = db.collection("account").doc(aId).collection("myfreefolders")
-      ref.add({
+	  let folderData = {
         img: downloadURL,
         name: document.urlset_form.title.value,
         aId: localStorage.getItem("accountId"),
         aProfileImg: user.photoURL,
         aName: user.displayName,
         dateTime : new Date()
-      }).then(docRef => {
-        closePostView()
+      }
+      ref.add(folderData).then(docRef => { 
+	    sessionStorage.folderpost_isUpload = "true"
+		sessionStorage.folderpost_uploadFolderData = JSON.stringify(folderData)
+        vSegueFolderPost2Folder(true)
       }).catch(error => {
         console.error("Error adding document: ", error);
       })
     }
-    submitImgToCloudStorage(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload)
+    submitImgToCloudStorage($("#ap_preview"), "urlset_images", firestoreUpload)
   }
-  // @platong If file is changed, file will be compressed.
   fileChanged(){
     imgCompressor(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false)
   }
+  postCancel(){
+	sessionStorage.folderpost_isUpload = ""
+    vSegueFolderPost2Folder(false)
+  }
   render(){
     return ([
-      <div className="window-overlay" onClick={closePostView} key="urlFolderPostOverlay"></div>,
+      <div className="window-overlay" onClick={this.postCancel} key="urlFolderPostOverlay"></div>,
       <div className="post__container"key="urlFolderPostContainer">
         <h1 className="view-title">URLを入れるフォルダを作成</h1>
         <form action="" name="urlset_form">

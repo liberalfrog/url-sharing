@@ -36,6 +36,7 @@ function updateProfileImg(downloadURL){
   }).then(docRef => {
     user.updateProfile({ photoURL: downloadURL }).then(() => {
       console.log("All process is done");
+      location.reload()
     }).catch(err => {
       console.error("Error: upload profile image: ", err);
     }); 
@@ -78,9 +79,10 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload){
 
       canvasDomObj.css("display", "block");
 
-      blob = canvasToPNGBlob(canvas)
-      if(isDirectlyUpload)
-        submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg)
+      blob = canvasToPNGBlob(canvas.get(0))
+      if(isDirectlyUpload){
+        submitImgToCloudStorage(canvas, "account_profile_imgs", updateProfileImg)
+	  }
     }
     image.src = e.target.result;
   }
@@ -91,13 +93,8 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload){
 function submitImgToCloudStorage(canvasDomObj, bucket, cloudStorageToFireStore){
   let file
   let extension
-  if(blob){
-    file = blobToFile(blob)
-	extension = file.name.split(".").slice(-1)[0];
-  } else{
-	file = blobToFile(canvasToPNGBlob(canvasDomObj))
-	extension = "png"
-  }
+  file = blobToFile(canvasToPNGBlob(canvasDomObj.get(0)))
+  extension = "png"
   let storageRef = storage.ref();
   let imagesRef = storageRef.child(bucket);
   let file_name = generateUuid() + "." + extension

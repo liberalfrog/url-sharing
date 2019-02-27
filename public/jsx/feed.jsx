@@ -1,26 +1,23 @@
 import React from 'react';
 import Folders from '../../component/folder';
+import {getFolderType} from '../../component/folder';
 import URLs from '../../component/url';
 import AccountRegister from '../../component/account_register';
-import {segueInitToGlobal, SegueAnyToURL, segueInitFolderFeed, segueURLFeed, segueURLPost} from '../../component/segue';
+import {segueGlobal, segueFolderFeed, segueInitToGlobal, SegueAnyToURL, segueInitFolderFeed, segueURLFeed, segueURLPost} from '../../component/segue';
 import {auth, storage, db} from "../../component/firebase";
+import {vSegueHome2Folder, vSegueFolder2Home} from "../../component/vector_segue";
+import {currentWhere} from "../../lib/magic_url";
+import {backBefore} from "../../lib/spa_router";
+import queryParser from "../../lib/query_parser";
+
 
 // @plaong Use session storage ( like a iOS user defaults )
 // 2019-2-18 Had better use indexedDB!!
 
 
 window.addEventListener('popstate', function(e) {
-  backBefore()
+  backBefore(true)
 });
-
-function backBefore(){
-  let path = sessionStorage.udBeforeLocation.split("/")[1]
-  if(path === "feed"){
-    path = "home"
-  }
-  let selector = "#list-nav__" + path
-  $(selector).click()
-}
 
 
 init()
@@ -53,40 +50,15 @@ function init(){
       }
     }).then(aId => {
       switch(location.pathname){
-        case "/feed":
+        case "/home":
           segueInitToGlobal()
           break
-        case "/folders":
-          let query = location.search;
-          if(query !== ""){
-            let hash = query.slice(1).split("&")
-            var parameters = []
-            hash.map(x => {
-              let array = x.split("=")
-              parameters.push(array[0])
-              parameters[array[0]] = array[1]
-            })
-            let folderId = parameters["id"]
-            db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(snap => {
-              if(snap.exists){
-                segueURLFeed("myfreefolders", folderId, localStorage.accountId)
-                throw 'Oh no!';
-              }
-              return db.collection("account").doc(aId).collection("folders").doc(folderId).get()
-            }).then(snap => {
-              if(snap.exists){
-                segueURLFeed("folders", folderId, localStorage.accountId)
-                throw 'Oh no!';
-              }
-              return db.collection("freefolder").doc(folderId).get()
-            }).then(snap => {
-              if(snap.exists){
-                let data = snap.data()
-                segueURLFeed("freefolder", folderId, data.ownerAId)
-              }else{
-                console.log("URL folder is not found.")
-              }
-            })
+        case "/folder":
+          let folderId = queryParser().id
+          if(folderId !== undefined){
+			getFolderType(folderId).then(folderData => {
+              segueURLFeed("", false, folderData)
+			})
           }else{
             segueInitFolderFeed()
           }
