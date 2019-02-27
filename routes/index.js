@@ -10,16 +10,16 @@ router.get('/signup', function(req, res, next) {
   res.render('signup', {});
 });
 
-router.get('/feed', function(req, res, next) { 
-  res.render('feed', {});
+router.get('/home', function(req, res, next) { 
+  res.render('home', {});
 });
 
-router.get('/folders', function(req, res, next) { 
-  res.render('feed', {});
+router.get('/folder', function(req, res, next) { 
+  res.render('home', {});
 });
 
 router.get('/walkthrough', function(req, res, next) { 
-  res.render('walk_through', {});
+  res.render('walkthrough', {});
 });
 
 module.exports = router;

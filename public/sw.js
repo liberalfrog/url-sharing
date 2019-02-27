@@ -1,6 +1,6 @@
 var cacheName = 'url-sharing-realozproject-201902211748-d';
 var filesToCache = [
-  "/feed",
+  "/home",
   "/account",
   "/css/account.css",
   "/css/basic_component.css",

@@ -20,7 +20,7 @@
 
     auth.onAuthStateChanged(function(user){
       if(user !== null) {
-        var redirect_url = "/feed" + location.search;
+        var redirect_url = "/home" + location.search;
         if (document.referrer) {
           var referrer = "referrer=" + encodeURIComponent(document.referrer);
           redirect_url = redirect_url + (location.search ? '&' : '?') + referrer;

@@ -2,13 +2,23 @@ import React from 'react';
 import Folders from '../../component/folder';
 import {storage, db} from "../../component/firebase";
 import {imgCompressor} from "../../component/img_compressor";
+import queryParser from "../../lib/query_parser";
+import {backBefore} from "../../lib/spa_router";
+
+
+// @plaong Use session storage ( like a iOS user defaults )
+// 2019-2-18 Had better use indexedDB!!
+
+window.addEventListener('popstate', function(e) {
+  backBefore(true)
+});
 
 var isFollow
 
 init()
 
 function init(){
-  let targetAId = location.search.substring(1).split('=')[1];
+  let targetAId = queryParser().aId
   let aId = localStorage.getItem("accountId")
   let queryToFollow = db.collection("account").doc(aId).collection("followees").doc(targetAId)
 
@@ -46,7 +56,7 @@ function init(){
     for(let i of snap.docs){
       d = i.data()
       d.id = i.id
-      d.kind = "myfreefolders"
+      d.kind = "freefolder"
       list.push(d)
     }
     ReactDOM.render( <div className="container__wrapper"><Folders list={list}/></div>, document.getElementById("container"));

@@ -117,7 +117,7 @@ var AccountRegister = (function (_React$Component) {
           console.error("Error: Register account: ", err);
         });
       };
-      (0, _img_compressor.submitImgToCloudStorage)(document.getElementById("ra_profile_img"), "account_profile_imgs", firestoreUpload);
+      (0, _img_compressor.submitImgToCloudStorage)(document.getElementById("ra_preview"), "account_profile_imgs", firestoreUpload);
     }
   }, {
     key: "render",
@@ -182,9 +182,7 @@ var _side_menu = require("./side_menu");
 
 var _img_compressor = require("./img_compressor");
 
-function closePostView() {
-  (0, _segue.segueFolderFeed)();
-}
+var _vector_segue = require("./vector_segue");
 
 // @platong If the folder form can submit, return true.
 function folderSubmitValidation() {
@@ -274,106 +272,13 @@ var AddPanel = (function (_React$Component2) {
   _createClass(AddPanel, [{
     key: "folderCreate",
     value: function folderCreate() {
-      history.pushState('', '', "folders");
-      var aId = localStorage.getItem("accountId");
-      var for_saved_list = [];
-      var list = [];
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-        var _iteratorNormalCompletion = true;
-        var _didIteratorError = false;
-        var _iteratorError = undefined;
-
-        try {
-          for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var i = _step.value;
-
-            var d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError = true;
-          _iteratorError = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion && _iterator["return"]) {
-              _iterator["return"]();
-            }
-          } finally {
-            if (_didIteratorError) {
-              throw _iteratorError;
-            }
-          }
-        }
-
-        ;
-        return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-      }).then(function (snap) {
-        var _iteratorNormalCompletion2 = true;
-        var _didIteratorError2 = false;
-        var _iteratorError2 = undefined;
-
-        try {
-          for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var i = _step2.value;
-
-            var d = i.data();
-            d.id = i.id;
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError2 = true;
-          _iteratorError2 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-              _iterator2["return"]();
-            }
-          } finally {
-            if (_didIteratorError2) {
-              throw _iteratorError2;
-            }
-          }
-        }
-
-        ;
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        (0, _side_menu.sideMenuButtonShift)("folders");
-        ReactDOM.render(React.createElement(_view.ViewPostFolder, { key: "AddPanelView", list: list }), document.getElementById("main__container"));
-        ReactDOM.render(React.createElement(AddButton, { func: _segue.segueFolderFeedToPostFolder, icon: "folder", key: "AddPanelAddButton" }), document.getElementById("utility__area"));
-        var _iteratorNormalCompletion3 = true;
-        var _didIteratorError3 = false;
-        var _iteratorError3 = undefined;
-
-        try {
-          for (var _iterator3 = list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var d = _step3.value;
-
-            $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError3 = true;
-          _iteratorError3 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion3 && _iterator3["return"]) {
-              _iterator3["return"]();
-            }
-          } finally {
-            if (_didIteratorError3) {
-              throw _iteratorError3;
-            }
-          }
-        }
-      });
+      (0, _vector_segue.vSegueAddPanel2FolderPost)(false);
     }
   }, {
     key: "urlCreate",
     value: function urlCreate() {
       (0, _side_menu.sideMenuButtonShift)("folders");
-      (0, _segue.segueAnyToURLPostFolderChoice)();
+      (0, _vector_segue.vSegueAddPanel2FolderChoice)(false);
     }
   }, {
     key: "render",
@@ -525,21 +430,11 @@ var URLPost = (function (_React$Component3) {
       }
       this.state.count = 0;
       Promise.all(promises).then(function (resultLists) {
-        console.log(resultLists);
-        var query = location.search;
-        var hash = query.slice(1).split("&");
-        var parameters = [];
-        hash.map(function (x) {
-          var array = x.split("=");
-          parameters.push(array[0]);
-          parameters[array[0]] = array[1];
-        });
-        var id = parameters["id"];
-        var list = sessionStorage.url_list.split("-@-").map(function (x) {
-          return JSON.parse(x);
-        });
-        Array.prototype.push.apply(list, resultLists);
-        ReactDOM.render(React.createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id, list: list }), document.getElementById("main__container"));
+        sessionStorage.urlpost_uploadURLList = resultLists.map(function (x) {
+          return JSON.stringify(x);
+        }).join("-@-");
+        sessionStorage.urlpost_isUpload = "true";
+        (0, _vector_segue.vSegueURLPost2URL)(false);
       });
     }
   }, {
@@ -552,9 +447,15 @@ var URLPost = (function (_React$Component3) {
       ReactDOM.render(React.createElement(URLInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
     }
   }, {
+    key: "postCancel",
+    value: function postCancel() {
+      sessionStorage.urlpost_isUpload = "";
+      (0, _vector_segue.vSegueURLPost2URL)(false);
+    }
+  }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlPostOverlay" }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: this.postCancel.bind(this), key: "urlPostOverlay" }), React.createElement(
         "div",
         { className: "post__container", key: "urlPostcontainer" },
         React.createElement(
@@ -643,32 +544,39 @@ var URLFolderPost = (function (_React$Component5) {
         var user = _firebase.auth.currentUser;
         var aId = localStorage.getItem("accountId");
         var ref = _firebase.db.collection("account").doc(aId).collection("myfreefolders");
-        ref.add({
+        var folderData = {
           img: downloadURL,
           name: document.urlset_form.title.value,
           aId: localStorage.getItem("accountId"),
           aProfileImg: user.photoURL,
           aName: user.displayName,
           dateTime: new Date()
-        }).then(function (docRef) {
-          closePostView();
+        };
+        ref.add(folderData).then(function (docRef) {
+          sessionStorage.folderpost_isUpload = "true";
+          sessionStorage.folderpost_uploadFolderData = JSON.stringify(folderData);
+          (0, _vector_segue.vSegueFolderPost2Folder)(true);
         })["catch"](function (error) {
           console.error("Error adding document: ", error);
         });
       };
-      (0, _img_compressor.submitImgToCloudStorage)(document.urlset_form.urlbook_img, "urlset_images", firestoreUpload);
+      (0, _img_compressor.submitImgToCloudStorage)($("#ap_preview"), "urlset_images", firestoreUpload);
     }
-
-    // @platong If file is changed, file will be compressed.
   }, {
     key: "fileChanged",
     value: function fileChanged() {
       (0, _img_compressor.imgCompressor)(document.urlset_form.urlbook_img, $('#ap_preview'), 192, false);
     }
   }, {
+    key: "postCancel",
+    value: function postCancel() {
+      sessionStorage.folderpost_isUpload = "";
+      (0, _vector_segue.vSegueFolderPost2Folder)(false);
+    }
+  }, {
     key: "render",
     value: function render() {
-      return [React.createElement("div", { className: "window-overlay", onClick: closePostView, key: "urlFolderPostOverlay" }), React.createElement(
+      return [React.createElement("div", { className: "window-overlay", onClick: this.postCancel, key: "urlFolderPostOverlay" }), React.createElement(
         "div",
         { className: "post__container", key: "urlFolderPostContainer" },
         React.createElement(
@@ -725,7 +633,7 @@ exports.AddPanel = AddPanel;
 exports.URLFolderPost = URLFolderPost;
 exports.URLPost = URLPost;
 
-},{"./firebase":3,"./img_compressor":5,"./segue":7,"./side_menu":8,"./uuid":10,"./view":11}],3:[function(require,module,exports){
+},{"./firebase":3,"./img_compressor":5,"./segue":7,"./side_menu":8,"./uuid":10,"./vector_segue":11,"./view":12}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -747,7 +655,7 @@ exports.db = db;
 exports.storage = storage;
 exports.auth = auth;
 
-},{"firebase/app":104,"firebase/auth":105,"firebase/firestore":106,"firebase/storage":107}],4:[function(require,module,exports){
+},{"firebase/app":109,"firebase/auth":110,"firebase/firestore":111,"firebase/storage":112}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -778,6 +686,10 @@ var _firebase = require("./firebase");
 
 var _view = require("./view");
 
+var _vector_segue = require("./vector_segue");
+
+var _libSpa_router = require("../lib/spa_router");
+
 var Folder = (function (_React$Component) {
   _inherits(Folder, _React$Component);
 
@@ -794,20 +706,29 @@ var Folder = (function (_React$Component) {
   }
 
   _createClass(Folder, [{
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      $("#" + this.state.id).css("background-image", 'url("' + this.props.img + '")');
+    }
+  }, {
     key: 'putShow',
     value: function putShow() {
-      (0, _segue.segueURLFeed)(this.state.kind, this.state.id, this.state.ownerAId);
+      sessionStorage.folderData = JSON.stringify(this.state);
+      (0, _libSpa_router.folderSegue)("url");
     }
   }, {
     key: 'urlPost',
     value: function urlPost() {
-      (0, _segue.segueURLPost)(this.state.id, this.state.ownerAId, this.state.kind);
+      sessionStorage.folderData = JSON.stringify(this.state);
+      (0, _vector_segue.vSegueFolderChoice2URLPost)(false);
     }
   }, {
     key: 'edit',
     value: function edit() {
       if (localStorage.accountId === this.state.ownerAId) {
-        ReactDOM.render(_react2['default'].createElement(_view.ViewFolderEdit, { ownerAId: this.state.ownerAId, id: this.state.id }), document.getElementById("container"));
+        sessionStorage.folderedit_id = this.state.id;
+        sessionStorage.folderedit_aId = this.state.ownerAId;
+        (0, _libSpa_router.folderEdit)(false);
       }
     }
   }, {
@@ -833,7 +754,7 @@ var Folder = (function (_React$Component) {
               { className: 'account_name' },
               this.props.aName
             ),
-            _react2['default'].createElement('a', { href: "/account?aId=" + this.state.ownerAId, className: 'profile-img__link' })
+            _react2['default'].createElement('a', { href: "/account?s=" + location.pathname.slice(1) + "2account&aId=" + this.state.ownerAId, className: 'profile-img__link' })
           ),
           _react2['default'].createElement('button', { className: 'edit__folder fas fa-cog', onClick: this.edit.bind(this) })
         ),
@@ -868,7 +789,7 @@ var Folders = (function (_React$Component2) {
           var d = _step.value;
 
           if (d.id === undefined) continue;
-          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName,
+          return_html.push(_react2['default'].createElement(Folder, { key: d.id, name: d.name, aName: d.aName, img: d.img,
             post: this.props.post, aId: d.aId, aProfileImg: d.aProfileImg, id: d.id, kind: d.kind }));
         }
       } catch (err) {
@@ -894,9 +815,43 @@ var Folders = (function (_React$Component2) {
 })(_react2['default'].Component);
 
 exports['default'] = Folders;
-module.exports = exports['default'];
 
-},{"./firebase":3,"./segue":7,"./url":9,"./view":11,"react":114}],5:[function(require,module,exports){
+function getFolderType(folderId) {
+  var type = undefined;
+  var aId = localStorage.accountId;
+  return _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(function (snap) {
+    if (snap.exists) {
+      type = "myfreefolders";
+      return snap;
+    } else {
+      return _firebase.db.collection("account").doc(aId).collection("folders").doc(folderId).get();
+    }
+  }).then(function (snap) {
+    if (snap.exists) {
+      type = "folders";
+      return snap;
+    } else {
+      return _firebase.db.collection("freefolder").doc(folderId).get();
+    }
+  }).then(function (snap) {
+    if (snap.exists) {
+      type = "freefolder";
+      var data = snap.data();
+      return {
+        id: snap.id,
+        ownerAId: data.aId,
+        kind: type
+      };
+    } else {
+      alert("このフォルダは存在しません");
+      console.error("Such a folder is not found.");
+    }
+  });
+}
+
+exports.getFolderType = getFolderType;
+
+},{"../lib/spa_router":16,"./firebase":3,"./segue":7,"./url":9,"./vector_segue":11,"./view":12,"react":119}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -913,6 +868,22 @@ var _firebase = require("./firebase");
 
 require("firebase/app");
 
+function canvasToPNGBlob(canvas) {
+  canvas.getContext('2d');
+  var base64 = canvas.toDataURL('image/jpeg');
+  var barr, bin, i, len;
+  bin = atob(base64.split('base64,')[1]);
+  len = bin.length;
+  barr = new Uint8Array(len);
+  i = 0;
+  while (i < len) {
+    barr[i] = bin.charCodeAt(i);
+    i++;
+  }
+  blob = new Blob([barr], { type: 'image/png' });
+  return blob;
+}
+
 function blobToFile(theBlob, fileName) {
   theBlob.lastModifiedDate = new Date();
   theBlob.name = fileName;
@@ -927,6 +898,7 @@ function updateProfileImg(downloadURL) {
   }).then(function (docRef) {
     user.updateProfile({ photoURL: downloadURL }).then(function () {
       console.log("All process is done");
+      location.reload();
     })["catch"](function (err) {
       console.error("Error: upload profile image: ", err);
     });
@@ -968,33 +940,24 @@ function imgCompressor(fileDomObj, canvasDomObj, maxWidth, isDirectlyUpload) {
 
       canvasDomObj.css("display", "block");
 
-      var base64 = canvas.get(0).toDataURL('image/jpeg');
-      var barr, bin, i, len;
-      bin = atob(base64.split('base64,')[1]);
-      len = bin.length;
-      barr = new Uint8Array(len);
-      i = 0;
-      while (i < len) {
-        barr[i] = bin.charCodeAt(i);
-        i++;
+      blob = canvasToPNGBlob(canvas.get(0));
+      if (isDirectlyUpload) {
+        submitImgToCloudStorage(canvas, "account_profile_imgs", updateProfileImg);
       }
-      blob = new Blob([barr], { type: 'image/jpeg' });
-      if (isDirectlyUpload) submitImgToCloudStorage(fileDomObj, "account_profile_imgs", updateProfileImg);
-      blob;
     };
     image.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
 
-function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
-  var file = fileDomObj.files[0];
-  if (!blob) return; // validation
+function submitImgToCloudStorage(canvasDomObj, bucket, cloudStorageToFireStore) {
+  var file = undefined;
+  var extension = undefined;
+  file = blobToFile(canvasToPNGBlob(canvasDomObj.get(0)));
+  extension = "png";
   var storageRef = _firebase.storage.ref();
   var imagesRef = storageRef.child(bucket);
-  var extension = file.name.split(".").slice(-1)[0];
   var file_name = (0, _uuid2["default"])() + "." + extension;
-  file = blobToFile(blob);
   var ref = storageRef.child(bucket + '/' + file_name);
   var uploadTask = ref.put(file);
   // Listen for state changes, errors, and completion of the upload.
@@ -1037,7 +1000,7 @@ function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
 exports.imgCompressor = imgCompressor;
 exports.submitImgToCloudStorage = submitImgToCloudStorage;
 
-},{"./firebase":3,"./uuid":10,"firebase/app":104}],6:[function(require,module,exports){
+},{"./firebase":3,"./uuid":10,"firebase/app":109}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1114,7 +1077,18 @@ var _later_button = require("./later_button");
 
 var _later_button2 = _interopRequireDefault(_later_button);
 
-function segueURLFeed(kind, id, ownerAId) {
+var _vector_segue = require("./vector_segue");
+
+var _libMagic_url = require("../lib/magic_url");
+
+function segueURLFeed(queryOfURL, unwind, folderData) {
+  var kind = folderData.kind;
+  var id = folderData.id;
+  var ownerAId = folderData.ownerAId;
+  if (!unwind && queryOfURL !== "") {
+    history.pushState('', '', "folder?s=" + queryOfURL);
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
   var list = [];
   var d = undefined;
   var aId = localStorage.accountId;
@@ -1130,11 +1104,10 @@ function segueURLFeed(kind, id, ownerAId) {
       query = _firebase.db.collection("freefolder").doc(id).collection("urls");
       break;
     default:
-      console.error("Some thing bug is occured at segueURLFeed.");
+      console.error("Error: such a folder is not found.");
       break;
   }
   query.get().then(function (snap) {
-    var for_saved_list = [];
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
@@ -1146,7 +1119,6 @@ function segueURLFeed(kind, id, ownerAId) {
         d = i.data();
         d.id = i.id;
         list.push(d);
-        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError = true;
@@ -1164,14 +1136,22 @@ function segueURLFeed(kind, id, ownerAId) {
     }
 
     ;
-    sessionStorage.url_list = for_saved_list.join("-@-");
+    sessionStorage.url_list = list.map(function (x) {
+      return JSON.stringify(x);
+    }).join("-@-");
 
     if (document.getElementById("main__container")) {
-      ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id,
-        ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
-      ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: function () {
-          return segueURLPost(id, ownerAId, kind);
-        }, icon: "url" }), document.getElementById("utility__area"));
+      var user = _firebase.auth.currentUser;
+      if (user) {
+        ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id,
+          ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
+        ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: function () {
+            return (0, _vector_segue.vSegueURL2URLPost)(false);
+          }, icon: "url" }), document.getElementById("utility__area"));
+      } else {
+        ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id,
+          ownerAId: ownerAId, list: list }), document.getElementById("main__container"));
+      }
     } else {
       ReactDOM.render([_react2["default"].createElement(
         "div",
@@ -1181,61 +1161,60 @@ function segueURLFeed(kind, id, ownerAId) {
         "div",
         { id: "utility__area", key: "segueUrlFeedUtility" },
         _react2["default"].createElement(_add_button.AddButton, { func: function () {
-            return segueURLPost(id, ownerAId, kind);
+            return (0, _vector_segue.vSegueURL2URLPost)(false);
           }, icon: "url" })
       ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })], document.getElementById("container"));
     }
   });
 }
 
-function segueFolderFeedToPostFolder() {
-  var list = sessionStorage.urlset_list.split("-@-");
-  list.map(function (x) {
-    JSON.parse(x);
-  });
-  ReactDOM.render(_react2["default"].createElement(_view.ViewPostFolder, { list: list }), document.getElementById("main__container"));
-  var _iteratorNormalCompletion2 = true;
-  var _didIteratorError2 = false;
-  var _iteratorError2 = undefined;
-
-  try {
-    for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-      var d = _step2.value;
-
-      var aId = localStorage.accountId;
-      if (d.aId === aId) {
-        var selector = "#" + d.id + " .edit__folder";
-        $(selector).css("display", "block");
-      }
-      $("#" + d.id).css("background-image", "url(" + d.img + ")");
-    }
-  } catch (err) {
-    _didIteratorError2 = true;
-    _iteratorError2 = err;
-  } finally {
-    try {
-      if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
-        _iterator2["return"]();
-      }
-    } finally {
-      if (_didIteratorError2) {
-        throw _iteratorError2;
-      }
-    }
-  }
-}
-
-function segueFolderToAddPanel() {
+function segueAddPanel(queryOfURL, unwind) {
+  segueGlobal(queryOfURL, unwind);
   ReactDOM.render(_react2["default"].createElement(_add_button.AddPanel, null), document.getElementById("utility__area"));
 }
 
-function segueAnyToURLPostFolderChoice() {
-  history.pushState('', '', "folders");
-  var list = [];
+function segueFolderPost(queryOfURL, unwind) {
+  if (!unwind) {
+    history.pushState('', '', "folder?s=" + queryOfURL);
+  }
+  $("#list-nav__rigid").click();
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
   var aId = localStorage.getItem("accountId");
   var for_saved_list = [];
+  var list = [];
   _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-    var d = undefined;
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = snap.docs[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var i = _step2.value;
+
+        var d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2["return"]) {
+          _iterator2["return"]();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+
+    ;
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
     var _iteratorNormalCompletion3 = true;
     var _didIteratorError3 = false;
     var _iteratorError3 = undefined;
@@ -1244,9 +1223,9 @@ function segueAnyToURLPostFolderChoice() {
       for (var _iterator3 = snap.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
         var i = _step3.value;
 
-        d = i.data();
+        var d = i.data();
         d.id = i.id;
-        d.kind = "folders";
+        d.kind = "myfreefolders";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
@@ -1265,22 +1244,23 @@ function segueAnyToURLPostFolderChoice() {
       }
     }
 
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
-    var d = undefined;
+    ;
+    sessionStorage.folder_folderList = for_saved_list.join("-@-");
+    var addFunction = function addFunction() {
+      (0, _vector_segue.vSegueFolder2FolderPost)(false);
+    };
+    /* sideMenuButtonShift("folders") */
+    ReactDOM.render(_react2["default"].createElement(_view.ViewPostFolder, { key: "AddPanelView", list: list }), document.getElementById("main__container"));
+    ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: addFunction, icon: "folder", key: "AddPanelAddButton" }), document.getElementById("utility__area"));
     var _iteratorNormalCompletion4 = true;
     var _didIteratorError4 = false;
     var _iteratorError4 = undefined;
 
     try {
-      for (var _iterator4 = snap.docs[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-        var i = _step4.value;
+      for (var _iterator4 = list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+        var d = _step4.value;
 
-        d = i.data();
-        d.id = i.id;
-        d.kind = "myfreefolders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        $("#" + d.id).css("background-image", "url(" + d.img + ")");
       }
     } catch (err) {
       _didIteratorError4 = true;
@@ -1296,27 +1276,33 @@ function segueAnyToURLPostFolderChoice() {
         }
       }
     }
+  });
+}
 
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render([_react2["default"].createElement(
-      "h1",
-      { className: "title__folder-choice", key: "SAtitele" },
-      "URLを登録するフォルダを選択"
-    ), _react2["default"].createElement(
-      "div",
-      { className: "container__wrapper", key: "SAcontainer" },
-      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
-    )], document.getElementById("main__container"));
-    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
+function segueFolderChoice(queryOfURL, unwind) {
+  if (!unwind) {
+    history.pushState('', '', "folder?s=" + queryOfURL);
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  $("#list-nav__rigid").click();
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  var for_saved_list = [];
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+    var d = undefined;
     var _iteratorNormalCompletion5 = true;
     var _didIteratorError5 = false;
     var _iteratorError5 = undefined;
 
     try {
-      for (var _iterator5 = list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-        var _d = _step5.value;
+      for (var _iterator5 = snap.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+        var i = _step5.value;
 
-        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
+        for_saved_list.push(JSON.stringify(d));
       }
     } catch (err) {
       _didIteratorError5 = true;
@@ -1332,30 +1318,10 @@ function segueAnyToURLPostFolderChoice() {
         }
       }
     }
-  });
-}
 
-function segueURLPost(id, ownerAId, kind) {
-  var list = [];
-  var d = undefined;
-  var aId = localStorage.accountId;
-  var query = undefined;
-  switch (kind) {
-    case "folders":
-      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
-      break;
-    case "myfreefolders":
-      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
-      break;
-    case "freefolder":
-      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
-      break;
-    default:
-      console.log("Some thing bug is occured at segueURLFeed.");
-      break;
-  }
-  query.get().then(function (snap) {
-    var for_saved_list = [];
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
+    var d = undefined;
     var _iteratorNormalCompletion6 = true;
     var _didIteratorError6 = false;
     var _iteratorError6 = undefined;
@@ -1366,6 +1332,7 @@ function segueURLPost(id, ownerAId, kind) {
 
         d = i.data();
         d.id = i.id;
+        d.kind = "myfreefolders";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
@@ -1384,45 +1351,26 @@ function segueURLPost(id, ownerAId, kind) {
       }
     }
 
-    ;
-    sessionStorage.url_list = for_saved_list.join("-@-");
-
-    /*let listStr = sessionStorage.url_list
-    let list
-    if(listStr !== "")
-      list = listStr.split("-@-").map(x => JSON.parse(x))
-    else
-      list = []*/
-    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { key: "segueUrlPost", list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
-  });
-}
-
-function segueInitFolderFeed() {
-  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderFeed, null), document.getElementById("container"));
-}
-
-function segueFolderFeed() {
-  sessionStorage.udBeforeLocation = location.pathname;
-  history.pushState('', '', "folders");
-  var list = [];
-  var for_saved_list = [];
-  var aId = localStorage.getItem("accountId");
-  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], { key: "segueFolderFeedLaterButton" }), _react2["default"].createElement(_add_button.AddButton, { key: "segueFolderFeedAddButton", func: segueFolderFeedToPostFolder, icon: "folder" })], document.getElementById("utility__area"));
-  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
-    var d = {};
+    sessionStorage.urlset_list = for_saved_list.join("-@-");
+    ReactDOM.render([_react2["default"].createElement(
+      "h1",
+      { className: "title__folder-choice", key: "SAtitele" },
+      "URLを登録するフォルダを選択"
+    ), _react2["default"].createElement(
+      "div",
+      { className: "container__wrapper", key: "SAcontainer" },
+      _react2["default"].createElement(_folder2["default"], { post: true, list: list })
+    )], document.getElementById("main__container"));
+    ReactDOM.unmountComponentAtNode(document.getElementById("utility__area"));
     var _iteratorNormalCompletion7 = true;
     var _didIteratorError7 = false;
     var _iteratorError7 = undefined;
 
     try {
-      for (var _iterator7 = snap.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-        var i = _step7.value;
+      for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+        var _d = _step7.value;
 
-        d = i.data();
-        d.id = i.id;
-        d.kind = "folders";
-        list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
       }
     } catch (err) {
       _didIteratorError7 = true;
@@ -1438,10 +1386,37 @@ function segueFolderFeed() {
         }
       }
     }
+  });
+}
 
-    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
-  }).then(function (snap) {
-    var d = {};
+function segueURLPost(queryOfURL, unwind, folderData) {
+  if (!unwind) {
+    history.pushState('', '', "folder?s=" + queryOfURL);
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  var id = folderData.id;
+  var ownerAId = folderData.ownerAId;
+  var kind = folderData.kind;
+  var list = [];
+  var d = undefined;
+  var aId = localStorage.accountId;
+  var query = undefined;
+  switch (kind) {
+    case "folders":
+      query = _firebase.db.collection("account").doc(aId).collection("folders").doc(id).collection("urls");
+      break;
+    case "myfreefolders":
+      query = _firebase.db.collection("account").doc(aId).collection("myfreefolders").doc(id).collection("urls");
+      break;
+    case "freefolder":
+      query = _firebase.db.collection("freefolder").doc(id).collection("urls");
+      break;
+    default:
+      console.log("Some thing bug is occured at segueURLPost.");
+      break;
+  }
+  query.get().then(function (snap) {
+    var for_saved_list = [];
     var _iteratorNormalCompletion8 = true;
     var _didIteratorError8 = false;
     var _iteratorError8 = undefined;
@@ -1452,7 +1427,6 @@ function segueFolderFeed() {
 
         d = i.data();
         d.id = i.id;
-        d.kind = "myfreefolders";
         list.push(d);
         for_saved_list.push(JSON.stringify(d));
       }
@@ -1471,26 +1445,47 @@ function segueFolderFeed() {
       }
     }
 
-    sessionStorage.urlset_list = for_saved_list.join("-@-");
-    ReactDOM.render(_react2["default"].createElement(
-      "div",
-      { className: "container__wrapper" },
-      _react2["default"].createElement(_folder2["default"], { list: list })
-    ), document.getElementById("main__container"));
+    ;
+    sessionStorage.url_list = for_saved_list.join("-@-");
+
+    /*let listStr = sessionStorage.url_list
+    let list
+    if(listStr !== "")
+      list = listStr.split("-@-").map(x => JSON.parse(x))
+    else
+      list = []*/
+    ReactDOM.render(_react2["default"].createElement(_view.ViewURLPost, { key: "segueUrlPost", list: list, id: id, ownerAId: ownerAId }), document.getElementById("main__container"));
+  });
+}
+
+function segueInitFolderFeed() {
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderFeed, null), document.getElementById("container"));
+}
+
+function segueFolderFeed(queryOfURL, unwind) {
+  if (!unwind) history.pushState('', '', "folder?s=" + queryOfURL);else $("#list-nav__rigid").click();
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  var list = [];
+  var aId = localStorage.getItem("accountId");
+  var addFunction = function addFunction() {
+    (0, _vector_segue.vSegueFolder2FolderPost)(false);
+  };
+  ReactDOM.render([_react2["default"].createElement(_later_button2["default"], { key: "segueFolderFeedLaterButton" }), _react2["default"].createElement(_add_button.AddButton, { key: "segueFolderFeedAddButton", func: addFunction, icon: "folder" })], document.getElementById("utility__area"));
+  _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap) {
+    var d = {};
     var _iteratorNormalCompletion9 = true;
     var _didIteratorError9 = false;
     var _iteratorError9 = undefined;
 
     try {
-      for (var _iterator9 = list[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-        var _d2 = _step9.value;
+      for (var _iterator9 = snap.docs[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+        var i = _step9.value;
 
-        var _aId = localStorage.accountId;
-        if (_d2.aId === _aId) {
-          var selector = "#" + _d2.id + " .edit__folder";
-          $(selector).css("display", "block");
-        }
-        $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
+        d = i.data();
+        d.id = i.id;
+        d.kind = "folders";
+        list.push(d);
       }
     } catch (err) {
       _didIteratorError9 = true;
@@ -1506,18 +1501,9 @@ function segueFolderFeed() {
         }
       }
     }
-  });
-}
 
-function segueGlobal() {
-  sessionStorage.udBeforeLocation = location.pathname;
-  history.pushState('', '', "feed");
-  var aId = localStorage.accountId;
-  var for_saved_list = [];
-  var latest_list = [];
-  var recommend_list = [];
-  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: segueFolderToAddPanel, icon: "+" }), document.getElementById("utility__area"));
-  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    return _firebase.db.collection("account").doc(aId).collection("myfreefolders").get();
+  }).then(function (snap) {
     var d = {};
     var _iteratorNormalCompletion10 = true;
     var _didIteratorError10 = false;
@@ -1525,13 +1511,12 @@ function segueGlobal() {
 
     try {
       for (var _iterator10 = snap.docs[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-        var j = _step10.value;
+        var i = _step10.value;
 
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        latest_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        d = i.data();
+        d.id = i.id;
+        d.kind = "myfreefolders";
+        list.push(d);
       }
     } catch (err) {
       _didIteratorError10 = true;
@@ -1548,22 +1533,28 @@ function segueGlobal() {
       }
     }
 
-    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-  }).then(function (snap) {
-    var d = {};
+    sessionStorage.folder_folderList = list.map(function (x) {
+      return JSON.stringify(x);
+    }).join("-@-");
+    ReactDOM.render(_react2["default"].createElement(
+      "div",
+      { className: "container__wrapper" },
+      _react2["default"].createElement(_folder2["default"], { list: list })
+    ), document.getElementById("main__container"));
     var _iteratorNormalCompletion11 = true;
     var _didIteratorError11 = false;
     var _iteratorError11 = undefined;
 
     try {
-      for (var _iterator11 = snap.docs[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-        var j = _step11.value;
+      for (var _iterator11 = list[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
+        var _d2 = _step11.value;
 
-        d = j.data();
-        d.id = j.id;
-        d.kind = "freefolder";
-        recommend_list.push(d);
-        for_saved_list.push(JSON.stringify(d));
+        var _aId = localStorage.accountId;
+        if (_d2.aId === _aId) {
+          var selector = "#" + _d2.id + " .edit__folder";
+          $(selector).css("display", "block");
+        }
+        $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
       }
     } catch (err) {
       _didIteratorError11 = true;
@@ -1579,9 +1570,87 @@ function segueGlobal() {
         }
       }
     }
+  });
+}
 
-    ;
-    sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+function segueGlobal(queryOfURL, unwind) {
+  if (!unwind) {
+    history.pushState('', '', "home?s=" + queryOfURL);
+  } else {
+    $("#list-nav__rigid").click();
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  var aId = localStorage.accountId;
+  var latest_list = [];
+  var recommend_list = [];
+  ReactDOM.render(_react2["default"].createElement(_add_button.AddButton, { func: _vector_segue.vSegueHome2AddPanel, icon: "+" }), document.getElementById("utility__area"));
+  _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion12 = true;
+    var _didIteratorError12 = false;
+    var _iteratorError12 = undefined;
+
+    try {
+      for (var _iterator12 = snap.docs[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
+        var j = _step12.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        latest_list.push(d);
+      }
+    } catch (err) {
+      _didIteratorError12 = true;
+      _iteratorError12 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
+          _iterator12["return"]();
+        }
+      } finally {
+        if (_didIteratorError12) {
+          throw _iteratorError12;
+        }
+      }
+    }
+
+    sessionStorage.home_latestFolderList = latest_list.map(function (x) {
+      return JSON.stringify(x);
+    }).join("-@-");
+    return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+  }).then(function (snap) {
+    var d = {};
+    var _iteratorNormalCompletion13 = true;
+    var _didIteratorError13 = false;
+    var _iteratorError13 = undefined;
+
+    try {
+      for (var _iterator13 = snap.docs[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
+        var j = _step13.value;
+
+        d = j.data();
+        d.id = j.id;
+        d.kind = "freefolder";
+        recommend_list.push(d);
+      }
+    } catch (err) {
+      _didIteratorError13 = true;
+      _iteratorError13 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion13 && _iterator13["return"]) {
+          _iterator13["return"]();
+        }
+      } finally {
+        if (_didIteratorError13) {
+          throw _iteratorError13;
+        }
+      }
+    }
+
+    sessionStorage.home_recommendFolderList = recommend_list.map(function (x) {
+      return JSON.stringify(x);
+    }).join("-@-");
     ReactDOM.render([_react2["default"].createElement(
       "div",
       { id: "container__latest", key: "segueGlobalLatest" },
@@ -1610,32 +1679,31 @@ function segueGlobal() {
       )
     )], document.getElementById("main__container"));
     var list = latest_list.concat(recommend_list);
-    var _iteratorNormalCompletion12 = true;
-    var _didIteratorError12 = false;
-    var _iteratorError12 = undefined;
+    var _iteratorNormalCompletion14 = true;
+    var _didIteratorError14 = false;
+    var _iteratorError14 = undefined;
 
     try {
-      for (var _iterator12 = list[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-        var _d3 = _step12.value;
+      for (var _iterator14 = list[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
+        var _d3 = _step14.value;
 
         var _aId2 = localStorage.accountId;
         if (_d3.aId === _aId2) {
           var selector = "#" + _d3.id + " .edit__folder";
           $(selector).css("display", "block");
         }
-        $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
       }
     } catch (err) {
-      _didIteratorError12 = true;
-      _iteratorError12 = err;
+      _didIteratorError14 = true;
+      _iteratorError14 = err;
     } finally {
       try {
-        if (!_iteratorNormalCompletion12 && _iterator12["return"]) {
-          _iterator12["return"]();
+        if (!_iteratorNormalCompletion14 && _iterator14["return"]) {
+          _iterator14["return"]();
         }
       } finally {
-        if (_didIteratorError12) {
-          throw _iteratorError12;
+        if (_didIteratorError14) {
+          throw _iteratorError14;
         }
       }
     }
@@ -1648,17 +1716,17 @@ function segueInitToGlobal() {
   ReactDOM.render(_react2["default"].createElement(_view.ViewTop, { key: "segueInitToGlobal" }), document.getElementById("container"));
 }
 
-exports.segueAnyToURLPostFolderChoice = segueAnyToURLPostFolderChoice;
+exports.segueFolderChoice = segueFolderChoice;
 exports.segueURLFeed = segueURLFeed;
 exports.segueInitFolderFeed = segueInitFolderFeed;
 exports.segueFolderFeed = segueFolderFeed;
 exports.segueInitToGlobal = segueInitToGlobal;
 exports.segueGlobal = segueGlobal;
-exports.segueFolderToAddPanel = segueFolderToAddPanel;
-exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
+exports.segueAddPanel = segueAddPanel;
+exports.segueFolderPost = segueFolderPost;
 exports.segueURLPost = segueURLPost;
 
-},{"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./side_menu":8,"./view":11,"react":114}],8:[function(require,module,exports){
+},{"../lib/magic_url":13,"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./side_menu":8,"./vector_segue":11,"./view":12,"react":119}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1683,6 +1751,10 @@ var _segue = require("./segue");
 
 var _firebase = require("./firebase");
 
+var _vector_segue = require("./vector_segue");
+
+var _libMagic_url = require("../lib/magic_url");
+
 var SideMenu = (function (_React$Component) {
   _inherits(SideMenu, _React$Component);
 
@@ -1694,10 +1766,9 @@ var SideMenu = (function (_React$Component) {
       profImg: _firebase.auth.currentUser.photoURL,
       profStyle: props.profStyle,
       homeStyle: props.homeStyle + " fas fa-home",
-      foldersStyle: props.foldersStyle + " far fa-folder",
+      folderStyle: props.folderStyle + " far fa-folder",
       notifiStyle: props.alertStyle + " far fa-bell",
       instructStyle: props.instructStyle + " far fa-question-circle"
-
     };
     this.sideMenuActiveShift = this.sidemenuActiveShift.bind(this);
   }
@@ -1705,43 +1776,47 @@ var SideMenu = (function (_React$Component) {
   _createClass(SideMenu, [{
     key: "sidemenuActiveShift",
     value: function sidemenuActiveShift() {
-      var sideMenuState = JSON.parse(sessionStorage.udSideMenuState);
-      this.setState(sideMenuState);
-      sessionStorage.removeItem("udSideMenuState");
+      var nowLocation = location.pathname.slice(1);
+      this.setState(switchButtonActive(nowLocation));
     }
   }, {
     key: "profClicked",
     value: function profClicked() {
+      history.pushState('', '', "account?" + localStorage.getItem("accountId"));
       this.setState(switchButtonActive("prof"));
     }
   }, {
     key: "homeClicked",
     value: function homeClicked() {
+      var beforeState = this.state;
       this.setState(switchButtonActive("home"));
-      (0, _segue.segueGlobal)();
+      sideMenuVSegueEventTrigger(beforeState, switchButtonActive("home"));
     }
   }, {
     key: "folderClicked",
     value: function folderClicked() {
-      this.setState(switchButtonActive("folders"));
-      (0, _segue.segueFolderFeed)();
+      var beforeState = this.state;
+      this.setState(switchButtonActive("folder"));
+      sideMenuVSegueEventTrigger(beforeState, switchButtonActive("folder"));
     }
   }, {
     key: "notifiClicked",
     value: function notifiClicked() {
+      var beforeState = this.state;
       this.setState(switchButtonActive("notification"));
+      sideMenuVSegueEventTrigger(beforeState, switchButtonActive("notification"));
       if (sessionStorage.canNotification) alert("通知表示画面はこれから実装されます。");else alert("通知が許可されていません、ブラウザの設定を修正してください");
       var path = location.pathname.split("/")[1];
-      if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));
     }
   }, {
     key: "instructClicked",
     value: function instructClicked() {
+      var beforeState = this.state;
       this.setState(switchButtonActive("instruction"));
+      sideMenuVSegueEventTrigger(beforeState, switchButtonActive("instuction"));
       alert("すみません、説明書はこれから実装されます。");
       var path = location.pathname.split("/")[1];
-      if (path === "feed") path = "home";
       this.setState(switchButtonActive(path));
     }
   }, {
@@ -1771,7 +1846,7 @@ var SideMenu = (function (_React$Component) {
             null,
             _react2["default"].createElement(
               "button",
-              { id: "list-nav__folders", className: this.state.foldersStyle, onClick: this.folderClicked.bind(this) },
+              { id: "list-nav__folders", className: this.state.folderStyle, onClick: this.folderClicked.bind(this) },
               _react2["default"].createElement(
                 "span",
                 { className: "list-nav__button-text" },
@@ -1810,7 +1885,7 @@ var SideMenu = (function (_React$Component) {
             { className: this.state.profStyle },
             _react2["default"].createElement(
               "a",
-              { href: "/account?aId=" + localStorage.getItem("accountId") },
+              { href: "/account?s=" + location.pathname.slice(1) + "2account&aId=" + localStorage.getItem("accountId") },
               _react2["default"].createElement("img", { src: this.state.profImg, id: "list-nav__button__profile" }),
               _react2["default"].createElement(
                 "span",
@@ -1835,7 +1910,7 @@ function switchButtonActive(targetElement) {
   var after = {
     profStyle: "",
     homeStyle: " fas fa-home",
-    foldersStyle: " far fa-folder",
+    folderStyle: " far fa-folder",
     notifiStyle: " far fa-bell",
     instructStyle: " far fa-question-circle"
   };
@@ -1846,8 +1921,8 @@ function switchButtonActive(targetElement) {
     case "profile":
       after.profStyle += " tb-active";
       break;
-    case "folders":
-      after.foldersStyle += " tb-active";
+    case "folder":
+      after.folderStyle += " tb-active";
       break;
     case "notification":
       after.notifiStyle += " tb-active";
@@ -1859,6 +1934,33 @@ function switchButtonActive(targetElement) {
   return after;
 }
 
+function sideMenuVSegueEventTrigger(beforeMenuState, afterMenuState) {
+  var beforeActiveListItem = undefined;
+  for (var i in beforeMenuState) {
+    if (beforeMenuState[i] === undefined) continue;
+    if (beforeMenuState[i].indexOf("tb-active") !== -1) {
+      beforeActiveListItem = i;
+    }
+  }
+
+  var afterActiveListItem = undefined;
+  for (var i in afterMenuState) {
+    if (beforeMenuState[i] === undefined) continue;
+    if (afterMenuState[i].indexOf("tb-active") !== -1) {
+      afterActiveListItem = i;
+    }
+  }
+
+  if (beforeActiveListItem === afterActiveListItem) return;
+
+  if (beforeActiveListItem === "homeStyle") {
+    if (afterActiveListItem === "profStyle") console.log("遷移が実際のリンクにより行われます");else if (afterActiveListItem === "folderStyle") (0, _vector_segue.vSegueHome2Folder)(false);else if (afterActiveListItem === "notifiStyle") console.log("通知画面が未実装なので表示されません");else if (afterActiveListItem === "instructStyle") console.log("説明書が未実装なので表示されません");else alert("すみません、開発者のミスです。このバグはすぐに修正します。");
+  } else if (beforeActiveListItem === "folderStyle") {
+    if (afterActiveListItem === "profStyle") console.log("遷移が実際のリンクにより行われます");else if (afterActiveListItem === "homeStyle") (0, _vector_segue.vSegueFolder2Home)(false);else if (afterActiveListItem === "notifiStyle") console.log("通知画面が未実装なので表示されません");else if (afterActiveListItem === "instructStyle") console.log("説明書が未実装なので表示されません");else alert("すみません、開発者のミスです。このバグはすぐに修正します。");
+  }
+}
+
+// 不要かも
 function sideMenuButtonShift(targetElement) {
   sessionStorage.udSideMenuState = JSON.stringify(switchButtonActive(targetElement));
   $("#list-nav__rigid").click();
@@ -1866,7 +1968,7 @@ function sideMenuButtonShift(targetElement) {
 
 exports.sideMenuButtonShift = sideMenuButtonShift;
 
-},{"./firebase":3,"./segue":7,"react":114}],9:[function(require,module,exports){
+},{"../lib/magic_url":13,"./firebase":3,"./segue":7,"./vector_segue":11,"react":119}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2033,7 +2135,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"./firebase":3,"react":114}],10:[function(require,module,exports){
+},{"./firebase":3,"react":119}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2061,6 +2163,311 @@ function generateUuid() {
 module.exports = exports["default"];
 
 },{}],11:[function(require,module,exports){
+/* 遷移元から遷移先を示したセグエ
+ * 実際に画面を移動させるときの大本
+ *
+ *  表記法
+ *
+ *  vSegue<From>2<To>
+ *
+ *  引数: unwind
+ *  戻るボタンを押した時の遷移か
+ *  押したときなら true
+ *
+ *  argument: unwind
+ *  Transition with pushing return button.
+ *  If pushed, true.
+ *
+ * Segue display transition from and to.
+ * Really entering function when page transition occured. 
+ *
+ */
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _segue = require("./segue");
+
+var _folder = require("./folder");
+
+var _folder2 = _interopRequireDefault(_folder);
+
+var _libMagic_url = require("../lib/magic_url");
+
+var _libQuery_parser = require("../lib/query_parser");
+
+var _libQuery_parser2 = _interopRequireDefault(_libQuery_parser);
+
+var _libQuery_generator = require("../lib/query_generator");
+
+var _libQuery_generator2 = _interopRequireDefault(_libQuery_generator);
+
+var _view = require("./view");
+
+function vSegueHome2Folder(unwind) {
+  (0, _segue.segueFolderFeed)("home2folder", unwind);
+}
+
+function vSegueFolder2Home(unwind) {
+  (0, _segue.segueGlobal)("folder2home", unwind);
+}
+
+function vSegueHome2FolderEdit(unwind) {
+  if (!unwind) {
+    history.pushState('', '', "home?s=home2folderedit");
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  var latestFolderList = sessionStorage.home_latestFolderList.split("-@-").map(function (x) {
+    return JSON.parse(x);
+  });
+  var recommendFolderList = sessionStorage.home_recommendFolderList.split("-@-").map(function (x) {
+    return JSON.parse(x);
+  });
+  var pageInfo = {
+    locate: "home",
+    latestFolderList: latestFolderList,
+    recommendFolderList: recommendFolderList
+  };
+  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderEdit, { pageInfo: pageInfo }), document.getElementById("main__container"));
+}
+
+function vSegueFolderEdit2Home(unwind) {
+  (0, _segue.segueGlobal)("folderedit2home", unwind);
+}
+
+function vSegueHome2URL(unwind) {
+  var folderData = JSON.parse(sessionStorage.folderData);
+  var query = undefined;
+  if (true) {
+    query = "home2url&id=" + folderData.id;
+  } else {
+    query;
+  }
+  (0, _segue.segueURLFeed)(query, unwind, folderData);
+}
+
+function vSegueURL2Home(unwind) {
+  (0, _segue.segueGlobal)("url2home", unwind);
+}
+
+function vSegueFolder2FolderEdit(unwind) {
+  if (!unwind) {
+    history.pushState('', '', "folder?s=folder2folderedit");
+  }
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  var folderList = sessionStorage.folder_folderList.split("-@-").map(function (x) {
+    return JSON.parse(x);
+  });
+  var pageInfo = {
+    locate: "folder",
+    folderList: folderList
+  };
+  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderEdit, { pageInfo: pageInfo }), document.getElementById("main__container"));
+}
+
+function vSegueFolderEdit2Folder(unwind) {
+  var queryPart = (0, _libQuery_generator2["default"])();
+  (0, _segue.segueFolderFeed)("folderedit2folder" + queryPart, unwind);
+}
+
+function vSegueFolder2URL(unwind) {
+  var folderData = JSON.parse(sessionStorage.folderData);
+  /* Authentication */
+  var query = undefined;
+  if (true) {
+    query = "folder2url&id=" + folderData.id;
+  } else {
+    query;
+  }
+  (0, _segue.segueURLFeed)(query, unwind, folderData);
+}
+
+function vSegueURL2Folder(unwind) {
+  (0, _segue.segueFolderFeed)("url2folder", unwind);
+}
+
+function vSegueAccount2Folder(unwind) {
+  (0, _segue.segueFolderFeed)("account2folder", unwind);
+}
+
+function vSegueFolder2Account(unwind) {
+  // location.href ="/account?s=folder2account"
+}
+
+function vSegueAccount2URL(unwind) {
+  var folderData = JSON.parse(sessionStorage.folderData);
+  var query = undefined;
+  if (true) {
+    query = "account2url&id=" + folderData.id;
+  } else {
+    query;
+  }
+  (0, _segue.segueURLFeed)(query, unwind, folderData);
+}
+
+function vSegueURL2Account(unwind) {
+  location.reload();
+}
+
+function vSegueAccount2FolderEdit(unwind) {
+  if (!unwind) {
+    history.pushState('', '', "account?s=account2folderedit");
+  }
+  ReactDOM.render(_react2["default"].createElement(_view.ViewFolderEdit, { ownerAId: this.state.ownerAId, id: this.state.id }), document.getElementById("container"));
+}
+
+function vSegueFolderEdit2Account(unwind) {}
+
+function vSegueAccount2Followee(unwind) {}
+
+function vSegueFollowee2Account(unwind) {}
+
+function vSegueAccount2Follower(unwind) {}
+
+function vSegueFollower2Account(unwind) {}
+
+function vSegueHome2AddPanel(unwind) {
+  (0, _segue.segueAddPanel)("home2addpanel", unwind);
+}
+
+function vSegueAddPanel2Home(unwind) {
+  (0, _segue.segueGlobal)("url2home", unwind);
+}
+
+function vSegueAddPanel2FolderPost(unwind) {
+  (0, _segue.segueFolderPost)("addpanel2folderpost", unwind);
+}
+
+function vSegueFolderPost2AddPanel(unwind) {
+  (0, _segue.segueAddPanel)("folderpost2addpanel", unwind);
+}
+
+function vSegueAddPanel2FolderChoice(unwind) {
+  (0, _segue.segueFolderChoice)("addpanel2folderchoice", unwind);
+}
+
+function vSegueFolderChoice2AddPanel(unwind) {
+  (0, _segue.segueAddPanel)("folderchoice2addpanel", unwind);
+}
+
+function vSegueFolderChoice2URLPost(unwind) {
+  var folderData = JSON.parse(sessionStorage.folderData);
+  sessionStorage.removeItem("folderData");
+  (0, _segue.segueURLPost)("folderchoice2urlpost&id=" + folderData.id, unwind, folderData);
+}
+
+function vSegueURLPost2FolderChoice(unwind) {
+  (0, _segue.segueFolderChoice)("urlpost2folderchoice", unwind);
+}
+
+function vSegueURLPost2URL(unwind) {
+  //* unwind is always false
+  var id = (0, _libQuery_parser2["default"])().id;
+  var urlList = sessionStorage.url_list.split("-@-").map(function (x) {
+    return JSON.parse(x);
+  });
+  if (Boolean(sessionStorage.urlpost_isUpload)) {
+    var uploadURLList = sessionStorage.urlpost_uploadURLList.split("-@-").map(function (x) {
+      return JSON.parse(x);
+    });
+    Array.prototype.push.apply(urlList, uploadURLList);
+    history.pushState('', '', "folder?s=urlpost2url&upload=true&id=" + id);
+  } else {
+    history.pushState('', '', "folder?s=urlpost2url&upload=false&id=" + id);
+  }
+  sessionStorage.removeItem("urlpost_isUpload");
+  sessionStorage.removeItem("urlpost_uploadURLList");
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  ReactDOM.render(_react2["default"].createElement(_view.ViewURLFeed, { key: "segueUrlFeed", id: id, list: urlList }), document.getElementById("main__container"));
+}
+
+function vSegueURL2URLPost(unwind) {
+  var folderId = (0, _libQuery_parser2["default"])().id;
+  //* unwind is always true
+  console.log("folderData");
+  (0, _folder.getFolderType)(folderId).then(function (folderData) {
+    console.log(folderData);
+    (0, _segue.segueURLPost)("url2urlpost&id=" + folderId, unwind, folderData);
+  });
+}
+
+function vSegueFolderPost2Folder(unwind) {
+  //* unwind is always false
+  var folderList = [];
+  if (Boolean(sessionStorage.folderpost_isUpload)) {
+    if (sessionStorage.folder_folderList) {
+      folderList = sessionStorage.folder_folderList.split("-@-").map(function (x) {
+        return JSON.parse(x);
+      });
+    }
+    folderList.push(JSON.parse(sessionStorage.folderpost_uploadFolderData));
+    history.pushState('', '', "folder?s=folderpost2folder&upload=true");
+  } else {
+    if (sessionStorage.folder_folderList) {
+      folderList = sessionStorage.folder_folderList.split("-@-").map(function (x) {
+        return JSON.parse(x);
+      });
+    }
+    history.pushState('', '', "folder?s=folderpost2folder&upload=false");
+  }
+  sessionStorage.removeItem("folderpost_uploadFolderData");
+  sessionStorage.removeItem("folderpost_isUpload");
+  sessionStorage.udBeforeLocation = (0, _libMagic_url.currentWhere)();
+  ReactDOM.render(_react2["default"].createElement(
+    "div",
+    { className: "container__wrapper" },
+    _react2["default"].createElement(_folder2["default"], { list: folderList })
+  ), document.getElementById("main__container"));
+}
+
+function vSegueFolder2FolderPost(unwind) {
+  (0, _segue.segueFolderPost)("folder2folderpost", unwind);
+}
+
+/* 関数を追加した場合、/lib/spa_router.js の関数リストも変更してください */
+
+exports.vSegueHome2Folder = vSegueHome2Folder;
+exports.vSegueFolder2Home = vSegueFolder2Home;
+exports.vSegueFolder2URL = vSegueFolder2URL;
+exports.vSegueURL2Folder = vSegueURL2Folder;
+exports.vSegueHome2AddPanel = vSegueHome2AddPanel;
+exports.vSegueAddPanel2Home = vSegueAddPanel2Home;
+exports.vSegueAccount2Folder = vSegueAccount2Folder;
+exports.vSegueFolderChoice2URLPost = vSegueFolderChoice2URLPost;
+exports.vSegueFolderChoice2AddPanel = vSegueFolderChoice2AddPanel;
+exports.vSegueFolder2Account = vSegueFolder2Account;
+exports.vSegueAddPanel2FolderChoice = vSegueAddPanel2FolderChoice;
+exports.vSegueFolderPost2AddPanel = vSegueFolderPost2AddPanel;
+exports.vSegueAccount2URL = vSegueAccount2URL;
+exports.vSegueAddPanel2FolderPost = vSegueAddPanel2FolderPost;
+exports.vSegueURLPost2URL = vSegueURLPost2URL;
+exports.vSegueURL2Account = vSegueURL2Account;
+exports.vSegueURL2URLPost = vSegueURL2URLPost;
+exports.vSegueFolderPost2Folder = vSegueFolderPost2Folder;
+exports.vSegueAccount2Followee = vSegueAccount2Followee;
+exports.vSegueFolder2FolderPost = vSegueFolder2FolderPost;
+exports.vSegueFolderEdit2Folder = vSegueFolderEdit2Folder;
+exports.vSegueFollowee2Account = vSegueFollowee2Account;
+exports.vSegueHome2URL = vSegueHome2URL;
+exports.vSegueURL2Home = vSegueURL2Home;
+exports.vSegueURLPost2FolderChoice = vSegueURLPost2FolderChoice;
+exports.vSegueAccount2Follower = vSegueAccount2Follower;
+exports.vSegueHome2FolderEdit = vSegueHome2FolderEdit;
+exports.vSegueFolderEdit2Home = vSegueFolderEdit2Home;
+exports.vSegueFollower2Account = vSegueFollower2Account;
+exports.vSegueFolder2FolderEdit = vSegueFolder2FolderEdit;
+exports.vSegueAccount2FolderEdit = vSegueAccount2FolderEdit;
+
+},{"../lib/magic_url":13,"../lib/query_generator":14,"../lib/query_parser":15,"./folder":4,"./segue":7,"./view":12,"react":119}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2102,6 +2509,10 @@ var _segue = require("./segue");
 var _later_button = require("./later_button");
 
 var _later_button2 = _interopRequireDefault(_later_button);
+
+var _vector_segue = require("./vector_segue");
+
+var _libSpa_router = require("../lib/spa_router");
 
 /* Props list: cancel(function) title(string) content(html) */
 
@@ -2145,89 +2556,95 @@ var ViewFolderEdit = (function (_React$Component2) {
     _classCallCheck(this, ViewFolderEdit);
 
     _get(Object.getPrototypeOf(ViewFolderEdit.prototype), "constructor", this).call(this, props);
-    var list = sessionStorage.urlset_list.split("-@-").map(function (x) {
-      return JSON.parse(x);
-    });
-    var jsx = _react2["default"].createElement(
-      "div",
-      { className: "add_view" },
-      _react2["default"].createElement(
+    this.state = {
+      id: sessionStorage.folderedit_id,
+      aId: sessionStorage.folderedit_aId,
+      content: _react2["default"].createElement(
         "div",
-        { className: "add_panel", onClick: this.deleteFolder.bind(this) },
+        { className: "add_view" },
         _react2["default"].createElement(
-          "h3",
-          null,
-          "フォルダの削除"
-        ),
-        _react2["default"].createElement(
-          "p",
-          null,
-          "このフォルダを削除します"
+          "div",
+          { className: "add_panel", onClick: this.deleteFolder.bind(this) },
+          _react2["default"].createElement(
+            "h3",
+            null,
+            "フォルダの削除"
+          ),
+          _react2["default"].createElement(
+            "p",
+            null,
+            "このフォルダを削除します"
+          )
         )
       )
-    );
-    this.state = {
-      id: props.id,
-      ownerAId: props.ownerAId,
-      list: list,
-      content: jsx
     };
+    sessionStorage.removeItem("folderedit_id");
+    sessionStorage.removeItem("folderedit_aId");
+    this.cancel.bind(this);
   }
 
   _createClass(ViewFolderEdit, [{
     key: "deleteFolder",
     value: function deleteFolder() {
-      _firebase.db.collection("account").doc(this.state.ownerAId).collection("myfreefolders").doc(this.state.id)["delete"]();
-      (0, _segue.segueInitFolderFeed)();
+      console.log(this.state);
+      console.log(this.state.aId);
+      _firebase.db.collection("account").doc(this.state.aId).collection("myfreefolders").doc(this.state.id)["delete"]().then(function () {
+        sessionStorage.folderedit_isManipulateType = "delete";
+        (0, _libSpa_router.backBefore)(false);
+      });
     }
   }, {
     key: "cancel",
     value: function cancel() {
-      ReactDOM.unmountComponentAtNode(document.getElementById("container"));
-      var list = sessionStorage.urlset_list.split("-@-");
-      for (var i = 0; i < list.length; i++) {
-        list[i] = JSON.parse(list[i]);
-      }
-      ReactDOM.render(_react2["default"].createElement("segueInitFolderFeed", { list: list }), document.getElementById("container"));
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
-
-      try {
-        for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var d = _step.value;
-
-          $("#" + d.id).css("background-image", "url(" + d.img + ")");
-          var aId = localStorage.accountId;
-          if (d.aId === aId) {
-            var selector = "#" + d.id + " .edit__folder";
-            $(selector).css("display", "block");
-          }
-        }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator["return"]) {
-            _iterator["return"]();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
+      sessionStorage.folderedit_isManipulateType = "";
+      (0, _libSpa_router.backBefore)(false);
     }
   }, {
     key: "render",
     value: function render() {
-      return _react2["default"].createElement(
-        "div",
-        { className: "container__wrapper" },
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list }),
-        _react2["default"].createElement(TemplateViewNavTab, { content: this.state.content, title: this.state.id, cancel: this.cancel })
-      );
+      var folderEditComponent = undefined;
+      switch (this.props.pageInfo.locate) {
+        case "home":
+          folderEditComponent = [_react2["default"].createElement(
+            "div",
+            { id: "container__latest", key: "segueGlobalLatest" },
+            _react2["default"].createElement(
+              "h1",
+              { className: "latest-container__title" },
+              "新着情報"
+            ),
+            _react2["default"].createElement(
+              "div",
+              { className: "container__wrapper" },
+              _react2["default"].createElement(_folder2["default"], { list: this.props.pageInfo.latestFolderList })
+            )
+          ), _react2["default"].createElement(
+            "div",
+            { key: "segueGlobalRecommend" },
+            _react2["default"].createElement(
+              "h1",
+              { className: "recommend-container__title" },
+              "評価されている情報"
+            ),
+            _react2["default"].createElement(
+              "div",
+              { className: "container__wrapper" },
+              _react2["default"].createElement(_folder2["default"], { list: this.props.pageInfo.recommendFolderList })
+            )
+          ), _react2["default"].createElement(TemplateViewNavTab, { key: "folderEdit", content: this.state.content, title: this.state.id, cancel: this.cancel })];
+          break;
+        case "folder":
+          folderEditComponent = _react2["default"].createElement(
+            "div",
+            { className: "container__wrapper" },
+            _react2["default"].createElement(_folder2["default"], { list: this.props.pageInfo.folderList }),
+            _react2["default"].createElement(TemplateViewNavTab, { content: this.state.content, title: this.state.id, cancel: this.cancel })
+          );
+          break;
+        default:
+          console.error("Error at folder edit component");
+      }
+      return folderEditComponent;
     }
   }]);
 
@@ -2250,7 +2667,7 @@ var ViewTop = (function (_React$Component3) {
   _createClass(ViewTop, [{
     key: "openAddPanel",
     value: function openAddPanel() {
-      (0, _segue.segueFolderToAddPanel)();
+      (0, _vector_segue.vSegueHome2AddPanel)(false);
     }
   }, {
     key: "shouldComponentUpdate",
@@ -2269,6 +2686,38 @@ var ViewTop = (function (_React$Component3) {
       var recommend_list = [];
       _firebase.db.collection("freefolder").orderBy("dateTime", "desc").limit(8).get().then(function (snaps) {
         var d = {};
+        var _iteratorNormalCompletion = true;
+        var _didIteratorError = false;
+        var _iteratorError = undefined;
+
+        try {
+          for (var _iterator = snaps.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var j = _step.value;
+
+            d = j.data();
+            d.id = j.id;
+            d.kind = "freefolder";
+            latest_list.push(d);
+            for_saved_list.push(JSON.stringify(d));
+          }
+        } catch (err) {
+          _didIteratorError = true;
+          _iteratorError = err;
+        } finally {
+          try {
+            if (!_iteratorNormalCompletion && _iterator["return"]) {
+              _iterator["return"]();
+            }
+          } finally {
+            if (_didIteratorError) {
+              throw _iteratorError;
+            }
+          }
+        }
+
+        return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
+      }).then(function (snaps) {
+        var d = {};
         var _iteratorNormalCompletion2 = true;
         var _didIteratorError2 = false;
         var _iteratorError2 = undefined;
@@ -2280,7 +2729,7 @@ var ViewTop = (function (_React$Component3) {
             d = j.data();
             d.id = j.id;
             d.kind = "freefolder";
-            latest_list.push(d);
+            recommend_list.push(d);
             for_saved_list.push(JSON.stringify(d));
           }
         } catch (err) {
@@ -2298,22 +2747,28 @@ var ViewTop = (function (_React$Component3) {
           }
         }
 
-        return _firebase.db.collection("freefolder").orderBy("dateTime").limit(8).get();
-      }).then(function (snaps) {
-        var d = {};
+        ;
+        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
+        _this.setState(function () {
+          return {
+            latest_list: latest_list,
+            recommend_list: recommend_list
+          };
+        });
         var _iteratorNormalCompletion3 = true;
         var _didIteratorError3 = false;
         var _iteratorError3 = undefined;
 
         try {
-          for (var _iterator3 = snaps.docs[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var j = _step3.value;
+          for (var _iterator3 = recommend_list[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var _d = _step3.value;
 
-            d = j.data();
-            d.id = j.id;
-            d.kind = "freefolder";
-            recommend_list.push(d);
-            for_saved_list.push(JSON.stringify(d));
+            var _aId = localStorage.accountId;
+            if (_d.aId === _aId) {
+              var selector = "#" + _d.id + " .edit__folder";
+              $(selector).css("display", "block");
+            }
+            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
           }
         } catch (err) {
           _didIteratorError3 = true;
@@ -2330,28 +2785,20 @@ var ViewTop = (function (_React$Component3) {
           }
         }
 
-        ;
-        sessionStorage.urlset_list = for_saved_list.join("-@-"); // @platong save list at urlset_list
-        _this.setState(function () {
-          return {
-            latest_list: latest_list,
-            recommend_list: recommend_list
-          };
-        });
         var _iteratorNormalCompletion4 = true;
         var _didIteratorError4 = false;
         var _iteratorError4 = undefined;
 
         try {
-          for (var _iterator4 = recommend_list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var _d = _step4.value;
+          for (var _iterator4 = latest_list[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _d2 = _step4.value;
 
-            var _aId = localStorage.accountId;
-            if (_d.aId === _aId) {
-              var selector = "#" + _d.id + " .edit__folder";
+            var _aId2 = localStorage.accountId;
+            if (_d2.aId === _aId2) {
+              var selector = "#" + _d2.id + " .edit__folder";
               $(selector).css("display", "block");
             }
-            $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
           }
         } catch (err) {
           _didIteratorError4 = true;
@@ -2364,36 +2811,6 @@ var ViewTop = (function (_React$Component3) {
           } finally {
             if (_didIteratorError4) {
               throw _iteratorError4;
-            }
-          }
-        }
-
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
-
-        try {
-          for (var _iterator5 = latest_list[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var _d2 = _step5.value;
-
-            var _aId2 = localStorage.accountId;
-            if (_d2.aId === _aId2) {
-              var selector = "#" + _d2.id + " .edit__folder";
-              $(selector).css("display", "block");
-            }
-            $("#" + _d2.id).css("background-image", "url(" + _d2.img + ")");
-          }
-        } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-              _iterator5["return"]();
-            }
-          } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
             }
           }
         }
@@ -2472,13 +2889,13 @@ var ViewFolderFeed = (function (_React$Component4) {
       _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
         var d = undefined;
         var for_saved_list = [];
-        var _iteratorNormalCompletion6 = true;
-        var _didIteratorError6 = false;
-        var _iteratorError6 = undefined;
+        var _iteratorNormalCompletion5 = true;
+        var _didIteratorError5 = false;
+        var _iteratorError5 = undefined;
 
         try {
-          for (var _iterator6 = snap1.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-            var i = _step6.value;
+          for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+            var i = _step5.value;
 
             d = i.data();
             d.id = i.id;
@@ -2487,16 +2904,16 @@ var ViewFolderFeed = (function (_React$Component4) {
             for_saved_list.push(JSON.stringify(d));
           }
         } catch (err) {
-          _didIteratorError6 = true;
-          _iteratorError6 = err;
+          _didIteratorError5 = true;
+          _iteratorError5 = err;
         } finally {
           try {
-            if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-              _iterator6["return"]();
+            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+              _iterator5["return"]();
             }
           } finally {
-            if (_didIteratorError6) {
-              throw _iteratorError6;
+            if (_didIteratorError5) {
+              throw _iteratorError5;
             }
           }
         }
@@ -2504,19 +2921,52 @@ var ViewFolderFeed = (function (_React$Component4) {
         ;
         _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
           var d = undefined;
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
+          var _iteratorNormalCompletion6 = true;
+          var _didIteratorError6 = false;
+          var _iteratorError6 = undefined;
 
           try {
-            for (var _iterator7 = snap2.docs[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var i = _step7.value;
+            for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+              var i = _step6.value;
 
               d = i.data();
               d.id = i.id;
               d.kind = "myfreefolders";
               list.push(d);
               for_saved_list.push(JSON.stringify(d));
+            }
+          } catch (err) {
+            _didIteratorError6 = true;
+            _iteratorError6 = err;
+          } finally {
+            try {
+              if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
+                _iterator6["return"]();
+              }
+            } finally {
+              if (_didIteratorError6) {
+                throw _iteratorError6;
+              }
+            }
+          }
+
+          ;
+          sessionStorage.urlset_list = for_saved_list.join("-@-");
+          _this2.setState({ list: list });
+          var _iteratorNormalCompletion7 = true;
+          var _didIteratorError7 = false;
+          var _iteratorError7 = undefined;
+
+          try {
+            for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+              var _d3 = _step7.value;
+
+              var _aId3 = localStorage.accountId;
+              if (_d3.aId === _aId3) {
+                var selector = "#" + _d3.id + " .edit__folder";
+                $(selector).css("display", "block");
+              }
+              $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
             }
           } catch (err) {
             _didIteratorError7 = true;
@@ -2532,46 +2982,13 @@ var ViewFolderFeed = (function (_React$Component4) {
               }
             }
           }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          _this2.setState({ list: list });
-          var _iteratorNormalCompletion8 = true;
-          var _didIteratorError8 = false;
-          var _iteratorError8 = undefined;
-
-          try {
-            for (var _iterator8 = list[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-              var _d3 = _step8.value;
-
-              var _aId3 = localStorage.accountId;
-              if (_d3.aId === _aId3) {
-                var selector = "#" + _d3.id + " .edit__folder";
-                $(selector).css("display", "block");
-              }
-              $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError8 = true;
-            _iteratorError8 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion8 && _iterator8["return"]) {
-                _iterator8["return"]();
-              }
-            } finally {
-              if (_didIteratorError8) {
-                throw _iteratorError8;
-              }
-            }
-          }
         });
       });
     }
   }, {
     key: "openFolderPost",
     value: function openFolderPost() {
-      (0, _segue.segueFolderFeedToPostFolder)();
+      (0, _vector_segue.vSegueFolder2FolderPost)(false);
     }
   }, {
     key: "render",
@@ -2589,7 +3006,7 @@ var ViewFolderFeed = (function (_React$Component4) {
         { id: "utility__area", key: "ViewFolderFeed_utility" },
         _react2["default"].createElement(_later_button2["default"], null),
         _react2["default"].createElement(_add_button.AddButton, { func: this.openFolderPost, icon: "folder" })
-      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", foldersStyle: "tb-active" })];
+      ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", folderStyle: "tb-active" })];
     }
   }]);
 
@@ -2632,7 +3049,6 @@ var ViewURLFeed = (function (_React$Component6) {
       id: props.id,
       ownerAId: props.ownerAId
     };
-    history.pushState('', '', "folders?id=" + this.props.id);
   }
 
   _createClass(ViewURLFeed, [{
@@ -2715,7 +3131,141 @@ exports.ViewPostFolder = ViewPostFolder;
 exports.ViewURLFeed = ViewURLFeed;
 exports.ViewURLPost = ViewURLPost;
 
-},{"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"react":114}],12:[function(require,module,exports){
+},{"../lib/spa_router":16,"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"./vector_segue":11,"react":119}],13:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var _query_parser = require("./query_parser");
+
+var _query_parser2 = _interopRequireDefault(_query_parser);
+
+function currentWhere() {
+  var path = location.pathname.slice(1);
+  var segue = (0, _query_parser2["default"])().s;
+  var nowLocation = undefined;
+
+  return segue ? path + "?s=" + segue : path;
+}
+exports.currentWhere = currentWhere;
+
+},{"./query_parser":15}],14:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = folderEditQueryGenerator;
+
+function folderEditQueryGenerator() {
+  var type = sessionStorage.getItem("folderedit_isManipulateType");
+  var query = "&manipulate_type=";
+  switch (type) {
+    case "delete":
+      query += "delete";
+      break;
+    case "":
+      query += "cancel";
+      break;
+    default:
+      console.error("Error incorrect manipulate at folderEditQueryGenerator");
+  }
+  sessionStorage.removeItem("folderedit_isManipulateType");
+  return query;
+}
+
+module.exports = exports["default"];
+
+},{}],15:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = queryParser;
+
+function queryParser() {
+  var queryOfURL = location.search;
+  var parameters = {};
+  if (queryOfURL === "") {
+    return {};
+  }
+  var hash = location.search.slice(1).split("&");
+  hash.map(function (x) {
+    var array = x.split("=");
+    parameters[array[0]] = array[1];
+  });
+  return parameters;
+}
+
+module.exports = exports["default"];
+
+},{}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj["default"] = obj; return newObj; } }
+
+var _componentVector_segue = require("../component/vector_segue");
+
+var vs = _interopRequireWildcard(_componentVector_segue);
+
+function pageMoving(nextLocation, unwind) {
+  var functionListCamel = ["vSegueHome2Folder", "vSegueFolder2Home", "vSegueFolder2URL", "vSegueURL2Folder", "vSegueHome2AddPanel", "vSegueAddPanel2Home", "vSegueAccount2Folder", "vSegueFolderChoice2URLPost", "vSegueFolderChoice2AddPanel", "vSegueFolder2Account", "vSegueAddPanel2FolderChoice", "vSegueFolderPost2AddPanel", "vSegueAccount2URL", "vSegueAddPanel2FolderPost", "vSegueURLPost2URL", "vSegueURL2Account", "vSegueURL2URLPost", "vSegueFolderPost2Folder", "vSegueAccount2Followee", "vSegueFolder2FolderPost", "vSegueFolderEdit2Folder", "vSegueFollowee2Account", "vSegueHome2URL", "vSegueURL2Home", "vSegueURLPost2FolderChoice", "vSegueAccount2Follower", "vSegueHome2FolderEdit", "vSegueFolderEdit2Home", "vSegueFollower2Account", "vSegueFolder2FolderEdit", "vSegueAccount2FolderEdit"];
+
+  var functionListLower = functionListCamel.map(function (x) {
+    return x.toLowerCase();
+  });
+
+  var segueFunctionString = "vsegue" + nextLocation;
+  var index = functionListLower.findIndex(function (x) {
+    return x === segueFunctionString;
+  });
+  if (unwind) {
+    eval("vs." + functionListCamel[index] + "(true)");
+  } else {
+    eval("vs." + functionListCamel[index] + "(false)");
+  }
+}
+
+function backBefore(unwind) {
+  var beforeLocate = sessionStorage.udBeforeLocation;
+  var segue = undefined;
+  var backSegue = undefined;
+  if (beforeLocate !== undefined) {
+    segue = beforeLocate.split("?s=")[1];
+    backSegue = segue.split("2");
+    backSegue = backSegue[1] + "2" + backSegue[0];
+  } else {}
+  var path = location.pathname;
+  pageMoving(backSegue, unwind);
+}
+
+function folderSegue(nextPath) {
+  var path = location.pathname.slice(1);
+  var nextLocation = path + "2" + nextPath;
+  pageMoving(nextLocation, false);
+}
+
+function folderEdit(unwind) {
+  var path = location.pathname.slice(1);
+  var nextLocation = path + "2folderedit";
+  console.log(nextLocation);
+  pageMoving(nextLocation, unwind);
+}
+
+exports.folderSegue = folderSegue;
+exports.backBefore = backBefore;
+exports.folderEdit = folderEdit;
+
+},{"../component/vector_segue":11}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -3117,7 +3667,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":19}],13:[function(require,module,exports){
+},{"@firebase/util":24}],18:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -3475,7 +4025,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":12}],14:[function(require,module,exports){
+},{"@firebase/app":17}],19:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24498,7 +25048,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":12,"@firebase/logger":15,"@firebase/util":19,"@firebase/webchannel-wrapper":20,"_process":117,"tslib":115}],15:[function(require,module,exports){
+},{"@firebase/app":17,"@firebase/logger":20,"@firebase/util":24,"@firebase/webchannel-wrapper":25,"_process":122,"tslib":120}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -24688,7 +25238,7 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],16:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 
 require('whatwg-fetch');
@@ -24718,7 +25268,7 @@ require('core-js/fn/symbol/iterator');
  * limitations under the License.
  */
 
-},{"core-js/fn/array/find":22,"core-js/fn/array/find-index":21,"core-js/fn/object/assign":23,"core-js/fn/string/repeat":24,"core-js/fn/string/starts-with":25,"core-js/fn/symbol":26,"core-js/fn/symbol/iterator":27,"promise-polyfill/lib/polyfill":109,"whatwg-fetch":17}],17:[function(require,module,exports){
+},{"core-js/fn/array/find":27,"core-js/fn/array/find-index":26,"core-js/fn/object/assign":28,"core-js/fn/string/repeat":29,"core-js/fn/string/starts-with":30,"core-js/fn/symbol":31,"core-js/fn/symbol/iterator":32,"promise-polyfill/lib/polyfill":114,"whatwg-fetch":22}],22:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -25186,7 +25736,7 @@ require('core-js/fn/symbol/iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],18:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -28675,7 +29225,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":12}],19:[function(require,module,exports){
+},{"@firebase/app":17}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30468,7 +31018,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":115}],20:[function(require,module,exports){
+},{"tslib":120}],25:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -30609,45 +31159,45 @@ cd.prototype.createWebChannel=cd.prototype.cf;W.prototype.send=W.prototype.send;
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 require('../../modules/es6.array.find-index');
 module.exports = require('../../modules/_core').Array.findIndex;
 
-},{"../../modules/_core":37,"../../modules/es6.array.find-index":92}],22:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.array.find-index":97}],27:[function(require,module,exports){
 require('../../modules/es6.array.find');
 module.exports = require('../../modules/_core').Array.find;
 
-},{"../../modules/_core":37,"../../modules/es6.array.find":93}],23:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.array.find":98}],28:[function(require,module,exports){
 require('../../modules/es6.object.assign');
 module.exports = require('../../modules/_core').Object.assign;
 
-},{"../../modules/_core":37,"../../modules/es6.object.assign":95}],24:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.object.assign":100}],29:[function(require,module,exports){
 require('../../modules/es6.string.repeat');
 module.exports = require('../../modules/_core').String.repeat;
 
-},{"../../modules/_core":37,"../../modules/es6.string.repeat":98}],25:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.string.repeat":103}],30:[function(require,module,exports){
 require('../../modules/es6.string.starts-with');
 module.exports = require('../../modules/_core').String.startsWith;
 
-},{"../../modules/_core":37,"../../modules/es6.string.starts-with":99}],26:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.string.starts-with":104}],31:[function(require,module,exports){
 require('../../modules/es6.symbol');
 require('../../modules/es6.object.to-string');
 require('../../modules/es7.symbol.async-iterator');
 require('../../modules/es7.symbol.observable');
 module.exports = require('../../modules/_core').Symbol;
 
-},{"../../modules/_core":37,"../../modules/es6.object.to-string":96,"../../modules/es6.symbol":100,"../../modules/es7.symbol.async-iterator":101,"../../modules/es7.symbol.observable":102}],27:[function(require,module,exports){
+},{"../../modules/_core":42,"../../modules/es6.object.to-string":101,"../../modules/es6.symbol":105,"../../modules/es7.symbol.async-iterator":106,"../../modules/es7.symbol.observable":107}],32:[function(require,module,exports){
 require('../../modules/es6.string.iterator');
 require('../../modules/web.dom.iterable');
 module.exports = require('../../modules/_wks-ext').f('iterator');
 
-},{"../../modules/_wks-ext":90,"../../modules/es6.string.iterator":97,"../../modules/web.dom.iterable":103}],28:[function(require,module,exports){
+},{"../../modules/_wks-ext":95,"../../modules/es6.string.iterator":102,"../../modules/web.dom.iterable":108}],33:[function(require,module,exports){
 module.exports = function (it) {
   if (typeof it != 'function') throw TypeError(it + ' is not a function!');
   return it;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = require('./_wks')('unscopables');
 var ArrayProto = Array.prototype;
@@ -30656,14 +31206,14 @@ module.exports = function (key) {
   ArrayProto[UNSCOPABLES][key] = true;
 };
 
-},{"./_hide":49,"./_wks":91}],30:[function(require,module,exports){
+},{"./_hide":54,"./_wks":96}],35:[function(require,module,exports){
 var isObject = require('./_is-object');
 module.exports = function (it) {
   if (!isObject(it)) throw TypeError(it + ' is not an object!');
   return it;
 };
 
-},{"./_is-object":54}],31:[function(require,module,exports){
+},{"./_is-object":59}],36:[function(require,module,exports){
 // false -> Array#indexOf
 // true  -> Array#includes
 var toIObject = require('./_to-iobject');
@@ -30688,7 +31238,7 @@ module.exports = function (IS_INCLUDES) {
   };
 };
 
-},{"./_to-absolute-index":82,"./_to-iobject":84,"./_to-length":85}],32:[function(require,module,exports){
+},{"./_to-absolute-index":87,"./_to-iobject":89,"./_to-length":90}],37:[function(require,module,exports){
 // 0 -> Array#forEach
 // 1 -> Array#map
 // 2 -> Array#filter
@@ -30734,7 +31284,7 @@ module.exports = function (TYPE, $create) {
   };
 };
 
-},{"./_array-species-create":34,"./_ctx":38,"./_iobject":52,"./_to-length":85,"./_to-object":86}],33:[function(require,module,exports){
+},{"./_array-species-create":39,"./_ctx":43,"./_iobject":57,"./_to-length":90,"./_to-object":91}],38:[function(require,module,exports){
 var isObject = require('./_is-object');
 var isArray = require('./_is-array');
 var SPECIES = require('./_wks')('species');
@@ -30752,7 +31302,7 @@ module.exports = function (original) {
   } return C === undefined ? Array : C;
 };
 
-},{"./_is-array":53,"./_is-object":54,"./_wks":91}],34:[function(require,module,exports){
+},{"./_is-array":58,"./_is-object":59,"./_wks":96}],39:[function(require,module,exports){
 // 9.4.2.3 ArraySpeciesCreate(originalArray, length)
 var speciesConstructor = require('./_array-species-constructor');
 
@@ -30760,7 +31310,7 @@ module.exports = function (original, length) {
   return new (speciesConstructor(original))(length);
 };
 
-},{"./_array-species-constructor":33}],35:[function(require,module,exports){
+},{"./_array-species-constructor":38}],40:[function(require,module,exports){
 // getting tag from 19.1.3.6 Object.prototype.toString()
 var cof = require('./_cof');
 var TAG = require('./_wks')('toStringTag');
@@ -30785,18 +31335,18 @@ module.exports = function (it) {
     : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
 };
 
-},{"./_cof":36,"./_wks":91}],36:[function(require,module,exports){
+},{"./_cof":41,"./_wks":96}],41:[function(require,module,exports){
 var toString = {}.toString;
 
 module.exports = function (it) {
   return toString.call(it).slice(8, -1);
 };
 
-},{}],37:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 var core = module.exports = { version: '2.5.5' };
 if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
 
-},{}],38:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 // optional / simple context binding
 var aFunction = require('./_a-function');
 module.exports = function (fn, that, length) {
@@ -30818,20 +31368,20 @@ module.exports = function (fn, that, length) {
   };
 };
 
-},{"./_a-function":28}],39:[function(require,module,exports){
+},{"./_a-function":33}],44:[function(require,module,exports){
 // 7.2.1 RequireObjectCoercible(argument)
 module.exports = function (it) {
   if (it == undefined) throw TypeError("Can't call method on  " + it);
   return it;
 };
 
-},{}],40:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 // Thank's IE8 for his funny defineProperty
 module.exports = !require('./_fails')(function () {
   return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_fails":46}],41:[function(require,module,exports){
+},{"./_fails":51}],46:[function(require,module,exports){
 var isObject = require('./_is-object');
 var document = require('./_global').document;
 // typeof document.createElement is 'object' in old IE
@@ -30840,13 +31390,13 @@ module.exports = function (it) {
   return is ? document.createElement(it) : {};
 };
 
-},{"./_global":47,"./_is-object":54}],42:[function(require,module,exports){
+},{"./_global":52,"./_is-object":59}],47:[function(require,module,exports){
 // IE 8- don't enum bug keys
 module.exports = (
   'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
 ).split(',');
 
-},{}],43:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 // all enumerable object keys, includes symbols
 var getKeys = require('./_object-keys');
 var gOPS = require('./_object-gops');
@@ -30863,7 +31413,7 @@ module.exports = function (it) {
   } return result;
 };
 
-},{"./_object-gops":69,"./_object-keys":72,"./_object-pie":73}],44:[function(require,module,exports){
+},{"./_object-gops":74,"./_object-keys":77,"./_object-pie":78}],49:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var hide = require('./_hide');
@@ -30908,7 +31458,7 @@ $export.U = 64;  // safe
 $export.R = 128; // real proto method for `library`
 module.exports = $export;
 
-},{"./_core":37,"./_ctx":38,"./_global":47,"./_hide":49,"./_redefine":75}],45:[function(require,module,exports){
+},{"./_core":42,"./_ctx":43,"./_global":52,"./_hide":54,"./_redefine":80}],50:[function(require,module,exports){
 var MATCH = require('./_wks')('match');
 module.exports = function (KEY) {
   var re = /./;
@@ -30922,7 +31472,7 @@ module.exports = function (KEY) {
   } return true;
 };
 
-},{"./_wks":91}],46:[function(require,module,exports){
+},{"./_wks":96}],51:[function(require,module,exports){
 module.exports = function (exec) {
   try {
     return !!exec();
@@ -30931,7 +31481,7 @@ module.exports = function (exec) {
   }
 };
 
-},{}],47:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 // https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
 var global = module.exports = typeof window != 'undefined' && window.Math == Math
   ? window : typeof self != 'undefined' && self.Math == Math ? self
@@ -30939,13 +31489,13 @@ var global = module.exports = typeof window != 'undefined' && window.Math == Mat
   : Function('return this')();
 if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
 
-},{}],48:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 var hasOwnProperty = {}.hasOwnProperty;
 module.exports = function (it, key) {
   return hasOwnProperty.call(it, key);
 };
 
-},{}],49:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 var dP = require('./_object-dp');
 var createDesc = require('./_property-desc');
 module.exports = require('./_descriptors') ? function (object, key, value) {
@@ -30955,16 +31505,16 @@ module.exports = require('./_descriptors') ? function (object, key, value) {
   return object;
 };
 
-},{"./_descriptors":40,"./_object-dp":64,"./_property-desc":74}],50:[function(require,module,exports){
+},{"./_descriptors":45,"./_object-dp":69,"./_property-desc":79}],55:[function(require,module,exports){
 var document = require('./_global').document;
 module.exports = document && document.documentElement;
 
-},{"./_global":47}],51:[function(require,module,exports){
+},{"./_global":52}],56:[function(require,module,exports){
 module.exports = !require('./_descriptors') && !require('./_fails')(function () {
   return Object.defineProperty(require('./_dom-create')('div'), 'a', { get: function () { return 7; } }).a != 7;
 });
 
-},{"./_descriptors":40,"./_dom-create":41,"./_fails":46}],52:[function(require,module,exports){
+},{"./_descriptors":45,"./_dom-create":46,"./_fails":51}],57:[function(require,module,exports){
 // fallback for non-array-like ES3 and non-enumerable old V8 strings
 var cof = require('./_cof');
 // eslint-disable-next-line no-prototype-builtins
@@ -30972,19 +31522,19 @@ module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
   return cof(it) == 'String' ? it.split('') : Object(it);
 };
 
-},{"./_cof":36}],53:[function(require,module,exports){
+},{"./_cof":41}],58:[function(require,module,exports){
 // 7.2.2 IsArray(argument)
 var cof = require('./_cof');
 module.exports = Array.isArray || function isArray(arg) {
   return cof(arg) == 'Array';
 };
 
-},{"./_cof":36}],54:[function(require,module,exports){
+},{"./_cof":41}],59:[function(require,module,exports){
 module.exports = function (it) {
   return typeof it === 'object' ? it !== null : typeof it === 'function';
 };
 
-},{}],55:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
 // 7.2.8 IsRegExp(argument)
 var isObject = require('./_is-object');
 var cof = require('./_cof');
@@ -30994,7 +31544,7 @@ module.exports = function (it) {
   return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
 };
 
-},{"./_cof":36,"./_is-object":54,"./_wks":91}],56:[function(require,module,exports){
+},{"./_cof":41,"./_is-object":59,"./_wks":96}],61:[function(require,module,exports){
 'use strict';
 var create = require('./_object-create');
 var descriptor = require('./_property-desc');
@@ -31009,7 +31559,7 @@ module.exports = function (Constructor, NAME, next) {
   setToStringTag(Constructor, NAME + ' Iterator');
 };
 
-},{"./_hide":49,"./_object-create":63,"./_property-desc":74,"./_set-to-string-tag":76,"./_wks":91}],57:[function(require,module,exports){
+},{"./_hide":54,"./_object-create":68,"./_property-desc":79,"./_set-to-string-tag":81,"./_wks":96}],62:[function(require,module,exports){
 'use strict';
 var LIBRARY = require('./_library');
 var $export = require('./_export');
@@ -31080,18 +31630,18 @@ module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCE
   return methods;
 };
 
-},{"./_export":44,"./_hide":49,"./_iter-create":56,"./_iterators":59,"./_library":60,"./_object-gpo":70,"./_redefine":75,"./_set-to-string-tag":76,"./_wks":91}],58:[function(require,module,exports){
+},{"./_export":49,"./_hide":54,"./_iter-create":61,"./_iterators":64,"./_library":65,"./_object-gpo":75,"./_redefine":80,"./_set-to-string-tag":81,"./_wks":96}],63:[function(require,module,exports){
 module.exports = function (done, value) {
   return { value: value, done: !!done };
 };
 
-},{}],59:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 module.exports = {};
 
-},{}],60:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 module.exports = false;
 
-},{}],61:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 var META = require('./_uid')('meta');
 var isObject = require('./_is-object');
 var has = require('./_has');
@@ -31146,7 +31696,7 @@ var meta = module.exports = {
   onFreeze: onFreeze
 };
 
-},{"./_fails":46,"./_has":48,"./_is-object":54,"./_object-dp":64,"./_uid":88}],62:[function(require,module,exports){
+},{"./_fails":51,"./_has":53,"./_is-object":59,"./_object-dp":69,"./_uid":93}],67:[function(require,module,exports){
 'use strict';
 // 19.1.2.1 Object.assign(target, source, ...)
 var getKeys = require('./_object-keys');
@@ -31182,7 +31732,7 @@ module.exports = !$assign || require('./_fails')(function () {
   } return T;
 } : $assign;
 
-},{"./_fails":46,"./_iobject":52,"./_object-gops":69,"./_object-keys":72,"./_object-pie":73,"./_to-object":86}],63:[function(require,module,exports){
+},{"./_fails":51,"./_iobject":57,"./_object-gops":74,"./_object-keys":77,"./_object-pie":78,"./_to-object":91}],68:[function(require,module,exports){
 // 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
 var anObject = require('./_an-object');
 var dPs = require('./_object-dps');
@@ -31225,7 +31775,7 @@ module.exports = Object.create || function create(O, Properties) {
   return Properties === undefined ? result : dPs(result, Properties);
 };
 
-},{"./_an-object":30,"./_dom-create":41,"./_enum-bug-keys":42,"./_html":50,"./_object-dps":65,"./_shared-key":77}],64:[function(require,module,exports){
+},{"./_an-object":35,"./_dom-create":46,"./_enum-bug-keys":47,"./_html":55,"./_object-dps":70,"./_shared-key":82}],69:[function(require,module,exports){
 var anObject = require('./_an-object');
 var IE8_DOM_DEFINE = require('./_ie8-dom-define');
 var toPrimitive = require('./_to-primitive');
@@ -31243,7 +31793,7 @@ exports.f = require('./_descriptors') ? Object.defineProperty : function defineP
   return O;
 };
 
-},{"./_an-object":30,"./_descriptors":40,"./_ie8-dom-define":51,"./_to-primitive":87}],65:[function(require,module,exports){
+},{"./_an-object":35,"./_descriptors":45,"./_ie8-dom-define":56,"./_to-primitive":92}],70:[function(require,module,exports){
 var dP = require('./_object-dp');
 var anObject = require('./_an-object');
 var getKeys = require('./_object-keys');
@@ -31258,7 +31808,7 @@ module.exports = require('./_descriptors') ? Object.defineProperties : function 
   return O;
 };
 
-},{"./_an-object":30,"./_descriptors":40,"./_object-dp":64,"./_object-keys":72}],66:[function(require,module,exports){
+},{"./_an-object":35,"./_descriptors":45,"./_object-dp":69,"./_object-keys":77}],71:[function(require,module,exports){
 var pIE = require('./_object-pie');
 var createDesc = require('./_property-desc');
 var toIObject = require('./_to-iobject');
@@ -31276,7 +31826,7 @@ exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor
   if (has(O, P)) return createDesc(!pIE.f.call(O, P), O[P]);
 };
 
-},{"./_descriptors":40,"./_has":48,"./_ie8-dom-define":51,"./_object-pie":73,"./_property-desc":74,"./_to-iobject":84,"./_to-primitive":87}],67:[function(require,module,exports){
+},{"./_descriptors":45,"./_has":53,"./_ie8-dom-define":56,"./_object-pie":78,"./_property-desc":79,"./_to-iobject":89,"./_to-primitive":92}],72:[function(require,module,exports){
 // fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
 var toIObject = require('./_to-iobject');
 var gOPN = require('./_object-gopn').f;
@@ -31297,7 +31847,7 @@ module.exports.f = function getOwnPropertyNames(it) {
   return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
 };
 
-},{"./_object-gopn":68,"./_to-iobject":84}],68:[function(require,module,exports){
+},{"./_object-gopn":73,"./_to-iobject":89}],73:[function(require,module,exports){
 // 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
 var $keys = require('./_object-keys-internal');
 var hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
@@ -31306,10 +31856,10 @@ exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
   return $keys(O, hiddenKeys);
 };
 
-},{"./_enum-bug-keys":42,"./_object-keys-internal":71}],69:[function(require,module,exports){
+},{"./_enum-bug-keys":47,"./_object-keys-internal":76}],74:[function(require,module,exports){
 exports.f = Object.getOwnPropertySymbols;
 
-},{}],70:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
 var has = require('./_has');
 var toObject = require('./_to-object');
@@ -31324,7 +31874,7 @@ module.exports = Object.getPrototypeOf || function (O) {
   } return O instanceof Object ? ObjectProto : null;
 };
 
-},{"./_has":48,"./_shared-key":77,"./_to-object":86}],71:[function(require,module,exports){
+},{"./_has":53,"./_shared-key":82,"./_to-object":91}],76:[function(require,module,exports){
 var has = require('./_has');
 var toIObject = require('./_to-iobject');
 var arrayIndexOf = require('./_array-includes')(false);
@@ -31343,7 +31893,7 @@ module.exports = function (object, names) {
   return result;
 };
 
-},{"./_array-includes":31,"./_has":48,"./_shared-key":77,"./_to-iobject":84}],72:[function(require,module,exports){
+},{"./_array-includes":36,"./_has":53,"./_shared-key":82,"./_to-iobject":89}],77:[function(require,module,exports){
 // 19.1.2.14 / 15.2.3.14 Object.keys(O)
 var $keys = require('./_object-keys-internal');
 var enumBugKeys = require('./_enum-bug-keys');
@@ -31352,10 +31902,10 @@ module.exports = Object.keys || function keys(O) {
   return $keys(O, enumBugKeys);
 };
 
-},{"./_enum-bug-keys":42,"./_object-keys-internal":71}],73:[function(require,module,exports){
+},{"./_enum-bug-keys":47,"./_object-keys-internal":76}],78:[function(require,module,exports){
 exports.f = {}.propertyIsEnumerable;
 
-},{}],74:[function(require,module,exports){
+},{}],79:[function(require,module,exports){
 module.exports = function (bitmap, value) {
   return {
     enumerable: !(bitmap & 1),
@@ -31365,7 +31915,7 @@ module.exports = function (bitmap, value) {
   };
 };
 
-},{}],75:[function(require,module,exports){
+},{}],80:[function(require,module,exports){
 var global = require('./_global');
 var hide = require('./_hide');
 var has = require('./_has');
@@ -31398,7 +31948,7 @@ require('./_core').inspectSource = function (it) {
   return typeof this == 'function' && this[SRC] || $toString.call(this);
 });
 
-},{"./_core":37,"./_global":47,"./_has":48,"./_hide":49,"./_uid":88}],76:[function(require,module,exports){
+},{"./_core":42,"./_global":52,"./_has":53,"./_hide":54,"./_uid":93}],81:[function(require,module,exports){
 var def = require('./_object-dp').f;
 var has = require('./_has');
 var TAG = require('./_wks')('toStringTag');
@@ -31407,14 +31957,14 @@ module.exports = function (it, tag, stat) {
   if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
 };
 
-},{"./_has":48,"./_object-dp":64,"./_wks":91}],77:[function(require,module,exports){
+},{"./_has":53,"./_object-dp":69,"./_wks":96}],82:[function(require,module,exports){
 var shared = require('./_shared')('keys');
 var uid = require('./_uid');
 module.exports = function (key) {
   return shared[key] || (shared[key] = uid(key));
 };
 
-},{"./_shared":78,"./_uid":88}],78:[function(require,module,exports){
+},{"./_shared":83,"./_uid":93}],83:[function(require,module,exports){
 var global = require('./_global');
 var SHARED = '__core-js_shared__';
 var store = global[SHARED] || (global[SHARED] = {});
@@ -31422,7 +31972,7 @@ module.exports = function (key) {
   return store[key] || (store[key] = {});
 };
 
-},{"./_global":47}],79:[function(require,module,exports){
+},{"./_global":52}],84:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
 // true  -> String#at
@@ -31441,7 +31991,7 @@ module.exports = function (TO_STRING) {
   };
 };
 
-},{"./_defined":39,"./_to-integer":83}],80:[function(require,module,exports){
+},{"./_defined":44,"./_to-integer":88}],85:[function(require,module,exports){
 // helper for String#{startsWith, endsWith, includes}
 var isRegExp = require('./_is-regexp');
 var defined = require('./_defined');
@@ -31451,7 +32001,7 @@ module.exports = function (that, searchString, NAME) {
   return String(defined(that));
 };
 
-},{"./_defined":39,"./_is-regexp":55}],81:[function(require,module,exports){
+},{"./_defined":44,"./_is-regexp":60}],86:[function(require,module,exports){
 'use strict';
 var toInteger = require('./_to-integer');
 var defined = require('./_defined');
@@ -31465,7 +32015,7 @@ module.exports = function repeat(count) {
   return res;
 };
 
-},{"./_defined":39,"./_to-integer":83}],82:[function(require,module,exports){
+},{"./_defined":44,"./_to-integer":88}],87:[function(require,module,exports){
 var toInteger = require('./_to-integer');
 var max = Math.max;
 var min = Math.min;
@@ -31474,7 +32024,7 @@ module.exports = function (index, length) {
   return index < 0 ? max(index + length, 0) : min(index, length);
 };
 
-},{"./_to-integer":83}],83:[function(require,module,exports){
+},{"./_to-integer":88}],88:[function(require,module,exports){
 // 7.1.4 ToInteger
 var ceil = Math.ceil;
 var floor = Math.floor;
@@ -31482,7 +32032,7 @@ module.exports = function (it) {
   return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
 };
 
-},{}],84:[function(require,module,exports){
+},{}],89:[function(require,module,exports){
 // to indexed object, toObject with fallback for non-array-like ES3 strings
 var IObject = require('./_iobject');
 var defined = require('./_defined');
@@ -31490,7 +32040,7 @@ module.exports = function (it) {
   return IObject(defined(it));
 };
 
-},{"./_defined":39,"./_iobject":52}],85:[function(require,module,exports){
+},{"./_defined":44,"./_iobject":57}],90:[function(require,module,exports){
 // 7.1.15 ToLength
 var toInteger = require('./_to-integer');
 var min = Math.min;
@@ -31498,14 +32048,14 @@ module.exports = function (it) {
   return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
 };
 
-},{"./_to-integer":83}],86:[function(require,module,exports){
+},{"./_to-integer":88}],91:[function(require,module,exports){
 // 7.1.13 ToObject(argument)
 var defined = require('./_defined');
 module.exports = function (it) {
   return Object(defined(it));
 };
 
-},{"./_defined":39}],87:[function(require,module,exports){
+},{"./_defined":44}],92:[function(require,module,exports){
 // 7.1.1 ToPrimitive(input [, PreferredType])
 var isObject = require('./_is-object');
 // instead of the ES6 spec version, we didn't implement @@toPrimitive case
@@ -31519,14 +32069,14 @@ module.exports = function (it, S) {
   throw TypeError("Can't convert object to primitive value");
 };
 
-},{"./_is-object":54}],88:[function(require,module,exports){
+},{"./_is-object":59}],93:[function(require,module,exports){
 var id = 0;
 var px = Math.random();
 module.exports = function (key) {
   return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
 };
 
-},{}],89:[function(require,module,exports){
+},{}],94:[function(require,module,exports){
 var global = require('./_global');
 var core = require('./_core');
 var LIBRARY = require('./_library');
@@ -31537,10 +32087,10 @@ module.exports = function (name) {
   if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: wksExt.f(name) });
 };
 
-},{"./_core":37,"./_global":47,"./_library":60,"./_object-dp":64,"./_wks-ext":90}],90:[function(require,module,exports){
+},{"./_core":42,"./_global":52,"./_library":65,"./_object-dp":69,"./_wks-ext":95}],95:[function(require,module,exports){
 exports.f = require('./_wks');
 
-},{"./_wks":91}],91:[function(require,module,exports){
+},{"./_wks":96}],96:[function(require,module,exports){
 var store = require('./_shared')('wks');
 var uid = require('./_uid');
 var Symbol = require('./_global').Symbol;
@@ -31553,7 +32103,7 @@ var $exports = module.exports = function (name) {
 
 $exports.store = store;
 
-},{"./_global":47,"./_shared":78,"./_uid":88}],92:[function(require,module,exports){
+},{"./_global":52,"./_shared":83,"./_uid":93}],97:[function(require,module,exports){
 'use strict';
 // 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -31569,7 +32119,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":29,"./_array-methods":32,"./_export":44}],93:[function(require,module,exports){
+},{"./_add-to-unscopables":34,"./_array-methods":37,"./_export":49}],98:[function(require,module,exports){
 'use strict';
 // 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
 var $export = require('./_export');
@@ -31585,7 +32135,7 @@ $export($export.P + $export.F * forced, 'Array', {
 });
 require('./_add-to-unscopables')(KEY);
 
-},{"./_add-to-unscopables":29,"./_array-methods":32,"./_export":44}],94:[function(require,module,exports){
+},{"./_add-to-unscopables":34,"./_array-methods":37,"./_export":49}],99:[function(require,module,exports){
 'use strict';
 var addToUnscopables = require('./_add-to-unscopables');
 var step = require('./_iter-step');
@@ -31621,13 +32171,13 @@ addToUnscopables('keys');
 addToUnscopables('values');
 addToUnscopables('entries');
 
-},{"./_add-to-unscopables":29,"./_iter-define":57,"./_iter-step":58,"./_iterators":59,"./_to-iobject":84}],95:[function(require,module,exports){
+},{"./_add-to-unscopables":34,"./_iter-define":62,"./_iter-step":63,"./_iterators":64,"./_to-iobject":89}],100:[function(require,module,exports){
 // 19.1.3.1 Object.assign(target, source)
 var $export = require('./_export');
 
 $export($export.S + $export.F, 'Object', { assign: require('./_object-assign') });
 
-},{"./_export":44,"./_object-assign":62}],96:[function(require,module,exports){
+},{"./_export":49,"./_object-assign":67}],101:[function(require,module,exports){
 'use strict';
 // 19.1.3.6 Object.prototype.toString()
 var classof = require('./_classof');
@@ -31639,7 +32189,7 @@ if (test + '' != '[object z]') {
   }, true);
 }
 
-},{"./_classof":35,"./_redefine":75,"./_wks":91}],97:[function(require,module,exports){
+},{"./_classof":40,"./_redefine":80,"./_wks":96}],102:[function(require,module,exports){
 'use strict';
 var $at = require('./_string-at')(true);
 
@@ -31658,7 +32208,7 @@ require('./_iter-define')(String, 'String', function (iterated) {
   return { value: point, done: false };
 });
 
-},{"./_iter-define":57,"./_string-at":79}],98:[function(require,module,exports){
+},{"./_iter-define":62,"./_string-at":84}],103:[function(require,module,exports){
 var $export = require('./_export');
 
 $export($export.P, 'String', {
@@ -31666,7 +32216,7 @@ $export($export.P, 'String', {
   repeat: require('./_string-repeat')
 });
 
-},{"./_export":44,"./_string-repeat":81}],99:[function(require,module,exports){
+},{"./_export":49,"./_string-repeat":86}],104:[function(require,module,exports){
 // 21.1.3.18 String.prototype.startsWith(searchString [, position ])
 'use strict';
 var $export = require('./_export');
@@ -31686,7 +32236,7 @@ $export($export.P + $export.F * require('./_fails-is-regexp')(STARTS_WITH), 'Str
   }
 });
 
-},{"./_export":44,"./_fails-is-regexp":45,"./_string-context":80,"./_to-length":85}],100:[function(require,module,exports){
+},{"./_export":49,"./_fails-is-regexp":50,"./_string-context":85,"./_to-length":90}],105:[function(require,module,exports){
 'use strict';
 // ECMAScript 6 symbols shim
 var global = require('./_global');
@@ -31922,13 +32472,13 @@ setToStringTag(Math, 'Math', true);
 // 24.3.3 JSON[@@toStringTag]
 setToStringTag(global.JSON, 'JSON', true);
 
-},{"./_an-object":30,"./_descriptors":40,"./_enum-keys":43,"./_export":44,"./_fails":46,"./_global":47,"./_has":48,"./_hide":49,"./_is-array":53,"./_is-object":54,"./_library":60,"./_meta":61,"./_object-create":63,"./_object-dp":64,"./_object-gopd":66,"./_object-gopn":68,"./_object-gopn-ext":67,"./_object-gops":69,"./_object-keys":72,"./_object-pie":73,"./_property-desc":74,"./_redefine":75,"./_set-to-string-tag":76,"./_shared":78,"./_to-iobject":84,"./_to-primitive":87,"./_uid":88,"./_wks":91,"./_wks-define":89,"./_wks-ext":90}],101:[function(require,module,exports){
+},{"./_an-object":35,"./_descriptors":45,"./_enum-keys":48,"./_export":49,"./_fails":51,"./_global":52,"./_has":53,"./_hide":54,"./_is-array":58,"./_is-object":59,"./_library":65,"./_meta":66,"./_object-create":68,"./_object-dp":69,"./_object-gopd":71,"./_object-gopn":73,"./_object-gopn-ext":72,"./_object-gops":74,"./_object-keys":77,"./_object-pie":78,"./_property-desc":79,"./_redefine":80,"./_set-to-string-tag":81,"./_shared":83,"./_to-iobject":89,"./_to-primitive":92,"./_uid":93,"./_wks":96,"./_wks-define":94,"./_wks-ext":95}],106:[function(require,module,exports){
 require('./_wks-define')('asyncIterator');
 
-},{"./_wks-define":89}],102:[function(require,module,exports){
+},{"./_wks-define":94}],107:[function(require,module,exports){
 require('./_wks-define')('observable');
 
-},{"./_wks-define":89}],103:[function(require,module,exports){
+},{"./_wks-define":94}],108:[function(require,module,exports){
 var $iterators = require('./es6.array.iterator');
 var getKeys = require('./_object-keys');
 var redefine = require('./_redefine');
@@ -31988,7 +32538,7 @@ for (var collections = getKeys(DOMIterables), i = 0; i < collections.length; i++
   }
 }
 
-},{"./_global":47,"./_hide":49,"./_iterators":59,"./_object-keys":72,"./_redefine":75,"./_wks":91,"./es6.array.iterator":94}],104:[function(require,module,exports){
+},{"./_global":52,"./_hide":54,"./_iterators":64,"./_object-keys":77,"./_redefine":80,"./_wks":96,"./es6.array.iterator":99}],109:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -32015,7 +32565,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":12,"@firebase/polyfill":16}],105:[function(require,module,exports){
+},{"@firebase/app":17,"@firebase/polyfill":21}],110:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -32037,7 +32587,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":13}],106:[function(require,module,exports){
+},{"@firebase/auth":18}],111:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -32059,7 +32609,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":14}],107:[function(require,module,exports){
+},{"@firebase/firestore":19}],112:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -32081,7 +32631,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":18}],108:[function(require,module,exports){
+},{"@firebase/storage":23}],113:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -32173,7 +32723,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],109:[function(require,module,exports){
+},{}],114:[function(require,module,exports){
 (function (global,setImmediate){
 'use strict';
 
@@ -32437,7 +32987,7 @@ if (!globalNS.Promise) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":118}],110:[function(require,module,exports){
+},{"timers":123}],115:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -32543,7 +33093,7 @@ checkPropTypes.resetWarningCache = function() {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":111,"_process":117}],111:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":116,"_process":122}],116:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -32557,7 +33107,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],112:[function(require,module,exports){
+},{}],117:[function(require,module,exports){
 (function (process){
 /** @license React v16.8.2
  * react.development.js
@@ -34462,7 +35012,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":117,"object-assign":108,"prop-types/checkPropTypes":110}],113:[function(require,module,exports){
+},{"_process":122,"object-assign":113,"prop-types/checkPropTypes":115}],118:[function(require,module,exports){
 /** @license React v16.8.2
  * react.production.min.js
  *
@@ -34489,7 +35039,7 @@ b,d){return W().useImperativeHandle(a,b,d)},useDebugValue:function(){},useLayout
 b){void 0!==b.ref&&(h=b.ref,f=J.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)K.call(b,c)&&!L.hasOwnProperty(c)&&(e[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)e.children=d;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];e.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:e,_owner:f}},createFactory:function(a){var b=M.bind(null,a);b.type=a;return b},isValidElement:N,version:"16.8.2",
 unstable_ConcurrentMode:x,unstable_Profiler:u,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentDispatcher:I,ReactCurrentOwner:J,assign:k}},Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":108}],114:[function(require,module,exports){
+},{"object-assign":113}],119:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34500,7 +35050,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":112,"./cjs/react.production.min.js":113,"_process":117}],115:[function(require,module,exports){
+},{"./cjs/react.development.js":117,"./cjs/react.production.min.js":118,"_process":122}],120:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -34745,7 +35295,7 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],116:[function(require,module,exports){
+},{}],121:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -34770,21 +35320,22 @@ var _componentSegue = require('../../component/segue');
 
 var _componentFirebase = require("../../component/firebase");
 
+var _componentVector_segue = require("../../component/vector_segue");
+
+var _libMagic_url = require("../../lib/magic_url");
+
+var _libSpa_router = require("../../lib/spa_router");
+
+var _libQuery_parser = require("../../lib/query_parser");
+
+var _libQuery_parser2 = _interopRequireDefault(_libQuery_parser);
+
 // @plaong Use session storage ( like a iOS user defaults )
 // 2019-2-18 Had better use indexedDB!!
 
 window.addEventListener('popstate', function (e) {
-  backBefore();
+  (0, _libSpa_router.backBefore)(true);
 });
-
-function backBefore() {
-  var path = sessionStorage.udBeforeLocation.split("/")[1];
-  if (path === "feed") {
-    path = "home";
-  }
-  var selector = "#list-nav__" + path;
-  $(selector).click();
-}
 
 init();
 
@@ -34836,45 +35387,15 @@ function init() {
       }
     }).then(function (aId) {
       switch (location.pathname) {
-        case "/feed":
+        case "/home":
           (0, _componentSegue.segueInitToGlobal)();
           break;
-        case "/folders":
-          var query = location.search;
-          if (query !== "") {
-            var parameters;
-
-            (function () {
-              var hash = query.slice(1).split("&");
-              parameters = [];
-
-              hash.map(function (x) {
-                var array = x.split("=");
-                parameters.push(array[0]);
-                parameters[array[0]] = array[1];
-              });
-              var folderId = parameters["id"];
-              _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(function (snap) {
-                if (snap.exists) {
-                  (0, _componentSegue.segueURLFeed)("myfreefolders", folderId, localStorage.accountId);
-                  throw 'Oh no!';
-                }
-                return _componentFirebase.db.collection("account").doc(aId).collection("folders").doc(folderId).get();
-              }).then(function (snap) {
-                if (snap.exists) {
-                  (0, _componentSegue.segueURLFeed)("folders", folderId, localStorage.accountId);
-                  throw 'Oh no!';
-                }
-                return _componentFirebase.db.collection("freefolder").doc(folderId).get();
-              }).then(function (snap) {
-                if (snap.exists) {
-                  var data = snap.data();
-                  (0, _componentSegue.segueURLFeed)("freefolder", folderId, data.ownerAId);
-                } else {
-                  console.log("URL folder is not found.");
-                }
-              });
-            })();
+        case "/folder":
+          var folderId = (0, _libQuery_parser2['default'])().id;
+          if (folderId !== undefined) {
+            (0, _componentFolder.getFolderType)(folderId).then(function (folderData) {
+              (0, _componentSegue.segueURLFeed)("", false, folderData);
+            });
           } else {
             (0, _componentSegue.segueInitFolderFeed)();
           }
@@ -34884,7 +35405,7 @@ function init() {
   });
 }
 
-},{"../../component/account_register":1,"../../component/firebase":3,"../../component/folder":4,"../../component/segue":7,"../../component/url":9,"react":114}],117:[function(require,module,exports){
+},{"../../component/account_register":1,"../../component/firebase":3,"../../component/folder":4,"../../component/segue":7,"../../component/url":9,"../../component/vector_segue":11,"../../lib/magic_url":13,"../../lib/query_parser":15,"../../lib/spa_router":16,"react":119}],122:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -35070,7 +35591,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],118:[function(require,module,exports){
+},{}],123:[function(require,module,exports){
 (function (setImmediate,clearImmediate){
 var nextTick = require('process/browser.js').nextTick;
 var apply = Function.prototype.apply;
@@ -35149,4 +35670,4 @@ exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate :
   delete immediateIds[id];
 };
 }).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":117,"timers":118}]},{},[116]);
+},{"process/browser.js":122,"timers":123}]},{},[121]);
