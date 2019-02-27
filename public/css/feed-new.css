@@ -348,9 +348,8 @@ button{
   .add_view{
     position: fixed;
     bottom: 140px;
-    right: 40px;
-    width: 240px;
-    height: 195px;
+    right: 10px;
+    z-index: 10;
   }
   
   
@@ -373,22 +372,42 @@ button{
     right: 25px;
     background: #00AA00;
     color: white;
-    width: 100px;
-    height: 100px;
+    width: 105px;
+    height: 105px;
     border-radius: 50%;
     font-size: 60px;
     z-index: 20;
   }
   
   .add_panel{
-    color:black;
-    height: 70px;
-    margin: 5px 0;
-    padding:6px;
-    border-radius: 5px;
-    border:solid 2px silver;
+    text-align: center;
+    font-size: 4em;
+    color: white;
+    background-color: #00AA00;
+    height: 90px;
+    width: 100px;
+    margin: 5px;
+    padding: 10px 0 0 0;
+    border-radius: 50%;
+    animation: roll 0.3s ease forwards;
   }
-  
+
+ @keyframes roll{
+    0%{
+      opacity: 0.2;
+      transform: rotate(-75deg);
+      }
+    30%{
+      opacity: 0.4;
+      }
+   50%{
+      opacity: 0.6;
+      }
+  100%{
+      opacity: 1;
+      transform: translateY(-60px);
+      }  
+    }
   .window-overlay{
     position: fixed;
     top: 0;
