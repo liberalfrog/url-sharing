@@ -4,7 +4,7 @@ import generateUuid from "./uuid";
 import {db, storage, auth} from "./firebase";
 import {sideMenuButtonShift} from "./side_menu";
 import {imgCompressor, submitImgToCloudStorage} from "./img_compressor";
-import {vSegueAddPanel2FolderPost, vSegueAddPanel2FolderChoice, vSegueURLPost2URL, vSegueFolderPost2Folder} from "./vector_segue";
+import {vSegueAddPanel2FolderPost, vSegueAddPanel2FolderChoice, vSegueURLPost2URL, vSegueFolderPost2Folder, vSegueAddPanel2Home} from "./vector_segue";
 
 
 // @platong If the folder form can submit, return true.
@@ -84,14 +84,20 @@ class AddPanel extends React.Component{
     sideMenuButtonShift("folders")
     vSegueAddPanel2FolderChoice(false)
   }
+  cancel(){
+    vSegueAddPanel2Home(false)
+  }
   render(){
     return(
       <div className="add_view">
         <div className="add_panel" onClick={this.folderCreate}>
-          <i class="fas fa-folder-plus"></i>
+          <i className="fas fa-folder-plus"></i>
         </div>
         <div className="add_panel" onClick={this.urlCreate}>
-          <i class="fas fa-code"></i>
+          <i className="fas fa-code"></i>
+        </div>
+        <div className="add_panel" onClick={this.cancel}>
+		  <i className="fas fa-times"></i>
         </div>
       </div>
     );
