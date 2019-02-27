@@ -289,30 +289,12 @@ var AddPanel = (function (_React$Component2) {
         React.createElement(
           "div",
           { className: "add_panel", onClick: this.folderCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add folder"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLを管理するフォルダを作成"
-          )
+          React.createElement("i", { "class": "fas fa-folder-plus" })
         ),
         React.createElement(
           "div",
           { className: "add_panel", onClick: this.urlCreate },
-          React.createElement(
-            "h3",
-            null,
-            "Add URL"
-          ),
-          React.createElement(
-            "p",
-            null,
-            "URLをフォルダに追加"
-          )
+          React.createElement("i", { "class": "fas fa-code" })
         )
       );
     }
@@ -2586,8 +2568,6 @@ var ViewFolderEdit = (function (_React$Component2) {
   _createClass(ViewFolderEdit, [{
     key: "deleteFolder",
     value: function deleteFolder() {
-      console.log(this.state);
-      console.log(this.state.aId);
       _firebase.db.collection("account").doc(this.state.aId).collection("myfreefolders").doc(this.state.id)["delete"]().then(function () {
         sessionStorage.folderedit_isManipulateType = "delete";
         (0, _libSpa_router.backBefore)(false);
