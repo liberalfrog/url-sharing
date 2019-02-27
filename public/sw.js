@@ -1,4 +1,4 @@
-var cacheName = 'url-sharing-realozproject-201902211748-d';
+var cacheName = 'url-sharing-realozproject-201902272055-a';
 var filesToCache = [
   "/home",
   "/account",

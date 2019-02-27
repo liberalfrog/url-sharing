@@ -281,6 +281,11 @@ var AddPanel = (function (_React$Component2) {
       (0, _vector_segue.vSegueAddPanel2FolderChoice)(false);
     }
   }, {
+    key: "cancel",
+    value: function cancel() {
+      (0, _vector_segue.vSegueAddPanel2Home)(false);
+    }
+  }, {
     key: "render",
     value: function render() {
       return React.createElement(
@@ -289,12 +294,17 @@ var AddPanel = (function (_React$Component2) {
         React.createElement(
           "div",
           { className: "add_panel", onClick: this.folderCreate },
-          React.createElement("i", { "class": "fas fa-folder-plus" })
+          React.createElement("i", { className: "fas fa-folder-plus" })
         ),
         React.createElement(
           "div",
           { className: "add_panel", onClick: this.urlCreate },
-          React.createElement("i", { "class": "fas fa-code" })
+          React.createElement("i", { className: "fas fa-code" })
+        ),
+        React.createElement(
+          "div",
+          { className: "add_panel", onClick: this.cancel },
+          React.createElement("i", { className: "fas fa-times" })
         )
       );
     }
