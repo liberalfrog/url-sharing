@@ -45,24 +45,22 @@ messaging.onMessage(function(payload) {
 
 function sendTokenToServer(currentToken){
   const db = firebase.firestore();
-  const settings = { timestampsInSnapshots: true };
-  db.settings(settings);
 
   var aId = localStorage.accountId;
   if(aId){
     return db.collection("account").doc(aId).get().then(snap => {
-   	  if(snap.exists){
+      if(snap.exists){
         var data = snap.data();
         for(var i of data.iid){
           if(currentToken === i)
-		    return;
-	    }
+	    return;
+	  }
         data.iid.push(currentToken);
         return db.collection("account").doc(aId).set(data, { merge: true });
-	  }
+      }
     })
   }else{
     localStorage.tokenSaved = currentToken;
-	return true;
+    return true;
   }
 };
