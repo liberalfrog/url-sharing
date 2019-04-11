@@ -1,8 +1,10 @@
-var express = require('express');
+const express = require('express');
 const fetch = require('node-fetch'); 
 const cheerio = require('cheerio');
 const fs = require('fs');
-var router = express.Router();
+const router = express.Router();
+const admin = require("firebase-admin")
+const db = admin.firestore()
 
 router.get('/url_to_title', function(req, res, next) {
   if(!req.query.url)
@@ -109,9 +111,47 @@ function extractMetaProps(html) {
     return 0
   })
 
-  console.log(results)
   return results
 }
+
+
+router.get("/sets", (req, res) => {
+  let myAId = req.query.myAId
+  let promises = [ 
+    db.collection("account").doc(myAId).collection("folders")
+      .get().then(snaps => {
+      return snaps.docs.map(x => {
+        let d = x.data()
+        d.id = x.id
+        d.kind = "folders"
+        return JSON.stringify(d)
+      })  
+    }).catch(e => {
+      console.log(e)
+    }), 
+    db.collection("account").doc(myAId).collection("myfreefolders")
+      .get().then(snaps => {
+      return snaps.docs.map(x => {
+        let d = x.data()
+        d.id = x.id
+        d.kind = "myfreefolders"
+        return JSON.stringify(d)
+      })  
+    }).catch(e => {
+      console.log(e)
+    }) 
+  ]
+  Promise.all(promises).then(setsList => {
+    let sets = setsList[0].concat(setsList[1])
+    res.header("Content-Type", "application/json; charset=utf-8")
+    res.send({
+      body: sets.join("-@-"),
+      state: "200"
+    })  
+  }).catch(e => {
+    console.error(e)
+  })
+})
 
 
 module.exports = router;
