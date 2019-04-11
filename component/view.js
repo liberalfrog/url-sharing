@@ -193,36 +193,24 @@ class ViewFolderFeed extends React.Component {
   componentDidMount(){
     let list = []
     let aId = localStorage.getItem("accountId")
-    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
-      let d;
-      let for_saved_list = []
-      for(let i of snap1.docs){
-        d = i.data()
-        d.id = i.id
-        d.kind = "folders"
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
-        let d;
-        for(let i of snap2.docs){
-          d = i.data()
-          d.id = i.id
-          d.kind = "myfreefolders"
-          list.push(d)
-          for_saved_list.push(JSON.stringify(d))
-        };
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        this.setState({list: list})
-        for(let d of list){
-          let aId = localStorage.accountId
+    $.ajax({
+      type: "GET",
+      url: "/api_v1/sets",
+      data: {
+        myAId: localStorage.accountId
+      },
+      success: res => {
+        let sets = res.body.split("-@-").map(x => { return JSON.parse(x) })
+        this.setState({list: sets})
+        let aId = localStorage.accountId
+        for(let d of sets){
           if(d.aId === aId){
             let selector = "#" + d.id + " .edit__folder"
             $(selector).css("display", "block")
           }
           $("#" + d.id ).css("background-image", "url(" + d.img + ")")
         }
-      })
+      }
     })
   }
   openFolderPost(){

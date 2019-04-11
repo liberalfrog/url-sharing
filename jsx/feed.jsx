@@ -1,29 +1,16 @@
-import React from 'react';
-import Folders from '../../component/folder';
-import {getFolderType} from '../../component/folder';
-import URLs from '../../component/url';
-import AccountRegister from '../../component/account_register';
-import {segueGlobal, segueFolderFeed, segueInitToGlobal, SegueAnyToURL, segueInitFolderFeed, segueURLFeed, segueURLPost} from '../../component/segue';
-import {auth, storage, db} from "../../component/firebase";
-import {vSegueHome2Folder, vSegueFolder2Home} from "../../component/vector_segue";
-import {currentWhere} from "../../lib/magic_url";
-import {backBefore} from "../../lib/spa_router";
-import queryParser from "../../lib/query_parser";
-
+import {getFolderType} from '../component/folder'
+import {segueInitToGlobal, segueInitFolderFeed, segueURLFeed} from '../component/segue'
+import {auth, db} from "../component/firebase"
+import {backBefore} from "../lib/spa_router"
+import queryParser from "../lib/query_parser"
 
 // @plaong Use session storage ( like a iOS user defaults )
 // 2019-2-18 Had better use indexedDB!!
 
-
-window.addEventListener('popstate', function(e) {
+window.addEventListener('popstate', (e) => {
   backBefore(true)
-});
+})
 
-
-init()
-
-
-function init(){
   auth.onAuthStateChanged(user => {
     if(user === null) {
       var redirect_url = "/" + location.search;
@@ -34,7 +21,6 @@ function init(){
       }
       location.href = redirect_url;
     }
-
     db.collection("account").where("uId", "==", user.uid).get().then(snap => {
       if(!snap.empty){
         for(let i of snap.docs){
@@ -45,7 +31,7 @@ function init(){
         return localStorage.accountId 
       }else{
         $("body").prepend('<div id="popover"></div>')
-		location.href = "/walkthrough"
+	location.href = "/walkthrough"
         return Promise.reject("Account doesn't exist.")
       }
     }).then(aId => {
@@ -56,14 +42,13 @@ function init(){
         case "/folder":
           let folderId = queryParser().id
           if(folderId !== undefined){
-			getFolderType(folderId).then(folderData => {
+	    getFolderType(folderId).then(folderData => {
               segueURLFeed("", false, folderData)
-			})
+	    })
           }else{
             segueInitFolderFeed()
           }
           break
       }
-    });
-  });
-}
+    })
+  })
