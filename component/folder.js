@@ -20,8 +20,8 @@ class Folder extends React.Component {
     $("#" + this.state.id).css("background-image", 'url("' + this.props.img + '")')
   }
   putShow(){
-	sessionStorage.folderData = JSON.stringify(this.state)
-	folderSegue("url")
+    sessionStorage.folderData = JSON.stringify(this.state)
+    folderSegue("url")
   }
   urlPost(){
 	sessionStorage.folderData = JSON.stringify(this.state)

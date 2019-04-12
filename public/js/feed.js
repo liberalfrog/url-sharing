@@ -2394,9 +2394,14 @@ function vSegueURLPost2FolderChoice(unwind) {
 function vSegueURLPost2URL(unwind) {
   //* unwind is always false
   var id = (0, _libQuery_parser2["default"])().id;
-  var urlList = sessionStorage.url_list.split("-@-").map(function (x) {
-    return JSON.parse(x);
-  });
+  var urlList = undefined;
+  if (sessionStorage.url_list === null) {
+    urlList = [];
+  } else {
+    urlList = sessionStorage.url_list.split("-@-").map(function (x) {
+      return JSON.parse(x);
+    });
+  }
   if (Boolean(sessionStorage.urlpost_isUpload)) {
     var uploadURLList = sessionStorage.urlpost_uploadURLList.split("-@-").map(function (x) {
       return JSON.parse(x);

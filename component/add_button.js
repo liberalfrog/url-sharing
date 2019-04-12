@@ -197,16 +197,16 @@ class URLPost extends React.Component{
       }
   }
   urlputSubmit(){
-	let promises = []
+    let promises = []
     for(let i=0; i<=this.state.count; i++){
       promises.push(this.singleURLSubmit(i))
-	}
+    }
     this.state.count = 0
-	Promise.all(promises).then(resultLists => {
-	  sessionStorage.urlpost_uploadURLList = resultLists.map(x => {return JSON.stringify(x)}).join("-@-")
-	  sessionStorage.urlpost_isUpload = "true"
-	  vSegueURLPost2URL(false)
-	})
+    Promise.all(promises).then(resultLists => {
+      sessionStorage.urlpost_uploadURLList = resultLists.map(x => {return JSON.stringify(x)}).join("-@-")
+      sessionStorage.urlpost_isUpload = "true"
+      vSegueURLPost2URL(false)
+    })
   }
   morePost(){
     ++this.state.count
