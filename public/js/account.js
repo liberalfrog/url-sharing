@@ -1,4 +1,190 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -472,7 +658,7 @@ exports.AddPanel = AddPanel;
 exports.URLFolderPost = URLFolderPost;
 exports.URLPost = URLPost;
 
-},{"./firebase":2,"./img_compressor":4,"./segue":6,"./side_menu":7,"./uuid":9,"./vector_segue":10,"./view":11}],2:[function(require,module,exports){
+},{"./firebase":3,"./img_compressor":5,"./segue":7,"./side_menu":8,"./uuid":10,"./vector_segue":11,"./view":12}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -487,14 +673,11 @@ var db = firebase.firestore();
 var storage = firebase.storage();
 var auth = firebase.auth();
 
-var settings = { timestampsInSnapshots: true };
-db.settings(settings);
-
 exports.db = db;
 exports.storage = storage;
 exports.auth = auth;
 
-},{"firebase/app":108,"firebase/auth":109,"firebase/firestore":110,"firebase/storage":111}],3:[function(require,module,exports){
+},{"firebase/app":27,"firebase/auth":28,"firebase/firestore":29,"firebase/storage":32}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -690,7 +873,7 @@ function getFolderType(folderId) {
 
 exports.getFolderType = getFolderType;
 
-},{"../lib/spa_router":15,"./firebase":2,"./segue":6,"./url":8,"./vector_segue":10,"./view":11,"react":118}],4:[function(require,module,exports){
+},{"../lib/spa_router":17,"./firebase":3,"./segue":7,"./url":9,"./vector_segue":11,"./view":12,"react":38}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -839,7 +1022,7 @@ function submitImgToCloudStorage(canvasDomObj, bucket, cloudStorageToFireStore) 
 exports.imgCompressor = imgCompressor;
 exports.submitImgToCloudStorage = submitImgToCloudStorage;
 
-},{"./firebase":2,"./uuid":9,"firebase/app":108}],5:[function(require,module,exports){
+},{"./firebase":3,"./uuid":10,"firebase/app":27}],6:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -885,7 +1068,7 @@ var LaterButton = (function (_React$Component) {
 exports["default"] = LaterButton;
 module.exports = exports["default"];
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1565,7 +1748,7 @@ exports.segueAddPanel = segueAddPanel;
 exports.segueFolderPost = segueFolderPost;
 exports.segueURLPost = segueURLPost;
 
-},{"../lib/magic_url":12,"./add_button":1,"./firebase":2,"./folder":3,"./later_button":5,"./side_menu":7,"./vector_segue":10,"./view":11,"react":118}],7:[function(require,module,exports){
+},{"../lib/magic_url":14,"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./side_menu":8,"./vector_segue":11,"./view":12,"react":38}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1807,7 +1990,7 @@ function sideMenuButtonShift(targetElement) {
 
 exports.sideMenuButtonShift = sideMenuButtonShift;
 
-},{"../lib/magic_url":12,"./firebase":2,"./segue":6,"./vector_segue":10,"react":118}],8:[function(require,module,exports){
+},{"../lib/magic_url":14,"./firebase":3,"./segue":7,"./vector_segue":11,"react":38}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1974,7 +2157,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"./firebase":2,"react":118}],9:[function(require,module,exports){
+},{"./firebase":3,"react":38}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2001,7 +2184,7 @@ function generateUuid() {
 
 module.exports = exports["default"];
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* 遷移元から遷移先を示したセグエ
  * 実際に画面を移動させるときの大本
  *
@@ -2211,9 +2394,14 @@ function vSegueURLPost2FolderChoice(unwind) {
 function vSegueURLPost2URL(unwind) {
   //* unwind is always false
   var id = (0, _libQuery_parser2["default"])().id;
-  var urlList = sessionStorage.url_list.split("-@-").map(function (x) {
-    return JSON.parse(x);
-  });
+  var urlList = undefined;
+  if (sessionStorage.url_list === undefined) {
+    urlList = [];
+  } else {
+    urlList = sessionStorage.url_list.split("-@-").map(function (x) {
+      return JSON.parse(x);
+    });
+  }
   if (Boolean(sessionStorage.urlpost_isUpload)) {
     var uploadURLList = sessionStorage.urlpost_uploadURLList.split("-@-").map(function (x) {
       return JSON.parse(x);
@@ -2306,7 +2494,7 @@ exports.vSegueFollower2Account = vSegueFollower2Account;
 exports.vSegueFolder2FolderEdit = vSegueFolder2FolderEdit;
 exports.vSegueAccount2FolderEdit = vSegueAccount2FolderEdit;
 
-},{"../lib/magic_url":12,"../lib/query_generator":13,"../lib/query_parser":14,"./folder":3,"./segue":6,"./view":11,"react":118}],11:[function(require,module,exports){
+},{"../lib/magic_url":14,"../lib/query_generator":15,"../lib/query_parser":16,"./folder":4,"./segue":7,"./view":12,"react":38}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2723,103 +2911,47 @@ var ViewFolderFeed = (function (_React$Component4) {
 
       var list = [];
       var aId = localStorage.getItem("accountId");
-      _firebase.db.collection("account").doc(aId).collection("folders").get().then(function (snap1) {
-        var d = undefined;
-        var for_saved_list = [];
-        var _iteratorNormalCompletion5 = true;
-        var _didIteratorError5 = false;
-        var _iteratorError5 = undefined;
+      $.ajax({
+        type: "GET",
+        url: "/api_v1/sets",
+        data: {
+          myAId: localStorage.accountId
+        },
+        success: function success(res) {
+          var sets = res.body.split("-@-").map(function (x) {
+            return JSON.parse(x);
+          });
+          _this2.setState({ list: sets });
+          var aId = localStorage.accountId;
+          var _iteratorNormalCompletion5 = true;
+          var _didIteratorError5 = false;
+          var _iteratorError5 = undefined;
 
-        try {
-          for (var _iterator5 = snap1.docs[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
-            var i = _step5.value;
-
-            d = i.data();
-            d.id = i.id;
-            d.kind = "folders";
-            list.push(d);
-            for_saved_list.push(JSON.stringify(d));
-          }
-        } catch (err) {
-          _didIteratorError5 = true;
-          _iteratorError5 = err;
-        } finally {
           try {
-            if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
-              _iterator5["return"]();
+            for (var _iterator5 = sets[Symbol.iterator](), _step5; !(_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done); _iteratorNormalCompletion5 = true) {
+              var d = _step5.value;
+
+              if (d.aId === aId) {
+                var selector = "#" + d.id + " .edit__folder";
+                $(selector).css("display", "block");
+              }
+              $("#" + d.id).css("background-image", "url(" + d.img + ")");
             }
+          } catch (err) {
+            _didIteratorError5 = true;
+            _iteratorError5 = err;
           } finally {
-            if (_didIteratorError5) {
-              throw _iteratorError5;
+            try {
+              if (!_iteratorNormalCompletion5 && _iterator5["return"]) {
+                _iterator5["return"]();
+              }
+            } finally {
+              if (_didIteratorError5) {
+                throw _iteratorError5;
+              }
             }
           }
         }
-
-        ;
-        _firebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap2) {
-          var d = undefined;
-          var _iteratorNormalCompletion6 = true;
-          var _didIteratorError6 = false;
-          var _iteratorError6 = undefined;
-
-          try {
-            for (var _iterator6 = snap2.docs[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
-              var i = _step6.value;
-
-              d = i.data();
-              d.id = i.id;
-              d.kind = "myfreefolders";
-              list.push(d);
-              for_saved_list.push(JSON.stringify(d));
-            }
-          } catch (err) {
-            _didIteratorError6 = true;
-            _iteratorError6 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion6 && _iterator6["return"]) {
-                _iterator6["return"]();
-              }
-            } finally {
-              if (_didIteratorError6) {
-                throw _iteratorError6;
-              }
-            }
-          }
-
-          ;
-          sessionStorage.urlset_list = for_saved_list.join("-@-");
-          _this2.setState({ list: list });
-          var _iteratorNormalCompletion7 = true;
-          var _didIteratorError7 = false;
-          var _iteratorError7 = undefined;
-
-          try {
-            for (var _iterator7 = list[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-              var _d3 = _step7.value;
-
-              var _aId3 = localStorage.accountId;
-              if (_d3.aId === _aId3) {
-                var selector = "#" + _d3.id + " .edit__folder";
-                $(selector).css("display", "block");
-              }
-              $("#" + _d3.id).css("background-image", "url(" + _d3.img + ")");
-            }
-          } catch (err) {
-            _didIteratorError7 = true;
-            _iteratorError7 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion7 && _iterator7["return"]) {
-                _iterator7["return"]();
-              }
-            } finally {
-              if (_didIteratorError7) {
-                throw _iteratorError7;
-              }
-            }
-          }
-        });
       });
     }
   }, {
@@ -2968,7 +3100,182 @@ exports.ViewPostFolder = ViewPostFolder;
 exports.ViewURLFeed = ViewURLFeed;
 exports.ViewURLPost = ViewURLPost;
 
-},{"../lib/spa_router":15,"./add_button":1,"./firebase":2,"./folder":3,"./later_button":5,"./segue":6,"./side_menu":7,"./url":8,"./vector_segue":10,"react":118}],12:[function(require,module,exports){
+},{"../lib/spa_router":17,"./add_button":2,"./firebase":3,"./folder":4,"./later_button":6,"./segue":7,"./side_menu":8,"./url":9,"./vector_segue":11,"react":38}],13:[function(require,module,exports){
+'use strict';
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _react = require('react');
+
+var _react2 = _interopRequireDefault(_react);
+
+var _componentFolder = require('../component/folder');
+
+var _componentFolder2 = _interopRequireDefault(_componentFolder);
+
+var _componentFirebase = require("../component/firebase");
+
+var _componentImg_compressor = require("../component/img_compressor");
+
+var _libQuery_parser = require("../lib/query_parser");
+
+var _libQuery_parser2 = _interopRequireDefault(_libQuery_parser);
+
+var _libSpa_router = require("../lib/spa_router");
+
+// @plaong Use session storage ( like a iOS user defaults )
+// 2019-2-18 Had better use indexedDB!!
+
+window.addEventListener('popstate', function (e) {
+  (0, _libSpa_router.backBefore)(true);
+});
+
+var isFollow;
+var aId = (0, _libQuery_parser2['default'])().aId;
+var myAId = localStorage.getItem("accountId");
+
+init();
+
+function init() {
+  var queryToFollow = _componentFirebase.db.collection("account").doc(myAId).collection("followees").doc(aId);
+
+  _componentFirebase.db.collection("account").doc(aId).get().then(function (snap) {
+    var d = snap.data();
+    document.getElementById("account_profile_img").src = d.img;
+    document.getElementById("account_name").innerHTML = d.name;
+    document.getElementById("account_intro").innerHTML = d.intro;
+    document.getElementById("follow__number").innerHTML = d.followee;
+    document.getElementById("follower__number").innerHTML = d.follower;
+  });
+
+  if (aId === myAId) {
+    $("#button_follow").css("display", "none");
+    $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
+    $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
+    $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
+  }
+
+  queryToFollow.get().then(function (snap) {
+    if (snap.exists) {
+      isFollow = true;
+      document.getElementById("button_follow").innerHTML = "フォロー中";
+    } else {
+      isFollow = false;
+      document.getElementById("button_follow").innerHTML = "フォローする";
+    }
+  });
+
+  // @platong  アカウントのURLフォルダを表示
+  _componentFirebase.db.collection("account").doc(aId).collection("myfreefolders").get().then(function (snap) {
+    var d = undefined;
+    var list = [];
+    var for_saved_list = [];
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+      for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        var i = _step.value;
+
+        d = i.data();
+        d.id = i.id;
+        d.kind = "freefolder";
+        list.push(d);
+      }
+    } catch (err) {
+      _didIteratorError = true;
+      _iteratorError = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion && _iterator['return']) {
+          _iterator['return']();
+        }
+      } finally {
+        if (_didIteratorError) {
+          throw _iteratorError;
+        }
+      }
+    }
+
+    ReactDOM.render(_react2['default'].createElement(
+      'div',
+      { className: 'container__wrapper' },
+      _react2['default'].createElement(_componentFolder2['default'], { list: list })
+    ), document.getElementById("container"));
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+      for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+        var _d = _step2.value;
+
+        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
+      }
+    } catch (err) {
+      _didIteratorError2 = true;
+      _iteratorError2 = err;
+    } finally {
+      try {
+        if (!_iteratorNormalCompletion2 && _iterator2['return']) {
+          _iterator2['return']();
+        }
+      } finally {
+        if (_didIteratorError2) {
+          throw _iteratorError2;
+        }
+      }
+    }
+  });
+}
+
+// @platong Follow button
+$("#button_follow").on("click", function () {
+  var queryToFollow = _componentFirebase.db.collection("account").doc(myAId).collection("followees").doc(aId);
+
+  if (isFollow) {
+    queryToFollow['delete']().then(function () {
+      return _componentFirebase.db.collection("account").doc(aId).get();
+    }).then(function (snap) {
+      var data = snap.data();
+      data.followee = data.followee - 1;
+      return _componentFirebase.db.collection("account").doc(aId).set(data);
+    }).then(function () {
+      document.getElementById("button_follow").innerHTML = "フォロー";
+      isFollow = false;
+    })['catch'](function (error) {
+      console.error("Error adding document: ", error);
+    });
+  } else {
+    _componentFirebase.db.collection("account").doc(aId).get().then(function (snap) {
+      var d = snap.data();
+      queryToFollow.set({
+        name: d.name,
+        profile_img: d.img
+      }).then(function () {
+        return _componentFirebase.db.collection("account").doc(aId).get();
+      }).then(function (snap) {
+        var data = snap.data();
+        data.followee = data.followee + 1;
+        return _componentFirebase.db.collection("account").doc(aId).set(data);
+      }).then(function () {
+        document.getElementById("button_follow").innerHTML = "フォロー中";
+        isFollow = true;
+      })['catch'](function (error) {
+        console.error("Error adding document: ", error);
+      });
+    });
+  }
+});
+
+var fileChanged = function fileChanged() {
+  (0, _componentImg_compressor.imgCompressor)(document.getElementById("changer__ap__profile-img"), $("#preview"), 192, true);
+};
+
+document.getElementById("changer__ap__profile-img").addEventListener("change", fileChanged, false);
+
+},{"../component/firebase":3,"../component/folder":4,"../component/img_compressor":5,"../lib/query_parser":16,"../lib/spa_router":17,"react":38}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2990,7 +3297,7 @@ function currentWhere() {
 }
 exports.currentWhere = currentWhere;
 
-},{"./query_parser":14}],13:[function(require,module,exports){
+},{"./query_parser":16}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3017,7 +3324,7 @@ function folderEditQueryGenerator() {
 
 module.exports = exports["default"];
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3041,7 +3348,7 @@ function queryParser() {
 
 module.exports = exports["default"];
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3102,7 +3409,7 @@ exports.folderSegue = folderSegue;
 exports.backBefore = backBefore;
 exports.folderEdit = folderEdit;
 
-},{"../component/vector_segue":10}],16:[function(require,module,exports){
+},{"../component/vector_segue":11}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -3110,7 +3417,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var util = require('@firebase/util');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3302,7 +3608,7 @@ function createFirebaseNamespace() {
         app: app,
         apps: null,
         Promise: Promise,
-        SDK_VERSION: '5.8.3',
+        SDK_VERSION: '5.5.0',
         INTERNAL: {
             registerService: registerService,
             createFirebaseNamespace: createFirebaseNamespace,
@@ -3484,7 +3790,6 @@ var errors = {
 var appErrors = new util.ErrorFactory('app', 'Firebase', errors);
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3504,7 +3809,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":23}],17:[function(require,module,exports){
+},{"@firebase/util":25}],19:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -3559,40 +3864,24 @@ function Ld(a,b,c){var d=arguments,e=document,f=String(d[0]),h=d[1];if(!md&&h&&(
 function Md(a,b,c){function d(c){c&&b.appendChild(l(c)?a.createTextNode(c):c)}for(var e=2;e<c.length;e++){var f=c[e];!ha(f)||q(f)&&0<f.nodeType?d(f):v(Nd(f)?Ja(f):f,d)}}function Nd(a){if(a&&"number"==typeof a.length){if(q(a))return"function"==typeof a.item||"string"==typeof a.item;if(n(a))return"function"==typeof a.item}return!1};function Od(a){var b=[];Pd(new Qd,a,b);return b.join("")}function Qd(){}
 function Pd(a,b,c){if(null==b)c.push("null");else{if("object"==typeof b){if(fa(b)){var d=b;b=d.length;c.push("[");for(var e="",f=0;f<b;f++)c.push(e),Pd(a,d[f],c),e=",";c.push("]");return}if(b instanceof String||b instanceof Number||b instanceof Boolean)b=b.valueOf();else{c.push("{");e="";for(d in b)Object.prototype.hasOwnProperty.call(b,d)&&(f=b[d],"function"!=typeof f&&(c.push(e),Rd(d,c),c.push(":"),Pd(a,f,c),e=","));c.push("}");return}}switch(typeof b){case "string":Rd(b,c);break;case "number":c.push(isFinite(b)&&
 !isNaN(b)?String(b):"null");break;case "boolean":c.push(String(b));break;case "function":c.push("null");break;default:throw Error("Unknown type: "+typeof b);}}}var Sd={'"':'\\"',"\\":"\\\\","/":"\\/","\b":"\\b","\f":"\\f","\n":"\\n","\r":"\\r","\t":"\\t","\x0B":"\\u000b"},Td=/\uffff/.test("\uffff")?/[\\"\x00-\x1f\x7f-\uffff]/g:/[\\"\x00-\x1f\x7f-\xff]/g;
-function Rd(a,b){b.push('"',a.replace(Td,function(a){var b=Sd[a];b||(b="\\u"+(a.charCodeAt(0)|65536).toString(16).substr(1),Sd[a]=b);return b}),'"')};/*
-
- Copyright 2017 Google Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-function Ud(){var a=H();return Pb&&!!$b&&11==$b||/Edge\/\d+/.test(a)}function Vd(){return k.window&&k.window.location.href||self&&self.location&&self.location.href||""}function Wd(a,b){b=b||k.window;var c="about:blank";a&&(c=Ad(Cd(a)));b.location.href=c}function Xd(a,b){var c=[],d;for(d in a)d in b?typeof a[d]!=typeof b[d]?c.push(d):"object"==typeof a[d]&&null!=a[d]&&null!=b[d]?0<Xd(a[d],b[d]).length&&c.push(d):a[d]!==b[d]&&c.push(d):c.push(d);for(d in b)d in a||c.push(d);return c}
+function Rd(a,b){b.push('"',a.replace(Td,function(a){var b=Sd[a];b||(b="\\u"+(a.charCodeAt(0)|65536).toString(16).substr(1),Sd[a]=b);return b}),'"')};function Ud(){var a=H();return Pb&&!!$b&&11==$b||/Edge\/\d+/.test(a)}function Vd(){return k.window&&k.window.location.href||self&&self.location&&self.location.href||""}function Wd(a,b){b=b||k.window;var c="about:blank";a&&(c=Ad(Cd(a)));b.location.href=c}function Xd(a,b){var c=[],d;for(d in a)d in b?typeof a[d]!=typeof b[d]?c.push(d):"object"==typeof a[d]&&null!=a[d]&&null!=b[d]?0<Xd(a[d],b[d]).length&&c.push(d):a[d]!==b[d]&&c.push(d):c.push(d);for(d in b)d in a||c.push(d);return c}
 function Yd(){var a=H();a=Zd(a)!=$d?null:(a=a.match(/\sChrome\/(\d+)/i))&&2==a.length?parseInt(a[1],10):null;return a&&30>a?!1:!Pb||!$b||9<$b}function ae(a){a=(a||H()).toLowerCase();return a.match(/android/)||a.match(/webos/)||a.match(/iphone|ipad|ipod/)||a.match(/blackberry/)||a.match(/windows phone/)||a.match(/iemobile/)?!0:!1}function be(a){a=a||k.window;try{a.close()}catch(b){}}
 function ce(a,b,c){var d=Math.floor(1E9*Math.random()).toString();b=b||500;c=c||600;var e=(window.screen.availHeight-c)/2,f=(window.screen.availWidth-b)/2;b={width:b,height:c,top:0<e?e:0,left:0<f?f:0,location:!0,resizable:!0,statusbar:!0,toolbar:!1};c=H().toLowerCase();d&&(b.target=d,y(c,"crios/")&&(b.target="_blank"));Zd(H())==de&&(a=a||"http://localhost",b.scrollbars=!0);c=a||"";(a=b)||(a={});d=window;b=c instanceof yd?c:Cd("undefined"!=typeof c.href?c.href:String(c));c=a.target||c.target;e=[];
 for(h in a)switch(h){case "width":case "height":case "top":case "left":e.push(h+"="+a[h]);break;case "target":case "noopener":case "noreferrer":break;default:e.push(h+"="+(a[h]?1:0))}var h=e.join(",");(z("iPhone")&&!z("iPod")&&!z("iPad")||z("iPad")||z("iPod"))&&d.navigator&&d.navigator.standalone&&c&&"_self"!=c?(h=d.document.createElement("A"),b instanceof yd||b instanceof yd||(b=b.na?b.ma():String(b),Bd.test(b)||(b="about:invalid#zClosurez"),b=Dd(b)),h.href=Ad(b),h.setAttribute("target",c),a.noreferrer&&
 h.setAttribute("rel","noreferrer"),a=document.createEvent("MouseEvent"),a.initMouseEvent("click",!0,!0,d,1),h.dispatchEvent(a),h={}):a.noreferrer?(h=d.open("",c,h),a=Ad(b),h&&(Rb&&y(a,";")&&(a="'"+a.replace(/'/g,"%27")+"'"),h.opener=null,qd("b/12014412, meta tag with sanitized URL"),a='<meta name="referrer" content="no-referrer"><meta http-equiv="refresh" content="0; url='+Ma(a)+'">',a=Hd(a),h.document.write(Gd(a)),h.document.close())):(h=d.open(Ad(b),c,h))&&a.noopener&&(h.opener=null);if(h)try{h.focus()}catch(m){}return h}
-function ee(a){return new A(function(b){function c(){Hc(2E3).then(function(){if(!a||a.closed)b();else return c()})}return c()})}var fe=/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/,ge=/^[^@]+@[^@]+$/;function he(){var a=null;return(new A(function(b){"complete"==k.document.readyState?b():(a=function(){b()},sc(window,"load",a))})).s(function(b){E(window,"load",a);throw b;})}
-function ie(){return je(void 0)?he().then(function(){return new A(function(a,b){var c=k.document,d=setTimeout(function(){b(Error("Cordova framework is not ready."))},1E3);c.addEventListener("deviceready",function(){clearTimeout(d);a()},!1)})}):C(Error("Cordova must run in an Android or iOS file scheme."))}function je(a){a=a||H();return!("file:"!==ke()||!a.toLowerCase().match(/iphone|ipad|ipod|android/))}function le(){var a=k.window;try{return!(!a||a==a.top)}catch(b){return!1}}
-function me(){return"object"!==typeof k.window&&"function"===typeof k.importScripts}function ne(){return firebase.INTERNAL.hasOwnProperty("reactNative")?"ReactNative":firebase.INTERNAL.hasOwnProperty("node")?"Node":me()?"Worker":"Browser"}function oe(){var a=ne();return"ReactNative"===a||"Node"===a}function pe(){for(var a=50,b=[];0<a;)b.push("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(62*Math.random()))),a--;return b.join("")}var de="Firefox",$d="Chrome";
+function ee(a){return new A(function(b){function c(){Hc(2E3).then(function(){if(!a||a.closed)b();else return c()})}return c()})}var fe=/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;function ge(){var a=null;return(new A(function(b){"complete"==k.document.readyState?b():(a=function(){b()},sc(window,"load",a))})).s(function(b){E(window,"load",a);throw b;})}
+function he(){return ie(void 0)?ge().then(function(){return new A(function(a,b){var c=k.document,d=setTimeout(function(){b(Error("Cordova framework is not ready."))},1E3);c.addEventListener("deviceready",function(){clearTimeout(d);a()},!1)})}):C(Error("Cordova must run in an Android or iOS file scheme."))}function ie(a){a=a||H();return!("file:"!==je()||!a.toLowerCase().match(/iphone|ipad|ipod|android/))}function ke(){var a=k.window;try{return!(!a||a==a.top)}catch(b){return!1}}
+function le(){return"object"!==typeof k.window&&"function"===typeof k.importScripts}function me(){return firebase.INTERNAL.hasOwnProperty("reactNative")?"ReactNative":firebase.INTERNAL.hasOwnProperty("node")?"Node":le()?"Worker":"Browser"}function ne(){var a=me();return"ReactNative"===a||"Node"===a}function oe(){for(var a=50,b=[];0<a;)b.push("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(62*Math.random()))),a--;return b.join("")}var de="Firefox",$d="Chrome";
 function Zd(a){var b=a.toLowerCase();if(y(b,"opera/")||y(b,"opr/")||y(b,"opios/"))return"Opera";if(y(b,"iemobile"))return"IEMobile";if(y(b,"msie")||y(b,"trident/"))return"IE";if(y(b,"edge/"))return"Edge";if(y(b,"firefox/"))return de;if(y(b,"silk/"))return"Silk";if(y(b,"blackberry"))return"Blackberry";if(y(b,"webos"))return"Webos";if(!y(b,"safari/")||y(b,"chrome/")||y(b,"crios/")||y(b,"android"))if(!y(b,"chrome/")&&!y(b,"crios/")||y(b,"edge/")){if(y(b,"android"))return"Android";if((a=a.match(/([a-zA-Z\d\.]+)\/[a-zA-Z\d\.]*$/))&&
-2==a.length)return a[1]}else return $d;else return"Safari";return"Other"}var qe={Uc:"FirebaseCore-web",Wc:"FirebaseUI-web"};function re(a,b){b=b||[];var c=[],d={},e;for(e in qe)d[qe[e]]=!0;for(e=0;e<b.length;e++)"undefined"!==typeof d[b[e]]&&(delete d[b[e]],c.push(b[e]));c.sort();b=c;b.length||(b=["FirebaseCore-web"]);c=ne();"Browser"===c?(d=H(),c=Zd(d)):"Worker"===c&&(d=H(),c=Zd(d)+"-"+c);return c+"/JsCore/"+a+"/"+b.join(",")}function H(){return k.navigator&&k.navigator.userAgent||""}
-function I(a,b){a=a.split(".");b=b||k;for(var c=0;c<a.length&&"object"==typeof b&&null!=b;c++)b=b[a[c]];c!=a.length&&(b=void 0);return b}function se(){try{var a=k.localStorage,b=te();if(a)return a.setItem(b,"1"),a.removeItem(b),Ud()?!!k.indexedDB:!0}catch(c){return me()&&!!k.indexedDB}return!1}function ue(){return(ve()||"chrome-extension:"===ke()||je())&&!oe()&&se()&&!me()}function ve(){return"http:"===ke()||"https:"===ke()}function ke(){return k.location&&k.location.protocol||null}
-function we(a){a=a||H();return ae(a)||Zd(a)==de?!1:!0}function xe(a){return"undefined"===typeof a?null:Od(a)}function ye(a){var b={},c;for(c in a)a.hasOwnProperty(c)&&null!==a[c]&&void 0!==a[c]&&(b[c]=a[c]);return b}function ze(a){if(null!==a)return JSON.parse(a)}function te(a){return a?a:Math.floor(1E9*Math.random()).toString()}function Ae(a){a=a||H();return"Safari"==Zd(a)||a.toLowerCase().match(/iphone|ipad|ipod/)?!1:!0}
-function Be(){var a=k.___jsl;if(a&&a.H)for(var b in a.H)if(a.H[b].r=a.H[b].r||[],a.H[b].L=a.H[b].L||[],a.H[b].r=a.H[b].L.concat(),a.CP)for(var c=0;c<a.CP.length;c++)a.CP[c]=null}function Ce(a,b){if(a>b)throw Error("Short delay should be less than long delay!");this.a=a;this.c=b;a=H();b=ne();this.b=ae(a)||"ReactNative"===b}
-Ce.prototype.get=function(){var a=k.navigator;return(a&&"boolean"===typeof a.onLine&&(ve()||"chrome-extension:"===ke()||"undefined"!==typeof a.connection)?a.onLine:1)?this.b?this.c:this.a:Math.min(5E3,this.a)};function De(){var a=k.document;return a&&"undefined"!==typeof a.visibilityState?"visible"==a.visibilityState:!0}
-function Ee(){var a=k.document,b=null;return De()||!a?B():(new A(function(c){b=function(){De()&&(a.removeEventListener("visibilitychange",b,!1),c())};a.addEventListener("visibilitychange",b,!1)})).s(function(c){a.removeEventListener("visibilitychange",b,!1);throw c;})}function Fe(a){try{var b=new Date(parseInt(a,10));if(!isNaN(b.getTime())&&!/[^0-9]/.test(a))return b.toUTCString()}catch(c){}return null}function Ge(){return!(!I("fireauth.oauthhelper",k)&&!I("fireauth.iframe",k))}
-function He(){var a=k.navigator;return a&&a.serviceWorker&&a.serviceWorker.controller||null}function Ie(){var a=k.navigator;return a&&a.serviceWorker?B().then(function(){return a.serviceWorker.ready}).then(function(a){return a.active||null}).s(function(){return null}):B(null)};var Je={};function Ke(a){Je[a]||(Je[a]=!0,"undefined"!==typeof console&&"function"===typeof console.warn&&console.warn(a))};var Le;try{var Me={};Object.defineProperty(Me,"abcd",{configurable:!0,enumerable:!0,value:1});Object.defineProperty(Me,"abcd",{configurable:!0,enumerable:!0,value:2});Le=2==Me.abcd}catch(a){Le=!1}function J(a,b,c){Le?Object.defineProperty(a,b,{configurable:!0,enumerable:!0,value:c}):a[b]=c}function K(a,b){if(b)for(var c in b)b.hasOwnProperty(c)&&J(a,c,b[c])}function Ne(a){var b={};K(b,a);return b}function Oe(a){var b={},c;for(c in a)a.hasOwnProperty(c)&&(b[c]=a[c]);return b}
-function Pe(a,b){if(!b||!b.length)return!0;if(!a)return!1;for(var c=0;c<b.length;c++){var d=a[b[c]];if(void 0===d||null===d||""===d)return!1}return!0}function Qe(a){var b=a;if("object"==typeof a&&null!=a){b="length"in a?[]:{};for(var c in a)J(b,c,Qe(a[c]))}return b};function Re(a){var b={},c=a[Se],d=a[Te];a=a[Ue];if(!a||a!=Ve&&!c)throw Error("Invalid provider user info!");b[We]=d||null;b[Xe]=c||null;J(this,Ye,a);J(this,Ze,Qe(b))}var Ve="EMAIL_SIGNIN",Se="email",Te="newEmail",Ue="requestType",Xe="email",We="fromEmail",Ze="data",Ye="operation";function L(a,b){this.code=$e+a;this.message=b||af[a]||""}t(L,Error);L.prototype.C=function(){return{code:this.code,message:this.message}};L.prototype.toJSON=function(){return this.C()};function bf(a){var b=a&&a.code;return b?new L(b.substring($e.length),a.message):null}
-var $e="auth/",af={"argument-error":"","app-not-authorized":"This app, identified by the domain where it's hosted, is not authorized to use Firebase Authentication with the provided API key. Review your key configuration in the Google API console.","app-not-installed":"The requested mobile application corresponding to the identifier (Android package name or iOS bundle ID) provided is not installed on this device.","captcha-check-failed":"The reCAPTCHA response token provided is either invalid, expired, already used or the domain associated with it does not match the list of whitelisted domains.",
+2==a.length)return a[1]}else return $d;else return"Safari";return"Other"}var pe={Uc:"FirebaseCore-web",Wc:"FirebaseUI-web"};function qe(a,b){b=b||[];var c=[],d={},e;for(e in pe)d[pe[e]]=!0;for(e=0;e<b.length;e++)"undefined"!==typeof d[b[e]]&&(delete d[b[e]],c.push(b[e]));c.sort();b=c;b.length||(b=["FirebaseCore-web"]);c=me();"Browser"===c?(d=H(),c=Zd(d)):"Worker"===c&&(d=H(),c=Zd(d)+"-"+c);return c+"/JsCore/"+a+"/"+b.join(",")}function H(){return k.navigator&&k.navigator.userAgent||""}
+function I(a,b){a=a.split(".");b=b||k;for(var c=0;c<a.length&&"object"==typeof b&&null!=b;c++)b=b[a[c]];c!=a.length&&(b=void 0);return b}function re(){try{var a=k.localStorage,b=se();if(a)return a.setItem(b,"1"),a.removeItem(b),Ud()?!!k.indexedDB:!0}catch(c){return le()&&!!k.indexedDB}return!1}function te(){return(ue()||"chrome-extension:"===je()||ie())&&!ne()&&re()&&!le()}function ue(){return"http:"===je()||"https:"===je()}function je(){return k.location&&k.location.protocol||null}
+function ve(a){a=a||H();return ae(a)||Zd(a)==de?!1:!0}function we(a){return"undefined"===typeof a?null:Od(a)}function xe(a){var b={},c;for(c in a)a.hasOwnProperty(c)&&null!==a[c]&&void 0!==a[c]&&(b[c]=a[c]);return b}function ye(a){if(null!==a)return JSON.parse(a)}function se(a){return a?a:Math.floor(1E9*Math.random()).toString()}function ze(a){a=a||H();return"Safari"==Zd(a)||a.toLowerCase().match(/iphone|ipad|ipod/)?!1:!0}
+function Ae(){var a=k.___jsl;if(a&&a.H)for(var b in a.H)if(a.H[b].r=a.H[b].r||[],a.H[b].L=a.H[b].L||[],a.H[b].r=a.H[b].L.concat(),a.CP)for(var c=0;c<a.CP.length;c++)a.CP[c]=null}function Be(a,b){if(a>b)throw Error("Short delay should be less than long delay!");this.a=a;this.c=b;a=H();b=me();this.b=ae(a)||"ReactNative"===b}
+Be.prototype.get=function(){var a=k.navigator;return(a&&"boolean"===typeof a.onLine&&(ue()||"chrome-extension:"===je()||"undefined"!==typeof a.connection)?a.onLine:1)?this.b?this.c:this.a:Math.min(5E3,this.a)};function Ce(){var a=k.document;return a&&"undefined"!==typeof a.visibilityState?"visible"==a.visibilityState:!0}
+function De(){var a=k.document,b=null;return Ce()||!a?B():(new A(function(c){b=function(){Ce()&&(a.removeEventListener("visibilitychange",b,!1),c())};a.addEventListener("visibilitychange",b,!1)})).s(function(c){a.removeEventListener("visibilitychange",b,!1);throw c;})}function Ee(a){try{var b=new Date(parseInt(a,10));if(!isNaN(b.getTime())&&!/[^0-9]/.test(a))return b.toUTCString()}catch(c){}return null}function Fe(){return!(!I("fireauth.oauthhelper",k)&&!I("fireauth.iframe",k))}
+function Ge(){var a=k.navigator;return a&&a.serviceWorker&&a.serviceWorker.controller||null}function He(){var a=k.navigator;return a&&a.serviceWorker?B().then(function(){return a.serviceWorker.ready}).then(function(a){return a.active||null}).s(function(){return null}):B(null)};var Ie={};function Je(a){Ie[a]||(Ie[a]=!0,"undefined"!==typeof console&&"function"===typeof console.warn&&console.warn(a))};var Ke;try{var Le={};Object.defineProperty(Le,"abcd",{configurable:!0,enumerable:!0,value:1});Object.defineProperty(Le,"abcd",{configurable:!0,enumerable:!0,value:2});Ke=2==Le.abcd}catch(a){Ke=!1}function J(a,b,c){Ke?Object.defineProperty(a,b,{configurable:!0,enumerable:!0,value:c}):a[b]=c}function K(a,b){if(b)for(var c in b)b.hasOwnProperty(c)&&J(a,c,b[c])}function Me(a){var b={};K(b,a);return b}function Ne(a){var b={},c;for(c in a)a.hasOwnProperty(c)&&(b[c]=a[c]);return b}
+function Oe(a,b){if(!b||!b.length)return!0;if(!a)return!1;for(var c=0;c<b.length;c++){var d=a[b[c]];if(void 0===d||null===d||""===d)return!1}return!0}function Pe(a){var b=a;if("object"==typeof a&&null!=a){b="length"in a?[]:{};for(var c in a)J(b,c,Pe(a[c]))}return b};function Qe(a){var b={},c=a[Re],d=a[Se];a=a[Te];if(!a||a!=Ue&&!c)throw Error("Invalid provider user info!");b[Ve]=d||null;b[We]=c||null;J(this,Xe,a);J(this,Ye,Pe(b))}var Ue="EMAIL_SIGNIN",Re="email",Se="newEmail",Te="requestType",We="email",Ve="fromEmail",Ye="data",Xe="operation";function L(a,b){this.code=Ze+a;this.message=b||$e[a]||""}t(L,Error);L.prototype.C=function(){return{code:this.code,message:this.message}};L.prototype.toJSON=function(){return this.C()};function af(a){var b=a&&a.code;return b?new L(b.substring(Ze.length),a.message):null}
+var Ze="auth/",$e={"argument-error":"","app-not-authorized":"This app, identified by the domain where it's hosted, is not authorized to use Firebase Authentication with the provided API key. Review your key configuration in the Google API console.","app-not-installed":"The requested mobile application corresponding to the identifier (Android package name or iOS bundle ID) provided is not installed on this device.","captcha-check-failed":"The reCAPTCHA response token provided is either invalid, expired, already used or the domain associated with it does not match the list of whitelisted domains.",
 "code-expired":"The SMS code has expired. Please re-send the verification code to try again.","cordova-not-ready":"Cordova framework is not ready.","cors-unsupported":"This browser is not supported.","credential-already-in-use":"This credential is already associated with a different user account.","custom-token-mismatch":"The custom token corresponds to a different audience.","requires-recent-login":"This operation is sensitive and requires recent authentication. Log in again before retrying this request.",
 "dynamic-link-not-activated":"Please activate Dynamic Links in the Firebase Console and agree to the terms and conditions.","email-already-in-use":"The email address is already in use by another account.","expired-action-code":"The action code has expired. ","cancelled-popup-request":"This operation has been cancelled due to another conflicting popup being opened.","internal-error":"An internal error has occurred.","invalid-app-credential":"The phone verification request contains an invalid application verifier. The reCAPTCHA token response is either invalid or expired.",
 "invalid-app-id":"The mobile app identifier is not registed for the current project.","invalid-user-token":"This user's credential isn't valid for this project. This can happen if the user's token has been tampered with, or if the user isn't for the project associated with this API key.","invalid-auth-event":"An internal error has occurred.","invalid-verification-code":"The SMS verification code used to create the phone auth credential is invalid. Please resend the verification code sms and be sure use the verification code provided by the user.",
@@ -3606,54 +3895,38 @@ var $e="auth/",af={"argument-error":"","app-not-authorized":"This app, identifie
 "no-auth-event":"An internal error has occurred.","no-such-provider":"User was not linked to an account with the given provider.","null-user":"A null user object was provided as the argument for an operation which requires a non-null user object.","operation-not-allowed":"The given sign-in provider is disabled for this Firebase project. Enable it in the Firebase console, under the sign-in method tab of the Auth section.","operation-not-supported-in-this-environment":'This operation is not supported in the environment this application is running on. "location.protocol" must be http, https or chrome-extension and web storage must be enabled.',
 "popup-blocked":"Unable to establish a connection with the popup. It may have been blocked by the browser.","popup-closed-by-user":"The popup has been closed by the user before finalizing the operation.","provider-already-linked":"User can only be linked to one identity for the given provider.","quota-exceeded":"The project's quota for this operation has been exceeded.","redirect-cancelled-by-user":"The redirect operation has been cancelled by the user before finalizing.","redirect-operation-pending":"A redirect sign-in operation is already pending.",
 "rejected-credential":"The request contains malformed or mismatching credentials.",timeout:"The operation has timed out.","user-token-expired":"The user's credential is no longer valid. The user must sign in again.","too-many-requests":"We have blocked all requests from this device due to unusual activity. Try again later.","unauthorized-continue-uri":"The domain of the continue URL is not whitelisted.  Please whitelist the domain in the Firebase console.","unsupported-persistence-type":"The current environment does not support the specified persistence type.",
-"user-cancelled":"User did not grant your application the permissions it requested.","user-not-found":"There is no user record corresponding to this identifier. The user may have been deleted.","user-disabled":"The user account has been disabled by an administrator.","user-mismatch":"The supplied credentials do not correspond to the previously signed in user.","user-signed-out":"","weak-password":"The password must be 6 characters long or more.","web-storage-unsupported":"This browser is not supported or 3rd party cookies and data may be disabled."};function cf(a){var b=a[df];if("undefined"===typeof b)throw new L("missing-continue-uri");if("string"!==typeof b||"string"===typeof b&&!b.length)throw new L("invalid-continue-uri");this.h=b;this.b=this.a=null;this.g=!1;var c=a[ef];if(c&&"object"===typeof c){b=c[ff];var d=c[gf];c=c[hf];if("string"===typeof b&&b.length){this.a=b;if("undefined"!==typeof d&&"boolean"!==typeof d)throw new L("argument-error",gf+" property must be a boolean when specified.");this.g=!!d;if("undefined"!==typeof c&&("string"!==
-typeof c||"string"===typeof c&&!c.length))throw new L("argument-error",hf+" property must be a non empty string when specified.");this.b=c||null}else{if("undefined"!==typeof b)throw new L("argument-error",ff+" property must be a non empty string when specified.");if("undefined"!==typeof d||"undefined"!==typeof c)throw new L("missing-android-pkg-name");}}else if("undefined"!==typeof c)throw new L("argument-error",ef+" property must be a non null object when specified.");this.f=null;if((b=a[jf])&&"object"===
-typeof b)if(b=b[kf],"string"===typeof b&&b.length)this.f=b;else{if("undefined"!==typeof b)throw new L("argument-error",kf+" property must be a non empty string when specified.");}else if("undefined"!==typeof b)throw new L("argument-error",jf+" property must be a non null object when specified.");b=a[lf];if("undefined"!==typeof b&&"boolean"!==typeof b)throw new L("argument-error",lf+" property must be a boolean when specified.");this.c=!!b;a=a[mf];if("undefined"!==typeof a&&("string"!==typeof a||"string"===
-typeof a&&!a.length))throw new L("argument-error",mf+" property must be a non empty string when specified.");this.i=a||null}var ef="android",mf="dynamicLinkDomain",lf="handleCodeInApp",jf="iOS",df="url",gf="installApp",hf="minimumVersion",ff="packageName",kf="bundleId";
-function nf(a){var b={};b.continueUrl=a.h;b.canHandleCodeInApp=a.c;if(b.androidPackageName=a.a)b.androidMinimumVersion=a.b,b.androidInstallApp=a.g;b.iOSBundleId=a.f;b.dynamicLinkDomain=a.i;for(var c in b)null===b[c]&&delete b[c];return b};function of(a){return Ca(a,function(a){a=a.toString(16);return 1<a.length?a:"0"+a}).join("")};var pf=null,qf=null;function rf(a){var b="";sf(a,function(a){b+=String.fromCharCode(a)});return b}function sf(a,b){function c(b){for(;d<a.length;){var c=a.charAt(d++),e=qf[c];if(null!=e)return e;if(!/^[\s\xa0]*$/.test(c))throw Error("Unknown base64 encoding at char: "+c);}return b}tf();for(var d=0;;){var e=c(-1),f=c(0),h=c(64),m=c(64);if(64===m&&-1===e)break;b(e<<2|f>>4);64!=h&&(b(f<<4&240|h>>2),64!=m&&b(h<<6&192|m))}}
-function tf(){if(!pf){pf={};qf={};for(var a=0;65>a;a++)pf[a]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(a),qf[pf[a]]=a,62<=a&&(qf["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.".charAt(a)]=a)}};function uf(a){this.c=a.sub;oa();this.a=a.provider_id||a.firebase&&a.firebase.sign_in_provider||null;this.b=!!a.is_anonymous||"anonymous"==this.a}uf.prototype.f=function(){return this.b};function vf(a){return(a=wf(a))&&a.sub&&a.iss&&a.aud&&a.exp?new uf(a):null}function wf(a){if(!a)return null;a=a.split(".");if(3!=a.length)return null;a=a[1];for(var b=(4-a.length%4)%4,c=0;c<b;c++)a+=".";try{return JSON.parse(rf(a))}catch(d){}return null};var xf={$c:{ab:"https://www.googleapis.com/identitytoolkit/v3/relyingparty/",ib:"https://securetoken.googleapis.com/v1/token",id:"p"},bd:{ab:"https://staging-www.sandbox.googleapis.com/identitytoolkit/v3/relyingparty/",ib:"https://staging-securetoken.sandbox.googleapis.com/v1/token",id:"s"},cd:{ab:"https://www-googleapis-test.sandbox.google.com/identitytoolkit/v3/relyingparty/",ib:"https://test-securetoken.sandbox.googleapis.com/v1/token",id:"t"}};
-function yf(a){for(var b in xf)if(xf[b].id===a)return a=xf[b],{firebaseEndpoint:a.ab,secureTokenEndpoint:a.ib};return null}var zf;zf=yf("__EID__")?"__EID__":void 0;var Af="oauth_consumer_key oauth_nonce oauth_signature oauth_signature_method oauth_timestamp oauth_token oauth_version".split(" "),Bf=["client_id","response_type","scope","redirect_uri","state"],Cf={Vc:{Ma:"locale",Ba:500,Aa:600,Na:"facebook.com",hb:Bf},Xc:{Ma:null,Ba:500,Aa:620,Na:"github.com",hb:Bf},Yc:{Ma:"hl",Ba:515,Aa:680,Na:"google.com",hb:Bf},dd:{Ma:"lang",Ba:485,Aa:705,Na:"twitter.com",hb:Af}};function Df(a){for(var b in Cf)if(Cf[b].Na==a)return Cf[b];return null};function Ef(a){var b={};b["facebook.com"]=Ff;b["google.com"]=Gf;b["github.com"]=Hf;b["twitter.com"]=If;var c=a&&a[Jf];try{if(c)return b[c]?new b[c](a):new Kf(a);if("undefined"!==typeof a[Lf])return new Mf(a)}catch(d){}return null}var Lf="idToken",Jf="providerId";
-function Mf(a){var b=a[Jf];if(!b&&a[Lf]){var c=vf(a[Lf]);c&&c.a&&(b=c.a)}if(!b)throw Error("Invalid additional user info!");if("anonymous"==b||"custom"==b)b=null;c=!1;"undefined"!==typeof a.isNewUser?c=!!a.isNewUser:"identitytoolkit#SignupNewUserResponse"===a.kind&&(c=!0);J(this,"providerId",b);J(this,"isNewUser",c)}function Kf(a){Mf.call(this,a);a=ze(a.rawUserInfo||"{}");J(this,"profile",Qe(a||{}))}t(Kf,Mf);
-function Ff(a){Kf.call(this,a);if("facebook.com"!=this.providerId)throw Error("Invalid provider ID!");}t(Ff,Kf);function Hf(a){Kf.call(this,a);if("github.com"!=this.providerId)throw Error("Invalid provider ID!");J(this,"username",this.profile&&this.profile.login||null)}t(Hf,Kf);function Gf(a){Kf.call(this,a);if("google.com"!=this.providerId)throw Error("Invalid provider ID!");}t(Gf,Kf);
-function If(a){Kf.call(this,a);if("twitter.com"!=this.providerId)throw Error("Invalid provider ID!");J(this,"username",a.screenName||null)}t(If,Kf);function Nf(a){this.a=dd(a)};function Of(a){var b=dd(a),c=cd(b,"link"),d=cd(dd(c),"link");b=cd(b,"deep_link_id");return cd(dd(b),"link")||b||d||c||a};function Pf(a,b){return a.then(function(a){if(a[M]){var c=vf(a[M]);if(!c||b!=c.c)throw new L("user-mismatch");return a}throw new L("user-mismatch");}).s(function(a){throw a&&a.code&&a.code==$e+"user-not-found"?new L("user-mismatch"):a;})}function Qf(a,b){if(b)this.a=b;else throw new L("internal-error","failed to construct a credential");J(this,"providerId",a);J(this,"signInMethod",a)}Qf.prototype.la=function(a){return Rf(a,Sf(this))};
-Qf.prototype.b=function(a,b){var c=Sf(this);c.idToken=b;return Tf(a,c)};Qf.prototype.f=function(a,b){return Pf(Uf(a,Sf(this)),b)};function Sf(a){return{pendingToken:a.a,requestUri:"http://localhost"}}Qf.prototype.C=function(){return{providerId:this.providerId,signInMethod:this.signInMethod,pendingToken:this.a}};
-function Vf(a,b,c){this.a=null;if(b.idToken||b.accessToken)b.idToken&&J(this,"idToken",b.idToken),b.accessToken&&J(this,"accessToken",b.accessToken),b.nonce&&!b.pendingToken&&J(this,"nonce",b.nonce),b.pendingToken&&(this.a=b.pendingToken);else if(b.oauthToken&&b.oauthTokenSecret)J(this,"accessToken",b.oauthToken),J(this,"secret",b.oauthTokenSecret);else throw new L("internal-error","failed to construct a credential");J(this,"providerId",a);J(this,"signInMethod",c)}
-Vf.prototype.la=function(a){return Rf(a,Wf(this))};Vf.prototype.b=function(a,b){var c=Wf(this);c.idToken=b;return Tf(a,c)};Vf.prototype.f=function(a,b){var c=Wf(this);return Pf(Uf(a,c),b)};
-function Wf(a){var b={};a.idToken&&(b.id_token=a.idToken);a.accessToken&&(b.access_token=a.accessToken);a.secret&&(b.oauth_token_secret=a.secret);b.providerId=a.providerId;a.nonce&&!a.a&&(b.nonce=a.nonce);b={postBody:hd(b).toString(),requestUri:"http://localhost"};a.a&&(delete b.postBody,b.pendingToken=a.a);return b}
-Vf.prototype.C=function(){var a={providerId:this.providerId,signInMethod:this.signInMethod};this.idToken&&(a.oauthIdToken=this.idToken);this.accessToken&&(a.oauthAccessToken=this.accessToken);this.secret&&(a.oauthTokenSecret=this.secret);this.nonce&&(a.nonce=this.nonce);this.a&&(a.pendingToken=this.a);return a};function Xf(a,b){this.Dc=b||[];K(this,{providerId:a,isOAuthProvider:!0});this.yb={};this.cb=(Df(a)||{}).Ma||null;this.$a=null}Xf.prototype.Da=function(a){this.yb=$a(a);return this};
-function Yf(a){if("string"!==typeof a||0!=a.indexOf("saml."))throw new L("argument-error",'SAML provider IDs must be prefixed with "saml."');Xf.call(this,a,[])}t(Yf,Xf);function N(a){Xf.call(this,a,Bf);this.a=[]}t(N,Xf);N.prototype.ua=function(a){Ga(this.a,a)||this.a.push(a);return this};N.prototype.Eb=function(){return Ja(this.a)};
-N.prototype.credential=function(a,b,c){if(!a&&!b)throw new L("argument-error","credential failed: must provide the ID token and/or the access token.");return new Vf(this.providerId,{idToken:a||null,accessToken:b||null,nonce:c||null},this.providerId)};function Zf(){N.call(this,"facebook.com")}t(Zf,N);J(Zf,"PROVIDER_ID","facebook.com");J(Zf,"FACEBOOK_SIGN_IN_METHOD","facebook.com");
-function $f(a){if(!a)throw new L("argument-error","credential failed: expected 1 argument (the OAuth access token).");var b=a;q(a)&&(b=a.accessToken);return(new Zf).credential(null,b)}function ag(){N.call(this,"github.com")}t(ag,N);J(ag,"PROVIDER_ID","github.com");J(ag,"GITHUB_SIGN_IN_METHOD","github.com");function bg(a){if(!a)throw new L("argument-error","credential failed: expected 1 argument (the OAuth access token).");var b=a;q(a)&&(b=a.accessToken);return(new ag).credential(null,b)}
-function cg(){N.call(this,"google.com");this.ua("profile")}t(cg,N);J(cg,"PROVIDER_ID","google.com");J(cg,"GOOGLE_SIGN_IN_METHOD","google.com");function dg(a,b){var c=a;q(a)&&(c=a.idToken,b=a.accessToken);return(new cg).credential(c,b)}function eg(){Xf.call(this,"twitter.com",Af)}t(eg,Xf);J(eg,"PROVIDER_ID","twitter.com");J(eg,"TWITTER_SIGN_IN_METHOD","twitter.com");
-function fg(a,b){var c=a;q(c)||(c={oauthToken:a,oauthTokenSecret:b});if(!c.oauthToken||!c.oauthTokenSecret)throw new L("argument-error","credential failed: expected 2 arguments (the OAuth access token and secret).");return new Vf("twitter.com",c,"twitter.com")}function gg(a,b,c){this.a=a;this.c=b;J(this,"providerId","password");J(this,"signInMethod",c===O.EMAIL_LINK_SIGN_IN_METHOD?O.EMAIL_LINK_SIGN_IN_METHOD:O.EMAIL_PASSWORD_SIGN_IN_METHOD)}
-gg.prototype.la=function(a){return this.signInMethod==O.EMAIL_LINK_SIGN_IN_METHOD?P(a,hg,{email:this.a,oobCode:this.c}):P(a,ig,{email:this.a,password:this.c})};gg.prototype.b=function(a,b){return this.signInMethod==O.EMAIL_LINK_SIGN_IN_METHOD?P(a,jg,{idToken:b,email:this.a,oobCode:this.c}):P(a,kg,{idToken:b,email:this.a,password:this.c})};gg.prototype.f=function(a,b){return Pf(this.la(a),b)};gg.prototype.C=function(){return{email:this.a,password:this.c,signInMethod:this.signInMethod}};
-function O(){K(this,{providerId:"password",isOAuthProvider:!1})}function lg(a,b){b=mg(b);if(!b)throw new L("argument-error","Invalid email link!");return new gg(a,b,O.EMAIL_LINK_SIGN_IN_METHOD)}function mg(a){a=Of(a);a=new Nf(a);var b=cd(a.a,"oobCode")||null;return"signIn"===(cd(a.a,"mode")||null)&&b?b:null}K(O,{PROVIDER_ID:"password"});K(O,{EMAIL_LINK_SIGN_IN_METHOD:"emailLink"});K(O,{EMAIL_PASSWORD_SIGN_IN_METHOD:"password"});
-function ng(a){if(!(a.Ta&&a.Sa||a.Fa&&a.$))throw new L("internal-error");this.a=a;J(this,"providerId","phone");J(this,"signInMethod","phone")}ng.prototype.la=function(a){return a.Ua(og(this))};ng.prototype.b=function(a,b){var c=og(this);c.idToken=b;return P(a,pg,c)};ng.prototype.f=function(a,b){var c=og(this);c.operation="REAUTH";a=P(a,qg,c);return Pf(a,b)};
-ng.prototype.C=function(){var a={providerId:"phone"};this.a.Ta&&(a.verificationId=this.a.Ta);this.a.Sa&&(a.verificationCode=this.a.Sa);this.a.Fa&&(a.temporaryProof=this.a.Fa);this.a.$&&(a.phoneNumber=this.a.$);return a};function og(a){return a.a.Fa&&a.a.$?{temporaryProof:a.a.Fa,phoneNumber:a.a.$}:{sessionInfo:a.a.Ta,code:a.a.Sa}}
-function rg(a){try{this.a=a||firebase.auth()}catch(b){throw new L("argument-error","Either an instance of firebase.auth.Auth must be passed as an argument to the firebase.auth.PhoneAuthProvider constructor, or the default firebase App instance must be initialized via firebase.initializeApp().");}K(this,{providerId:"phone",isOAuthProvider:!1})}
-rg.prototype.Ua=function(a,b){var c=this.a.b;return B(b.verify()).then(function(d){if(!l(d))throw new L("argument-error","An implementation of firebase.auth.ApplicationVerifier.prototype.verify() must return a firebase.Promise that resolves with a string.");switch(b.type){case "recaptcha":return sg(c,{phoneNumber:a,recaptchaToken:d}).then(function(a){"function"===typeof b.reset&&b.reset();return a},function(a){"function"===typeof b.reset&&b.reset();throw a;});default:throw new L("argument-error",
-'Only firebase.auth.ApplicationVerifiers with type="recaptcha" are currently supported.');}})};function tg(a,b){if(!a)throw new L("missing-verification-id");if(!b)throw new L("missing-verification-code");return new ng({Ta:a,Sa:b})}K(rg,{PROVIDER_ID:"phone"});K(rg,{PHONE_SIGN_IN_METHOD:"phone"});
-function ug(a){if(a.temporaryProof&&a.phoneNumber)return new ng({Fa:a.temporaryProof,$:a.phoneNumber});var b=a&&a.providerId;if(!b||"password"===b)return null;var c=a&&a.oauthAccessToken,d=a&&a.oauthTokenSecret,e=a&&a.nonce,f=a&&a.oauthIdToken,h=a&&a.pendingToken;try{switch(b){case "google.com":return dg(f,c);case "facebook.com":return $f(c);case "github.com":return bg(c);case "twitter.com":return fg(c,d);default:return c||d||f||h?h?0==b.indexOf("saml.")?new Qf(b,h):new Vf(b,{pendingToken:h,idToken:a.oauthIdToken,
-accessToken:a.oauthAccessToken},b):(new N(b)).credential(f,c,e):null}}catch(m){return null}}function vg(a){if(!a.isOAuthProvider)throw new L("invalid-oauth-provider");};function wg(a,b,c,d,e,f){this.b=a;this.c=b||null;this.f=c||null;this.g=d||null;this.h=f||null;this.a=e||null;if(this.f||this.a){if(this.f&&this.a)throw new L("invalid-auth-event");if(this.f&&!this.g)throw new L("invalid-auth-event");}else throw new L("invalid-auth-event");}wg.prototype.C=function(){return{type:this.b,eventId:this.c,urlResponse:this.f,sessionId:this.g,postBody:this.h,error:this.a&&this.a.C()}};
-function xg(a){a=a||{};return a.type?new wg(a.type,a.eventId,a.urlResponse,a.sessionId,a.error&&bf(a.error),a.postBody):null};/*
-
- Copyright 2018 Google Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-function yg(){this.b=null;this.a=[]}var zg=null;yg.prototype.subscribe=function(a){var b=this;this.a.push(a);this.b||(this.b=function(a){for(var c=0;c<b.a.length;c++)b.a[c](a)},a=I("universalLinks.subscribe",k),"function"===typeof a&&a(null,this.b))};yg.prototype.unsubscribe=function(a){w(this.a,function(b){return b==a})};function Ag(a){var b="unauthorized-domain",c=void 0,d=dd(a);a=d.b;d=d.c;"chrome-extension"==d?c=Ka("This chrome extension ID (chrome-extension://%s) is not authorized to run this operation. Add it to the OAuth redirect domains list in the Firebase console -> Auth section -> Sign in method tab.",a):"http"==d||"https"==d?c=Ka("This domain (%s) is not authorized to run this operation. Add it to the OAuth redirect domains list in the Firebase console -> Auth section -> Sign in method tab.",a):b="operation-not-supported-in-this-environment";
-L.call(this,b,c)}t(Ag,L);function Bg(a,b,c){L.call(this,a,c);a=b||{};a.zb&&J(this,"email",a.zb);a.$&&J(this,"phoneNumber",a.$);a.credential&&J(this,"credential",a.credential)}t(Bg,L);Bg.prototype.C=function(){var a={code:this.code,message:this.message};this.email&&(a.email=this.email);this.phoneNumber&&(a.phoneNumber=this.phoneNumber);var b=this.credential&&this.credential.C();b&&bb(a,b);return a};Bg.prototype.toJSON=function(){return this.C()};
-function Cg(a){if(a.code){var b=a.code||"";0==b.indexOf($e)&&(b=b.substring($e.length));var c={credential:ug(a)};if(a.email)c.zb=a.email;else if(a.phoneNumber)c.$=a.phoneNumber;else if(!c.credential)return new L(b,a.message||void 0);return new Bg(b,c,a.message)}return null};function Dg(){}Dg.prototype.c=null;function Eg(a){return a.c||(a.c=a.b())};var Fg;function Gg(){}t(Gg,Dg);Gg.prototype.a=function(){var a=Hg(this);return a?new ActiveXObject(a):new XMLHttpRequest};Gg.prototype.b=function(){var a={};Hg(this)&&(a[0]=!0,a[1]=!0);return a};
+"user-cancelled":"User did not grant your application the permissions it requested.","user-not-found":"There is no user record corresponding to this identifier. The user may have been deleted.","user-disabled":"The user account has been disabled by an administrator.","user-mismatch":"The supplied credentials do not correspond to the previously signed in user.","user-signed-out":"","weak-password":"The password must be 6 characters long or more.","web-storage-unsupported":"This browser is not supported or 3rd party cookies and data may be disabled."};function bf(a){var b=a[cf];if("undefined"===typeof b)throw new L("missing-continue-uri");if("string"!==typeof b||"string"===typeof b&&!b.length)throw new L("invalid-continue-uri");this.h=b;this.b=this.a=null;this.g=!1;var c=a[df];if(c&&"object"===typeof c){b=c[ef];var d=c[ff];c=c[gf];if("string"===typeof b&&b.length){this.a=b;if("undefined"!==typeof d&&"boolean"!==typeof d)throw new L("argument-error",ff+" property must be a boolean when specified.");this.g=!!d;if("undefined"!==typeof c&&("string"!==
+typeof c||"string"===typeof c&&!c.length))throw new L("argument-error",gf+" property must be a non empty string when specified.");this.b=c||null}else{if("undefined"!==typeof b)throw new L("argument-error",ef+" property must be a non empty string when specified.");if("undefined"!==typeof d||"undefined"!==typeof c)throw new L("missing-android-pkg-name");}}else if("undefined"!==typeof c)throw new L("argument-error",df+" property must be a non null object when specified.");this.f=null;if((b=a[hf])&&"object"===
+typeof b)if(b=b[jf],"string"===typeof b&&b.length)this.f=b;else{if("undefined"!==typeof b)throw new L("argument-error",jf+" property must be a non empty string when specified.");}else if("undefined"!==typeof b)throw new L("argument-error",hf+" property must be a non null object when specified.");b=a[kf];if("undefined"!==typeof b&&"boolean"!==typeof b)throw new L("argument-error",kf+" property must be a boolean when specified.");this.c=!!b;a=a[lf];if("undefined"!==typeof a&&("string"!==typeof a||"string"===
+typeof a&&!a.length))throw new L("argument-error",lf+" property must be a non empty string when specified.");this.i=a||null}var df="android",lf="dynamicLinkDomain",kf="handleCodeInApp",hf="iOS",cf="url",ff="installApp",gf="minimumVersion",ef="packageName",jf="bundleId";
+function mf(a){var b={};b.continueUrl=a.h;b.canHandleCodeInApp=a.c;if(b.androidPackageName=a.a)b.androidMinimumVersion=a.b,b.androidInstallApp=a.g;b.iOSBundleId=a.f;b.dynamicLinkDomain=a.i;for(var c in b)null===b[c]&&delete b[c];return b};function nf(a){return Ca(a,function(a){a=a.toString(16);return 1<a.length?a:"0"+a}).join("")};var of=null,pf=null;function qf(a){var b="";rf(a,function(a){b+=String.fromCharCode(a)});return b}function rf(a,b){function c(b){for(;d<a.length;){var c=a.charAt(d++),e=pf[c];if(null!=e)return e;if(!/^[\s\xa0]*$/.test(c))throw Error("Unknown base64 encoding at char: "+c);}return b}sf();for(var d=0;;){var e=c(-1),f=c(0),h=c(64),m=c(64);if(64===m&&-1===e)break;b(e<<2|f>>4);64!=h&&(b(f<<4&240|h>>2),64!=m&&b(h<<6&192|m))}}
+function sf(){if(!of){of={};pf={};for(var a=0;65>a;a++)of[a]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".charAt(a),pf[of[a]]=a,62<=a&&(pf["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.".charAt(a)]=a)}};function tf(a){this.c=a.sub;oa();this.a=a.provider_id||a.firebase&&a.firebase.sign_in_provider||null;this.b=!!a.is_anonymous||"anonymous"==this.a}tf.prototype.f=function(){return this.b};function uf(a){return(a=vf(a))&&a.sub&&a.iss&&a.aud&&a.exp?new tf(a):null}function vf(a){if(!a)return null;a=a.split(".");if(3!=a.length)return null;a=a[1];for(var b=(4-a.length%4)%4,c=0;c<b;c++)a+=".";try{return JSON.parse(qf(a))}catch(d){}return null};var wf={$c:{ab:"https://www.googleapis.com/identitytoolkit/v3/relyingparty/",ib:"https://securetoken.googleapis.com/v1/token",id:"p"},bd:{ab:"https://staging-www.sandbox.googleapis.com/identitytoolkit/v3/relyingparty/",ib:"https://staging-securetoken.sandbox.googleapis.com/v1/token",id:"s"},cd:{ab:"https://www-googleapis-test.sandbox.google.com/identitytoolkit/v3/relyingparty/",ib:"https://test-securetoken.sandbox.googleapis.com/v1/token",id:"t"}};
+function xf(a){for(var b in wf)if(wf[b].id===a)return a=wf[b],{firebaseEndpoint:a.ab,secureTokenEndpoint:a.ib};return null}var yf;yf=xf("__EID__")?"__EID__":void 0;var zf="oauth_consumer_key oauth_nonce oauth_signature oauth_signature_method oauth_timestamp oauth_token oauth_version".split(" "),Af=["client_id","response_type","scope","redirect_uri","state"],Bf={Vc:{Ma:"locale",Ba:500,Aa:600,Na:"facebook.com",hb:Af},Xc:{Ma:null,Ba:500,Aa:620,Na:"github.com",hb:Af},Yc:{Ma:"hl",Ba:515,Aa:680,Na:"google.com",hb:Af},dd:{Ma:"lang",Ba:485,Aa:705,Na:"twitter.com",hb:zf}};function Cf(a){for(var b in Bf)if(Bf[b].Na==a)return Bf[b];return null};function Df(a){var b={};b["facebook.com"]=Ef;b["google.com"]=Ff;b["github.com"]=Gf;b["twitter.com"]=Hf;var c=a&&a[If];try{if(c)return b[c]?new b[c](a):new Jf(a);if("undefined"!==typeof a[Kf])return new Lf(a)}catch(d){}return null}var Kf="idToken",If="providerId";
+function Lf(a){var b=a[If];if(!b&&a[Kf]){var c=uf(a[Kf]);c&&c.a&&(b=c.a)}if(!b)throw Error("Invalid additional user info!");if("anonymous"==b||"custom"==b)b=null;c=!1;"undefined"!==typeof a.isNewUser?c=!!a.isNewUser:"identitytoolkit#SignupNewUserResponse"===a.kind&&(c=!0);J(this,"providerId",b);J(this,"isNewUser",c)}function Jf(a){Lf.call(this,a);a=ye(a.rawUserInfo||"{}");J(this,"profile",Pe(a||{}))}t(Jf,Lf);
+function Ef(a){Jf.call(this,a);if("facebook.com"!=this.providerId)throw Error("Invalid provider ID!");}t(Ef,Jf);function Gf(a){Jf.call(this,a);if("github.com"!=this.providerId)throw Error("Invalid provider ID!");J(this,"username",this.profile&&this.profile.login||null)}t(Gf,Jf);function Ff(a){Jf.call(this,a);if("google.com"!=this.providerId)throw Error("Invalid provider ID!");}t(Ff,Jf);
+function Hf(a){Jf.call(this,a);if("twitter.com"!=this.providerId)throw Error("Invalid provider ID!");J(this,"username",a.screenName||null)}t(Hf,Jf);function Mf(a){this.a=dd(a)};function Nf(a){var b=dd(a),c=cd(b,"link"),d=cd(dd(c),"link");b=cd(b,"deep_link_id");return cd(dd(b),"link")||b||d||c||a};function Of(a,b){return a.then(function(a){if(a[M]){var c=uf(a[M]);if(!c||b!=c.c)throw new L("user-mismatch");return a}throw new L("user-mismatch");}).s(function(a){throw a&&a.code&&a.code==Ze+"user-not-found"?new L("user-mismatch"):a;})}function Pf(a,b){if(b)this.a=b;else throw new L("internal-error","failed to construct a credential");J(this,"providerId",a);J(this,"signInMethod",a)}Pf.prototype.la=function(a){return Qf(a,Rf(this))};
+Pf.prototype.b=function(a,b){var c=Rf(this);c.idToken=b;return Sf(a,c)};Pf.prototype.f=function(a,b){return Of(Tf(a,Rf(this)),b)};function Rf(a){return{pendingToken:a.a,requestUri:"http://localhost"}}Pf.prototype.C=function(){return{providerId:this.providerId,signInMethod:this.signInMethod,pendingToken:this.a}};
+function Uf(a,b,c){this.a=null;if(b.idToken||b.accessToken)b.idToken&&J(this,"idToken",b.idToken),b.accessToken&&J(this,"accessToken",b.accessToken),b.nonce&&!b.pendingToken&&J(this,"nonce",b.nonce),b.pendingToken&&(this.a=b.pendingToken);else if(b.oauthToken&&b.oauthTokenSecret)J(this,"accessToken",b.oauthToken),J(this,"secret",b.oauthTokenSecret);else throw new L("internal-error","failed to construct a credential");J(this,"providerId",a);J(this,"signInMethod",c)}
+Uf.prototype.la=function(a){return Qf(a,Vf(this))};Uf.prototype.b=function(a,b){var c=Vf(this);c.idToken=b;return Sf(a,c)};Uf.prototype.f=function(a,b){var c=Vf(this);return Of(Tf(a,c),b)};
+function Vf(a){var b={};a.idToken&&(b.id_token=a.idToken);a.accessToken&&(b.access_token=a.accessToken);a.secret&&(b.oauth_token_secret=a.secret);b.providerId=a.providerId;a.nonce&&!a.a&&(b.nonce=a.nonce);b={postBody:hd(b).toString(),requestUri:"http://localhost"};a.a&&(delete b.postBody,b.pendingToken=a.a);return b}
+Uf.prototype.C=function(){var a={providerId:this.providerId,signInMethod:this.signInMethod};this.idToken&&(a.oauthIdToken=this.idToken);this.accessToken&&(a.oauthAccessToken=this.accessToken);this.secret&&(a.oauthTokenSecret=this.secret);this.nonce&&(a.nonce=this.nonce);this.a&&(a.pendingToken=this.a);return a};function Wf(a,b){this.Dc=b||[];K(this,{providerId:a,isOAuthProvider:!0});this.yb={};this.cb=(Cf(a)||{}).Ma||null;this.$a=null}Wf.prototype.Da=function(a){this.yb=$a(a);return this};
+function Xf(a){if("string"!==typeof a||0!=a.indexOf("saml."))throw new L("argument-error",'SAML provider IDs must be prefixed with "saml."');Wf.call(this,a,[])}t(Xf,Wf);function N(a){Wf.call(this,a,Af);this.a=[]}t(N,Wf);N.prototype.ua=function(a){Ga(this.a,a)||this.a.push(a);return this};N.prototype.Eb=function(){return Ja(this.a)};
+N.prototype.credential=function(a,b,c){if(!a&&!b)throw new L("argument-error","credential failed: must provide the ID token and/or the access token.");return new Uf(this.providerId,{idToken:a||null,accessToken:b||null,nonce:c||null},this.providerId)};function Yf(){N.call(this,"facebook.com")}t(Yf,N);J(Yf,"PROVIDER_ID","facebook.com");J(Yf,"FACEBOOK_SIGN_IN_METHOD","facebook.com");
+function Zf(a){if(!a)throw new L("argument-error","credential failed: expected 1 argument (the OAuth access token).");var b=a;q(a)&&(b=a.accessToken);return(new Yf).credential(null,b)}function $f(){N.call(this,"github.com")}t($f,N);J($f,"PROVIDER_ID","github.com");J($f,"GITHUB_SIGN_IN_METHOD","github.com");function ag(a){if(!a)throw new L("argument-error","credential failed: expected 1 argument (the OAuth access token).");var b=a;q(a)&&(b=a.accessToken);return(new $f).credential(null,b)}
+function bg(){N.call(this,"google.com");this.ua("profile")}t(bg,N);J(bg,"PROVIDER_ID","google.com");J(bg,"GOOGLE_SIGN_IN_METHOD","google.com");function cg(a,b){var c=a;q(a)&&(c=a.idToken,b=a.accessToken);return(new bg).credential(c,b)}function dg(){Wf.call(this,"twitter.com",zf)}t(dg,Wf);J(dg,"PROVIDER_ID","twitter.com");J(dg,"TWITTER_SIGN_IN_METHOD","twitter.com");
+function eg(a,b){var c=a;q(c)||(c={oauthToken:a,oauthTokenSecret:b});if(!c.oauthToken||!c.oauthTokenSecret)throw new L("argument-error","credential failed: expected 2 arguments (the OAuth access token and secret).");return new Uf("twitter.com",c,"twitter.com")}function fg(a,b,c){this.a=a;this.c=b;J(this,"providerId","password");J(this,"signInMethod",c===O.EMAIL_LINK_SIGN_IN_METHOD?O.EMAIL_LINK_SIGN_IN_METHOD:O.EMAIL_PASSWORD_SIGN_IN_METHOD)}
+fg.prototype.la=function(a){return this.signInMethod==O.EMAIL_LINK_SIGN_IN_METHOD?P(a,gg,{email:this.a,oobCode:this.c}):P(a,hg,{email:this.a,password:this.c})};fg.prototype.b=function(a,b){return this.signInMethod==O.EMAIL_LINK_SIGN_IN_METHOD?P(a,ig,{idToken:b,email:this.a,oobCode:this.c}):P(a,jg,{idToken:b,email:this.a,password:this.c})};fg.prototype.f=function(a,b){return Of(this.la(a),b)};fg.prototype.C=function(){return{email:this.a,password:this.c,signInMethod:this.signInMethod}};
+function O(){K(this,{providerId:"password",isOAuthProvider:!1})}function kg(a,b){b=lg(b);if(!b)throw new L("argument-error","Invalid email link!");return new fg(a,b,O.EMAIL_LINK_SIGN_IN_METHOD)}function lg(a){a=Nf(a);a=new Mf(a);var b=cd(a.a,"oobCode")||null;return"signIn"===(cd(a.a,"mode")||null)&&b?b:null}K(O,{PROVIDER_ID:"password"});K(O,{EMAIL_LINK_SIGN_IN_METHOD:"emailLink"});K(O,{EMAIL_PASSWORD_SIGN_IN_METHOD:"password"});
+function mg(a){if(!(a.Ta&&a.Sa||a.Fa&&a.$))throw new L("internal-error");this.a=a;J(this,"providerId","phone");J(this,"signInMethod","phone")}mg.prototype.la=function(a){return a.Ua(ng(this))};mg.prototype.b=function(a,b){var c=ng(this);c.idToken=b;return P(a,og,c)};mg.prototype.f=function(a,b){var c=ng(this);c.operation="REAUTH";a=P(a,pg,c);return Of(a,b)};
+mg.prototype.C=function(){var a={providerId:"phone"};this.a.Ta&&(a.verificationId=this.a.Ta);this.a.Sa&&(a.verificationCode=this.a.Sa);this.a.Fa&&(a.temporaryProof=this.a.Fa);this.a.$&&(a.phoneNumber=this.a.$);return a};function ng(a){return a.a.Fa&&a.a.$?{temporaryProof:a.a.Fa,phoneNumber:a.a.$}:{sessionInfo:a.a.Ta,code:a.a.Sa}}
+function qg(a){try{this.a=a||firebase.auth()}catch(b){throw new L("argument-error","Either an instance of firebase.auth.Auth must be passed as an argument to the firebase.auth.PhoneAuthProvider constructor, or the default firebase App instance must be initialized via firebase.initializeApp().");}K(this,{providerId:"phone",isOAuthProvider:!1})}
+qg.prototype.Ua=function(a,b){var c=this.a.b;return B(b.verify()).then(function(d){if(!l(d))throw new L("argument-error","An implementation of firebase.auth.ApplicationVerifier.prototype.verify() must return a firebase.Promise that resolves with a string.");switch(b.type){case "recaptcha":return rg(c,{phoneNumber:a,recaptchaToken:d}).then(function(a){"function"===typeof b.reset&&b.reset();return a},function(a){"function"===typeof b.reset&&b.reset();throw a;});default:throw new L("argument-error",
+'Only firebase.auth.ApplicationVerifiers with type="recaptcha" are currently supported.');}})};function sg(a,b){if(!a)throw new L("missing-verification-id");if(!b)throw new L("missing-verification-code");return new mg({Ta:a,Sa:b})}K(qg,{PROVIDER_ID:"phone"});K(qg,{PHONE_SIGN_IN_METHOD:"phone"});
+function tg(a){if(a.temporaryProof&&a.phoneNumber)return new mg({Fa:a.temporaryProof,$:a.phoneNumber});var b=a&&a.providerId;if(!b||"password"===b)return null;var c=a&&a.oauthAccessToken,d=a&&a.oauthTokenSecret,e=a&&a.nonce,f=a&&a.oauthIdToken,h=a&&a.pendingToken;try{switch(b){case "google.com":return cg(f,c);case "facebook.com":return Zf(c);case "github.com":return ag(c);case "twitter.com":return eg(c,d);default:return c||d||f||h?h?0==b.indexOf("saml.")?new Pf(b,h):new Uf(b,{pendingToken:h,idToken:a.oauthIdToken,
+accessToken:a.oauthAccessToken},b):(new N(b)).credential(f,c,e):null}}catch(m){return null}}function ug(a){if(!a.isOAuthProvider)throw new L("invalid-oauth-provider");};function vg(a,b,c,d,e,f){this.b=a;this.c=b||null;this.f=c||null;this.g=d||null;this.h=f||null;this.a=e||null;if(this.f||this.a){if(this.f&&this.a)throw new L("invalid-auth-event");if(this.f&&!this.g)throw new L("invalid-auth-event");}else throw new L("invalid-auth-event");}vg.prototype.C=function(){return{type:this.b,eventId:this.c,urlResponse:this.f,sessionId:this.g,postBody:this.h,error:this.a&&this.a.C()}};
+function wg(a){a=a||{};return a.type?new vg(a.type,a.eventId,a.urlResponse,a.sessionId,a.error&&af(a.error),a.postBody):null};function xg(){this.b=null;this.a=[]}var yg=null;xg.prototype.subscribe=function(a){var b=this;this.a.push(a);this.b||(this.b=function(a){for(var c=0;c<b.a.length;c++)b.a[c](a)},a=I("universalLinks.subscribe",k),"function"===typeof a&&a(null,this.b))};xg.prototype.unsubscribe=function(a){w(this.a,function(b){return b==a})};function zg(a){var b="unauthorized-domain",c=void 0,d=dd(a);a=d.b;d=d.c;"chrome-extension"==d?c=Ka("This chrome extension ID (chrome-extension://%s) is not authorized to run this operation. Add it to the OAuth redirect domains list in the Firebase console -> Auth section -> Sign in method tab.",a):"http"==d||"https"==d?c=Ka("This domain (%s) is not authorized to run this operation. Add it to the OAuth redirect domains list in the Firebase console -> Auth section -> Sign in method tab.",a):b="operation-not-supported-in-this-environment";
+L.call(this,b,c)}t(zg,L);function Ag(a,b,c){L.call(this,a,c);a=b||{};a.zb&&J(this,"email",a.zb);a.$&&J(this,"phoneNumber",a.$);a.credential&&J(this,"credential",a.credential)}t(Ag,L);Ag.prototype.C=function(){var a={code:this.code,message:this.message};this.email&&(a.email=this.email);this.phoneNumber&&(a.phoneNumber=this.phoneNumber);var b=this.credential&&this.credential.C();b&&bb(a,b);return a};Ag.prototype.toJSON=function(){return this.C()};
+function Bg(a){if(a.code){var b=a.code||"";0==b.indexOf(Ze)&&(b=b.substring(Ze.length));var c={credential:tg(a)};if(a.email)c.zb=a.email;else if(a.phoneNumber)c.$=a.phoneNumber;else if(!c.credential)return new L(b,a.message||void 0);return new Ag(b,c,a.message)}return null};var Cg=/^[+a-zA-Z0-9_.!#$%&'*\/=?^`{|}~-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z0-9]{2,63}$/;function Dg(){}Dg.prototype.c=null;function Eg(a){return a.c||(a.c=a.b())};var Fg;function Gg(){}t(Gg,Dg);Gg.prototype.a=function(){var a=Hg(this);return a?new ActiveXObject(a):new XMLHttpRequest};Gg.prototype.b=function(){var a={};Hg(this)&&(a[0]=!0,a[1]=!0);return a};
 function Hg(a){if(!a.f&&"undefined"==typeof XMLHttpRequest&&"undefined"!=typeof ActiveXObject){for(var b=["MSXML2.XMLHTTP.6.0","MSXML2.XMLHTTP.3.0","MSXML2.XMLHTTP","Microsoft.XMLHTTP"],c=0;c<b.length;c++){var d=b[c];try{return new ActiveXObject(d),a.f=d}catch(e){}}throw Error("Could not create ActiveXObject. ActiveX might be disabled, or MSXML might not be installed");}return a.f}Fg=new Gg;function Ig(){}t(Ig,Dg);Ig.prototype.a=function(){var a=new XMLHttpRequest;if("withCredentials"in a)return a;if("undefined"!=typeof XDomainRequest)return new Jg;throw Error("Unsupported browser");};Ig.prototype.b=function(){return{}};
 function Jg(){this.a=new XDomainRequest;this.readyState=0;this.onreadystatechange=null;this.responseText="";this.status=-1;this.statusText="";this.a.onload=r(this.ec,this);this.a.onerror=r(this.Fb,this);this.a.onprogress=r(this.fc,this);this.a.ontimeout=r(this.ic,this)}g=Jg.prototype;g.open=function(a,b,c){if(null!=c&&!c)throw Error("Only async requests are supported.");this.a.open(a,b)};
 g.send=function(a){if(a)if("string"==typeof a)this.a.send(a);else throw Error("Only string data is supported");else this.a.send()};g.abort=function(){this.a.abort()};g.setRequestHeader=function(){};g.getResponseHeader=function(a){return"content-type"==a.toLowerCase()?this.a.contentType:""};g.ec=function(){this.status=200;this.responseText=this.a.responseText;Kg(this,4)};g.Fb=function(){this.status=500;this.responseText="";Kg(this,4)};g.ic=function(){this.Fb()};
@@ -3681,97 +3954,97 @@ function uh(a){if(a.h&&a.a&&yh(a)){var b=a.h,c=zh[b];c&&(k.clearTimeout(c.a),del
 new Ah(b),zh[b.a]=b,a.h=b.a)}function vh(){u.call(this)}t(vh,u);vh.prototype.message="Deferred has already fired";vh.prototype.name="AlreadyCalledError";function rh(){u.call(this)}t(rh,u);rh.prototype.message="Deferred was canceled";rh.prototype.name="CanceledError";function Ah(a){this.a=k.setTimeout(r(this.c,this),0);this.b=a}Ah.prototype.c=function(){delete zh[this.a];throw this.b;};var zh={};function Bh(a){var b={},c=b.document||document,d=td(a),e=document.createElement("SCRIPT"),f={Lb:e,Ga:void 0},h=new qh(Ch,f),m=null,p=null!=b.timeout?b.timeout:5E3;0<p&&(m=window.setTimeout(function(){Dh(e,!0);var a=new Eh(Fh,"Timeout reached for loading script "+d);sh(h);th(h,!1,a)},p),f.Ga=m);e.onload=e.onreadystatechange=function(){e.readyState&&"loaded"!=e.readyState&&"complete"!=e.readyState||(Dh(e,b.fd||!1,m),h.D())};e.onerror=function(){Dh(e,!0,m);var a=new Eh(Gh,"Error while loading script "+
 d);sh(h);th(h,!1,a)};f=b.attributes||{};bb(f,{type:"text/javascript",charset:"UTF-8"});Jd(e,f);e.src=td(a);Hh(c).appendChild(e);return h}function Hh(a){var b;return(b=(a||document).getElementsByTagName("HEAD"))&&0!=b.length?b[0]:a.documentElement}function Ch(){if(this&&this.Lb){var a=this.Lb;a&&"SCRIPT"==a.tagName&&Dh(a,!0,this.Ga)}}
 function Dh(a,b,c){null!=c&&k.clearTimeout(c);a.onload=ca;a.onerror=ca;a.onreadystatechange=ca;b&&window.setTimeout(function(){a&&a.parentNode&&a.parentNode.removeChild(a)},0)}var Gh=0,Fh=1;function Eh(a,b){var c="Jsloader error (code #"+a+")";b&&(c+=": "+b);u.call(this,c);this.code=a}t(Eh,u);function Ih(a){this.f=a}t(Ih,Dg);Ih.prototype.a=function(){return new this.f};Ih.prototype.b=function(){return{}};
-function Jh(a,b,c){this.b=a;a=b||{};this.i=a.secureTokenEndpoint||"https://securetoken.googleapis.com/v1/token";this.l=a.secureTokenTimeout||Kh;this.f=$a(a.secureTokenHeaders||Lh);this.g=a.firebaseEndpoint||"https://www.googleapis.com/identitytoolkit/v3/relyingparty/";this.h=a.firebaseTimeout||Mh;this.a=$a(a.firebaseHeaders||Nh);c&&(this.a["X-Client-Version"]=c,this.f["X-Client-Version"]=c);c="Node"==ne();c=k.XMLHttpRequest||c&&firebase.INTERNAL.node&&firebase.INTERNAL.node.XMLHttpRequest;if(!c&&
-!me())throw new L("internal-error","The XMLHttpRequest compatibility library was not found.");this.c=void 0;me()?this.c=new Yg(self):oe()?this.c=new Ih(c):this.c=new Ig}var Oh,M="idToken",Kh=new Ce(3E4,6E4),Lh={"Content-Type":"application/x-www-form-urlencoded"},Mh=new Ce(3E4,6E4),Nh={"Content-Type":"application/json"};function Ph(a,b){b?a.a["X-Firebase-Locale"]=b:delete a.a["X-Firebase-Locale"]}
-function Qh(a,b){b?(a.a["X-Client-Version"]=b,a.f["X-Client-Version"]=b):(delete a.a["X-Client-Version"],delete a.f["X-Client-Version"])}function Rh(a,b,c,d,e,f,h){Yd()||me()?a=r(a.o,a):(Oh||(Oh=new A(function(a,b){Sh(a,b)})),a=r(a.m,a));a(b,c,d,e,f,h)}
-Jh.prototype.o=function(a,b,c,d,e,f){if(me()&&("undefined"===typeof k.fetch||"undefined"===typeof k.Headers||"undefined"===typeof k.Request))throw new L("operation-not-supported-in-this-environment","fetch, Headers and Request native APIs or equivalent Polyfills must be available to support HTTP requests from a Worker environment.");var h=new bh(this.c);if(f){h.g=Math.max(0,f);var m=setTimeout(function(){h.dispatchEvent("timeout")},f)}uc(h,"complete",function(){m&&clearTimeout(m);var a=null;try{a=
+function Jh(a,b,c){this.b=a;a=b||{};this.i=a.secureTokenEndpoint||"https://securetoken.googleapis.com/v1/token";this.l=a.secureTokenTimeout||Kh;this.f=$a(a.secureTokenHeaders||Lh);this.g=a.firebaseEndpoint||"https://www.googleapis.com/identitytoolkit/v3/relyingparty/";this.h=a.firebaseTimeout||Mh;this.a=$a(a.firebaseHeaders||Nh);c&&(this.a["X-Client-Version"]=c,this.f["X-Client-Version"]=c);c="Node"==me();c=k.XMLHttpRequest||c&&firebase.INTERNAL.node&&firebase.INTERNAL.node.XMLHttpRequest;if(!c&&
+!le())throw new L("internal-error","The XMLHttpRequest compatibility library was not found.");this.c=void 0;le()?this.c=new Yg(self):ne()?this.c=new Ih(c):this.c=new Ig}var Oh,M="idToken",Kh=new Be(3E4,6E4),Lh={"Content-Type":"application/x-www-form-urlencoded"},Mh=new Be(3E4,6E4),Nh={"Content-Type":"application/json"};function Ph(a,b){b?a.a["X-Firebase-Locale"]=b:delete a.a["X-Firebase-Locale"]}
+function Qh(a,b){b?(a.a["X-Client-Version"]=b,a.f["X-Client-Version"]=b):(delete a.a["X-Client-Version"],delete a.f["X-Client-Version"])}function Rh(a,b,c,d,e,f,h){Yd()||le()?a=r(a.o,a):(Oh||(Oh=new A(function(a,b){Sh(a,b)})),a=r(a.m,a));a(b,c,d,e,f,h)}
+Jh.prototype.o=function(a,b,c,d,e,f){if(le()&&("undefined"===typeof k.fetch||"undefined"===typeof k.Headers||"undefined"===typeof k.Request))throw new L("operation-not-supported-in-this-environment","fetch, Headers and Request native APIs or equivalent Polyfills must be available to support HTTP requests from a Worker environment.");var h=new bh(this.c);if(f){h.g=Math.max(0,f);var m=setTimeout(function(){h.dispatchEvent("timeout")},f)}uc(h,"complete",function(){m&&clearTimeout(m);var a=null;try{a=
 JSON.parse(ph(this))||null}catch(x){a=null}b&&b(a)});Ac(h,"ready",function(){m&&clearTimeout(m);Kb(this)});Ac(h,"timeout",function(){m&&clearTimeout(m);Kb(this);b&&b(null)});fh(h,a,c,d,e)};var Th=qd("https://apis.google.com/js/client.js?onload=%{onload}"),Uh="__fcb"+Math.floor(1E6*Math.random()).toString();
 function Sh(a,b){if(((window.gapi||{}).client||{}).request)a();else{k[Uh]=function(){((window.gapi||{}).client||{}).request?a():b(Error("CORS_UNSUPPORTED"))};var c=ud(Th,{onload:Uh});wh(Bh(c),function(){b(Error("CORS_UNSUPPORTED"))})}}
 Jh.prototype.m=function(a,b,c,d,e){var f=this;Oh.then(function(){window.gapi.client.setApiKey(f.b);var h=window.gapi.auth.getToken();window.gapi.auth.setToken(null);window.gapi.client.request({path:a,method:c,body:d,headers:e,authType:"none",callback:function(a){window.gapi.auth.setToken(h);b&&b(a)}})}).s(function(a){b&&b({error:{message:a&&a.message||"CORS_UNSUPPORTED"}})})};
 function Vh(a,b){return new A(function(c,d){"refresh_token"==b.grant_type&&b.refresh_token||"authorization_code"==b.grant_type&&b.code?Rh(a,a.i+"?key="+encodeURIComponent(a.b),function(a){a?a.error?d(Wh(a)):a.access_token&&a.refresh_token?c(a):d(new L("internal-error")):d(new L("network-request-failed"))},"POST",hd(b).toString(),a.f,a.l.get()):d(new L("internal-error"))})}
-function Xh(a,b,c,d,e,f){var h=dd(a.g+b);G(h,"key",a.b);f&&G(h,"cb",oa().toString());var m="GET"==c;if(m)for(var p in d)d.hasOwnProperty(p)&&G(h,p,d[p]);return new A(function(b,f){Rh(a,h.toString(),function(a){a?a.error?f(Wh(a,e||{})):b(a):f(new L("network-request-failed"))},c,m?void 0:Od(ye(d)),a.a,a.h.get())})}function Yh(a){a=a.email;if(!l(a)||!ge.test(a))throw new L("invalid-email");}function Zh(a){"email"in a&&Yh(a)}
-function $h(a,b){return P(a,ai,{identifier:b,continueUri:ve()?Vd():"http://localhost"}).then(function(a){return a.allProviders||[]})}function bi(a,b){return P(a,ai,{identifier:b,continueUri:ve()?Vd():"http://localhost"}).then(function(a){return a.signinMethods||[]})}function ci(a){return P(a,di,{}).then(function(a){return a.authorizedDomains||[]})}function ei(a){if(!a[M])throw new L("internal-error");}
-function fi(a){if(a.phoneNumber||a.temporaryProof){if(!a.phoneNumber||!a.temporaryProof)throw new L("internal-error");}else{if(!a.sessionInfo)throw new L("missing-verification-id");if(!a.code)throw new L("missing-verification-code");}}Jh.prototype.Qa=function(){return P(this,gi,{})};Jh.prototype.pb=function(a,b){return P(this,hi,{idToken:a,email:b})};Jh.prototype.qb=function(a,b){return P(this,kg,{idToken:a,password:b})};var ii={displayName:"DISPLAY_NAME",photoUrl:"PHOTO_URL"};g=Jh.prototype;
-g.rb=function(a,b){var c={idToken:a},d=[];Ya(ii,function(a,f){var e=b[f];null===e?d.push(a):f in b&&(c[f]=e)});d.length&&(c.deleteAttribute=d);return P(this,hi,c)};g.kb=function(a,b){a={requestType:"PASSWORD_RESET",email:a};bb(a,b);return P(this,ji,a)};g.lb=function(a,b){a={requestType:"EMAIL_SIGNIN",email:a};bb(a,b);return P(this,ki,a)};g.jb=function(a,b){a={requestType:"VERIFY_EMAIL",idToken:a};bb(a,b);return P(this,li,a)};function sg(a,b){return P(a,mi,b)}g.Ua=function(a){return P(this,ni,a)};
+function Xh(a,b,c,d,e,f){var h=dd(a.g+b);G(h,"key",a.b);f&&G(h,"cb",oa().toString());var m="GET"==c;if(m)for(var p in d)d.hasOwnProperty(p)&&G(h,p,d[p]);return new A(function(b,f){Rh(a,h.toString(),function(a){a?a.error?f(Wh(a,e||{})):b(a):f(new L("network-request-failed"))},c,m?void 0:Od(xe(d)),a.a,a.h.get())})}function Yh(a){if(!Cg.test(a.email))throw new L("invalid-email");}function Zh(a){"email"in a&&Yh(a)}
+function $h(a,b){return P(a,ai,{identifier:b,continueUri:ue()?Vd():"http://localhost"}).then(function(a){return a.allProviders||[]})}function bi(a,b){return P(a,ai,{identifier:b,continueUri:ue()?Vd():"http://localhost"}).then(function(a){return a.signinMethods||[]})}function ci(a){return P(a,di,{}).then(function(a){return a.authorizedDomains||[]})}function ei(a){if(!a[M])throw new L("internal-error");}
+function fi(a){if(a.phoneNumber||a.temporaryProof){if(!a.phoneNumber||!a.temporaryProof)throw new L("internal-error");}else{if(!a.sessionInfo)throw new L("missing-verification-id");if(!a.code)throw new L("missing-verification-code");}}Jh.prototype.Qa=function(){return P(this,gi,{})};Jh.prototype.pb=function(a,b){return P(this,hi,{idToken:a,email:b})};Jh.prototype.qb=function(a,b){return P(this,jg,{idToken:a,password:b})};var ii={displayName:"DISPLAY_NAME",photoUrl:"PHOTO_URL"};g=Jh.prototype;
+g.rb=function(a,b){var c={idToken:a},d=[];Ya(ii,function(a,f){var e=b[f];null===e?d.push(a):f in b&&(c[f]=e)});d.length&&(c.deleteAttribute=d);return P(this,hi,c)};g.kb=function(a,b){a={requestType:"PASSWORD_RESET",email:a};bb(a,b);return P(this,ji,a)};g.lb=function(a,b){a={requestType:"EMAIL_SIGNIN",email:a};bb(a,b);return P(this,ki,a)};g.jb=function(a,b){a={requestType:"VERIFY_EMAIL",idToken:a};bb(a,b);return P(this,li,a)};function rg(a,b){return P(a,mi,b)}g.Ua=function(a){return P(this,ni,a)};
 function oi(a,b,c){return P(a,pi,{idToken:b,deleteProvider:c})}function qi(a){if(!a.requestUri||!a.sessionId&&!a.postBody&&!a.pendingToken)throw new L("internal-error");}function ri(a,b){b.oauthIdToken&&b.providerId&&0==b.providerId.indexOf("oidc.")&&!b.pendingToken&&(a.sessionId?b.nonce=a.sessionId:a.postBody&&(a=new Tc(a.postBody),ld(a,"nonce")&&(b.nonce=a.get("nonce"))));return b}
-function si(a){var b=null;a.needConfirmation?(a.code="account-exists-with-different-credential",b=Cg(a)):"FEDERATED_USER_ID_ALREADY_LINKED"==a.errorMessage?(a.code="credential-already-in-use",b=Cg(a)):"EMAIL_EXISTS"==a.errorMessage?(a.code="email-already-in-use",b=Cg(a)):a.errorMessage&&(b=ti(a.errorMessage));if(b)throw b;if(!a[M])throw new L("internal-error");}function Rf(a,b){b.returnIdpCredential=!0;return P(a,ui,b)}function Tf(a,b){b.returnIdpCredential=!0;return P(a,vi,b)}
-function Uf(a,b){b.returnIdpCredential=!0;b.autoCreate=!1;return P(a,wi,b)}function xi(a){if(!a.oobCode)throw new L("invalid-action-code");}g.Za=function(a,b){return P(this,yi,{oobCode:a,newPassword:b})};g.Ja=function(a){return P(this,zi,{oobCode:a})};g.Wa=function(a){return P(this,Ai,{oobCode:a})};
-var Ai={endpoint:"setAccountInfo",B:xi,da:"email"},zi={endpoint:"resetPassword",B:xi,J:function(a){var b=a.requestType;if(!b||!a.email&&"EMAIL_SIGNIN"!=b)throw new L("internal-error");}},Bi={endpoint:"signupNewUser",B:function(a){Yh(a);if(!a.password)throw new L("weak-password");},J:ei,R:!0},ai={endpoint:"createAuthUri"},Ci={endpoint:"deleteAccount",T:["idToken"]},pi={endpoint:"setAccountInfo",T:["idToken","deleteProvider"],B:function(a){if(!fa(a.deleteProvider))throw new L("internal-error");}},hg=
-{endpoint:"emailLinkSignin",T:["email","oobCode"],B:Yh,J:ei,R:!0},jg={endpoint:"emailLinkSignin",T:["idToken","email","oobCode"],B:Yh,J:ei,R:!0},Di={endpoint:"getAccountInfo"},ki={endpoint:"getOobConfirmationCode",T:["requestType"],B:function(a){if("EMAIL_SIGNIN"!=a.requestType)throw new L("internal-error");Yh(a)},da:"email"},li={endpoint:"getOobConfirmationCode",T:["idToken","requestType"],B:function(a){if("VERIFY_EMAIL"!=a.requestType)throw new L("internal-error");},da:"email"},ji={endpoint:"getOobConfirmationCode",
-T:["requestType"],B:function(a){if("PASSWORD_RESET"!=a.requestType)throw new L("internal-error");Yh(a)},da:"email"},di={ub:!0,endpoint:"getProjectConfig",Ib:"GET"},Ei={ub:!0,endpoint:"getRecaptchaParam",Ib:"GET",J:function(a){if(!a.recaptchaSiteKey)throw new L("internal-error");}},yi={endpoint:"resetPassword",B:xi,da:"email"},mi={endpoint:"sendVerificationCode",T:["phoneNumber","recaptchaToken"],da:"sessionInfo"},hi={endpoint:"setAccountInfo",T:["idToken"],B:Zh,R:!0},kg={endpoint:"setAccountInfo",
+function si(a){var b=null;a.needConfirmation?(a.code="account-exists-with-different-credential",b=Bg(a)):"FEDERATED_USER_ID_ALREADY_LINKED"==a.errorMessage?(a.code="credential-already-in-use",b=Bg(a)):"EMAIL_EXISTS"==a.errorMessage?(a.code="email-already-in-use",b=Bg(a)):a.errorMessage&&(b=ti(a.errorMessage));if(b)throw b;if(!a[M])throw new L("internal-error");}function Qf(a,b){b.returnIdpCredential=!0;return P(a,ui,b)}function Sf(a,b){b.returnIdpCredential=!0;return P(a,vi,b)}
+function Tf(a,b){b.returnIdpCredential=!0;b.autoCreate=!1;return P(a,wi,b)}function xi(a){if(!a.oobCode)throw new L("invalid-action-code");}g.Za=function(a,b){return P(this,yi,{oobCode:a,newPassword:b})};g.Ja=function(a){return P(this,zi,{oobCode:a})};g.Wa=function(a){return P(this,Ai,{oobCode:a})};
+var Ai={endpoint:"setAccountInfo",B:xi,da:"email"},zi={endpoint:"resetPassword",B:xi,J:function(a){var b=a.requestType;if(!b||!a.email&&"EMAIL_SIGNIN"!=b)throw new L("internal-error");}},Bi={endpoint:"signupNewUser",B:function(a){Yh(a);if(!a.password)throw new L("weak-password");},J:ei,R:!0},ai={endpoint:"createAuthUri"},Ci={endpoint:"deleteAccount",T:["idToken"]},pi={endpoint:"setAccountInfo",T:["idToken","deleteProvider"],B:function(a){if(!fa(a.deleteProvider))throw new L("internal-error");}},gg=
+{endpoint:"emailLinkSignin",T:["email","oobCode"],B:Yh,J:ei,R:!0},ig={endpoint:"emailLinkSignin",T:["idToken","email","oobCode"],B:Yh,J:ei,R:!0},Di={endpoint:"getAccountInfo"},ki={endpoint:"getOobConfirmationCode",T:["requestType"],B:function(a){if("EMAIL_SIGNIN"!=a.requestType)throw new L("internal-error");Yh(a)},da:"email"},li={endpoint:"getOobConfirmationCode",T:["idToken","requestType"],B:function(a){if("VERIFY_EMAIL"!=a.requestType)throw new L("internal-error");},da:"email"},ji={endpoint:"getOobConfirmationCode",
+T:["requestType"],B:function(a){if("PASSWORD_RESET"!=a.requestType)throw new L("internal-error");Yh(a)},da:"email"},di={ub:!0,endpoint:"getProjectConfig",Ib:"GET"},Ei={ub:!0,endpoint:"getRecaptchaParam",Ib:"GET",J:function(a){if(!a.recaptchaSiteKey)throw new L("internal-error");}},yi={endpoint:"resetPassword",B:xi,da:"email"},mi={endpoint:"sendVerificationCode",T:["phoneNumber","recaptchaToken"],da:"sessionInfo"},hi={endpoint:"setAccountInfo",T:["idToken"],B:Zh,R:!0},jg={endpoint:"setAccountInfo",
 T:["idToken"],B:function(a){Zh(a);if(!a.password)throw new L("weak-password");},J:ei,R:!0},gi={endpoint:"signupNewUser",J:ei,R:!0},ui={endpoint:"verifyAssertion",B:qi,Oa:ri,J:si,R:!0},wi={endpoint:"verifyAssertion",B:qi,Oa:ri,J:function(a){if(a.errorMessage&&"USER_NOT_FOUND"==a.errorMessage)throw new L("user-not-found");if(a.errorMessage)throw ti(a.errorMessage);if(!a[M])throw new L("internal-error");},R:!0},vi={endpoint:"verifyAssertion",B:function(a){qi(a);if(!a.idToken)throw new L("internal-error");
-},Oa:ri,J:si,R:!0},Fi={endpoint:"verifyCustomToken",B:function(a){if(!a.token)throw new L("invalid-custom-token");},J:ei,R:!0},ig={endpoint:"verifyPassword",B:function(a){Yh(a);if(!a.password)throw new L("wrong-password");},J:ei,R:!0},ni={endpoint:"verifyPhoneNumber",B:fi,J:ei},pg={endpoint:"verifyPhoneNumber",B:function(a){if(!a.idToken)throw new L("internal-error");fi(a)},J:function(a){if(a.temporaryProof)throw a.code="credential-already-in-use",Cg(a);ei(a)}},qg={Xb:{USER_NOT_FOUND:"user-not-found"},
-endpoint:"verifyPhoneNumber",B:fi,J:ei};function P(a,b,c){if(!Pe(c,b.T))return C(new L("internal-error"));var d=b.Ib||"POST",e;return B(c).then(b.B).then(function(){b.R&&(c.returnSecureToken=!0);return Xh(a,b.endpoint,d,c,b.Xb,b.ub||!1)}).then(function(a){e=a;return b.Oa?b.Oa(c,e):e}).then(b.J).then(function(){if(!b.da)return e;if(!(b.da in e))throw new L("internal-error");return e[b.da]})}function ti(a){return Wh({error:{errors:[{message:a}],code:400,message:a}})}
+},Oa:ri,J:si,R:!0},Fi={endpoint:"verifyCustomToken",B:function(a){if(!a.token)throw new L("invalid-custom-token");},J:ei,R:!0},hg={endpoint:"verifyPassword",B:function(a){Yh(a);if(!a.password)throw new L("wrong-password");},J:ei,R:!0},ni={endpoint:"verifyPhoneNumber",B:fi,J:ei},og={endpoint:"verifyPhoneNumber",B:function(a){if(!a.idToken)throw new L("internal-error");fi(a)},J:function(a){if(a.temporaryProof)throw a.code="credential-already-in-use",Bg(a);ei(a)}},pg={Xb:{USER_NOT_FOUND:"user-not-found"},
+endpoint:"verifyPhoneNumber",B:fi,J:ei};function P(a,b,c){if(!Oe(c,b.T))return C(new L("internal-error"));var d=b.Ib||"POST",e;return B(c).then(b.B).then(function(){b.R&&(c.returnSecureToken=!0);return Xh(a,b.endpoint,d,c,b.Xb,b.ub||!1)}).then(function(a){e=a;return b.Oa?b.Oa(c,e):e}).then(b.J).then(function(){if(!b.da)return e;if(!(b.da in e))throw new L("internal-error");return e[b.da]})}function ti(a){return Wh({error:{errors:[{message:a}],code:400,message:a}})}
 function Wh(a,b){var c=(a.error&&a.error.errors&&a.error.errors[0]||{}).reason||"";var d={keyInvalid:"invalid-api-key",ipRefererBlocked:"app-not-authorized"};if(c=d[c]?new L(d[c]):null)return c;c=a.error&&a.error.message||"";d={INVALID_CUSTOM_TOKEN:"invalid-custom-token",CREDENTIAL_MISMATCH:"custom-token-mismatch",MISSING_CUSTOM_TOKEN:"internal-error",INVALID_IDENTIFIER:"invalid-email",MISSING_CONTINUE_URI:"internal-error",INVALID_EMAIL:"invalid-email",INVALID_PASSWORD:"wrong-password",USER_DISABLED:"user-disabled",
 MISSING_PASSWORD:"internal-error",EMAIL_EXISTS:"email-already-in-use",PASSWORD_LOGIN_DISABLED:"operation-not-allowed",INVALID_IDP_RESPONSE:"invalid-credential",INVALID_PENDING_TOKEN:"invalid-credential",FEDERATED_USER_ID_ALREADY_LINKED:"credential-already-in-use",MISSING_OR_INVALID_NONCE:"missing-or-invalid-nonce",INVALID_MESSAGE_PAYLOAD:"invalid-message-payload",INVALID_RECIPIENT_EMAIL:"invalid-recipient-email",INVALID_SENDER:"invalid-sender",EMAIL_NOT_FOUND:"user-not-found",RESET_PASSWORD_EXCEED_LIMIT:"too-many-requests",
 EXPIRED_OOB_CODE:"expired-action-code",INVALID_OOB_CODE:"invalid-action-code",MISSING_OOB_CODE:"internal-error",INVALID_PROVIDER_ID:"invalid-provider-id",CREDENTIAL_TOO_OLD_LOGIN_AGAIN:"requires-recent-login",INVALID_ID_TOKEN:"invalid-user-token",TOKEN_EXPIRED:"user-token-expired",USER_NOT_FOUND:"user-token-expired",CORS_UNSUPPORTED:"cors-unsupported",DYNAMIC_LINK_NOT_ACTIVATED:"dynamic-link-not-activated",INVALID_APP_ID:"invalid-app-id",TOO_MANY_ATTEMPTS_TRY_LATER:"too-many-requests",WEAK_PASSWORD:"weak-password",
 OPERATION_NOT_ALLOWED:"operation-not-allowed",USER_CANCELLED:"user-cancelled",CAPTCHA_CHECK_FAILED:"captcha-check-failed",INVALID_APP_CREDENTIAL:"invalid-app-credential",INVALID_CODE:"invalid-verification-code",INVALID_PHONE_NUMBER:"invalid-phone-number",INVALID_SESSION_INFO:"invalid-verification-id",INVALID_TEMPORARY_PROOF:"invalid-credential",MISSING_APP_CREDENTIAL:"missing-app-credential",MISSING_CODE:"missing-verification-code",MISSING_PHONE_NUMBER:"missing-phone-number",MISSING_SESSION_INFO:"missing-verification-id",
 QUOTA_EXCEEDED:"quota-exceeded",SESSION_EXPIRED:"code-expired",REJECTED_CREDENTIAL:"rejected-credential",INVALID_CONTINUE_URI:"invalid-continue-uri",MISSING_ANDROID_PACKAGE_NAME:"missing-android-pkg-name",MISSING_IOS_BUNDLE_ID:"missing-ios-bundle-id",UNAUTHORIZED_DOMAIN:"unauthorized-continue-uri",INVALID_DYNAMIC_LINK_DOMAIN:"invalid-dynamic-link-domain",INVALID_OAUTH_CLIENT_ID:"invalid-oauth-client-id",INVALID_CERT_HASH:"invalid-cert-hash"};bb(d,b||{});b=(b=c.match(/^[^\s]+\s*:\s*(.*)$/))&&1<b.length?
-b[1]:void 0;for(var e in d)if(0===c.indexOf(e))return new L(d[e],b);!b&&a&&(b=xe(a));return new L("internal-error",b)};function Gi(a){this.b=a;this.a=null;this.fb=Hi(this)}
+b[1]:void 0;for(var e in d)if(0===c.indexOf(e))return new L(d[e],b);!b&&a&&(b=we(a));return new L("internal-error",b)};function Gi(a){this.b=a;this.a=null;this.fb=Hi(this)}
 function Hi(a){return Ii().then(function(){return new A(function(b,c){I("gapi.iframes.getContext")().open({where:document.body,url:a.b,messageHandlersFilter:I("gapi.iframes.CROSS_ORIGIN_IFRAMES_FILTER"),attributes:{style:{position:"absolute",top:"-100px",width:"1px",height:"1px"}},dontclear:!0},function(d){function e(){clearTimeout(f);b()}a.a=d;a.a.restyle({setHideOnLeave:!1});var f=setTimeout(function(){c(Error("Network Error"))},Ji.get());d.ping(e).then(e,function(){c(Error("Network Error"))})})})})}
-function Ki(a,b){return a.fb.then(function(){return new A(function(c){a.a.send(b.type,b,c,I("gapi.iframes.CROSS_ORIGIN_IFRAMES_FILTER"))})})}function Li(a,b){a.fb.then(function(){a.a.register("authEvent",b,I("gapi.iframes.CROSS_ORIGIN_IFRAMES_FILTER"))})}var Mi=qd("https://apis.google.com/js/api.js?onload=%{onload}"),Ni=new Ce(3E4,6E4),Ji=new Ce(5E3,15E3),Oi=null;
-function Ii(){return Oi?Oi:Oi=(new A(function(a,b){function c(){Be();I("gapi.load")("gapi.iframes",{callback:a,ontimeout:function(){Be();b(Error("Network Error"))},timeout:Ni.get()})}if(I("gapi.iframes.Iframe"))a();else if(I("gapi.load"))c();else{var d="__iframefcb"+Math.floor(1E6*Math.random()).toString();k[d]=function(){I("gapi.load")?c():b(Error("Network Error"))};d=ud(Mi,{onload:d});B(Bh(d)).s(function(){b(Error("Network Error"))})}})).s(function(a){Oi=null;throw a;})};function Pi(a,b,c){this.i=a;this.g=b;this.h=c;this.f=null;this.a=ed(this.i,"/__/auth/iframe");G(this.a,"apiKey",this.g);G(this.a,"appName",this.h);this.b=null;this.c=[]}Pi.prototype.toString=function(){this.f?G(this.a,"v",this.f):kd(this.a.a,"v");this.b?G(this.a,"eid",this.b):kd(this.a.a,"eid");this.c.length?G(this.a,"fw",this.c.join(",")):kd(this.a.a,"fw");return this.a.toString()};function Qi(a,b,c,d,e){this.o=a;this.m=b;this.c=c;this.l=d;this.h=this.g=this.i=null;this.a=e;this.f=null}
-Qi.prototype.toString=function(){var a=ed(this.o,"/__/auth/handler");G(a,"apiKey",this.m);G(a,"appName",this.c);G(a,"authType",this.l);if(this.a.isOAuthProvider){var b=this.a;try{var c=firebase.app(this.c).auth().ea()}catch(m){c=null}b.$a=c;G(a,"providerId",this.a.providerId);b=this.a;c=ye(b.yb);for(var d in c)c[d]=c[d].toString();d=b.Dc;c=$a(c);for(var e=0;e<d.length;e++){var f=d[e];f in c&&delete c[f]}b.cb&&b.$a&&!c[b.cb]&&(c[b.cb]=b.$a);Za(c)||G(a,"customParameters",xe(c))}"function"===typeof this.a.Eb&&
+function Ki(a,b){return a.fb.then(function(){return new A(function(c){a.a.send(b.type,b,c,I("gapi.iframes.CROSS_ORIGIN_IFRAMES_FILTER"))})})}function Li(a,b){a.fb.then(function(){a.a.register("authEvent",b,I("gapi.iframes.CROSS_ORIGIN_IFRAMES_FILTER"))})}var Mi=qd("https://apis.google.com/js/api.js?onload=%{onload}"),Ni=new Be(3E4,6E4),Ji=new Be(5E3,15E3),Oi=null;
+function Ii(){return Oi?Oi:Oi=(new A(function(a,b){function c(){Ae();I("gapi.load")("gapi.iframes",{callback:a,ontimeout:function(){Ae();b(Error("Network Error"))},timeout:Ni.get()})}if(I("gapi.iframes.Iframe"))a();else if(I("gapi.load"))c();else{var d="__iframefcb"+Math.floor(1E6*Math.random()).toString();k[d]=function(){I("gapi.load")?c():b(Error("Network Error"))};d=ud(Mi,{onload:d});B(Bh(d)).s(function(){b(Error("Network Error"))})}})).s(function(a){Oi=null;throw a;})};function Pi(a,b,c){this.i=a;this.g=b;this.h=c;this.f=null;this.a=ed(this.i,"/__/auth/iframe");G(this.a,"apiKey",this.g);G(this.a,"appName",this.h);this.b=null;this.c=[]}Pi.prototype.toString=function(){this.f?G(this.a,"v",this.f):kd(this.a.a,"v");this.b?G(this.a,"eid",this.b):kd(this.a.a,"eid");this.c.length?G(this.a,"fw",this.c.join(",")):kd(this.a.a,"fw");return this.a.toString()};function Qi(a,b,c,d,e){this.o=a;this.m=b;this.c=c;this.l=d;this.h=this.g=this.i=null;this.a=e;this.f=null}
+Qi.prototype.toString=function(){var a=ed(this.o,"/__/auth/handler");G(a,"apiKey",this.m);G(a,"appName",this.c);G(a,"authType",this.l);if(this.a.isOAuthProvider){var b=this.a;try{var c=firebase.app(this.c).auth().ea()}catch(m){c=null}b.$a=c;G(a,"providerId",this.a.providerId);b=this.a;c=xe(b.yb);for(var d in c)c[d]=c[d].toString();d=b.Dc;c=$a(c);for(var e=0;e<d.length;e++){var f=d[e];f in c&&delete c[f]}b.cb&&b.$a&&!c[b.cb]&&(c[b.cb]=b.$a);Za(c)||G(a,"customParameters",we(c))}"function"===typeof this.a.Eb&&
 (b=this.a.Eb(),b.length&&G(a,"scopes",b.join(",")));this.i?G(a,"redirectUrl",this.i):kd(a.a,"redirectUrl");this.g?G(a,"eventId",this.g):kd(a.a,"eventId");this.h?G(a,"v",this.h):kd(a.a,"v");if(this.b)for(var h in this.b)this.b.hasOwnProperty(h)&&!cd(a,h)&&G(a,h,this.b[h]);this.f?G(a,"eid",this.f):kd(a.a,"eid");h=Ri(this.c);h.length&&G(a,"fw",h.join(","));return a.toString()};function Ri(a){try{return firebase.app(a).auth().ya()}catch(b){return[]}}
 function Si(a,b,c,d,e){this.m=a;this.f=b;this.b=c;this.c=d||null;this.h=e||null;this.o=this.u=this.v=null;this.g=[];this.l=this.a=null}
-function Ti(a){var b=Vd();return ci(a).then(function(a){a:{var c=dd(b),e=c.c;c=c.b;for(var f=0;f<a.length;f++){var h=a[f];var m=c;var p=e;0==h.indexOf("chrome-extension://")?m=dd(h).b==m&&"chrome-extension"==p:"http"!=p&&"https"!=p?m=!1:fe.test(h)?m=m==h:(h=h.split(".").join("\\."),m=(new RegExp("^(.+\\."+h+"|"+h+")$","i")).test(m));if(m){a=!0;break a}}a=!1}if(!a)throw new Ag(Vd());})}
-function Ui(a){if(a.l)return a.l;a.l=he().then(function(){if(!a.u){var b=a.c,c=a.h,d=Ri(a.b),e=new Pi(a.m,a.f,a.b);e.f=b;e.b=c;e.c=Ja(d||[]);a.u=e.toString()}a.i=new Gi(a.u);Vi(a)});return a.l}g=Si.prototype;g.Ea=function(a,b,c){var d=new L("popup-closed-by-user"),e=new L("web-storage-unsupported"),f=this,h=!1;return this.ga().then(function(){Wi(f).then(function(c){c||(a&&be(a),b(e),h=!0)})}).s(function(){}).then(function(){if(!h)return ee(a)}).then(function(){if(!h)return Hc(c).then(function(){b(d)})})};
-g.Mb=function(){var a=H();return!we(a)&&!Ae(a)};g.Hb=function(){return!1};
-g.Cb=function(a,b,c,d,e,f,h){if(!a)return C(new L("popup-blocked"));if(h&&!we())return this.ga().s(function(b){be(a);e(b)}),d(),B();this.a||(this.a=Ti(Xi(this)));var m=this;return this.a.then(function(){var b=m.ga().s(function(b){be(a);e(b);throw b;});d();return b}).then(function(){vg(c);if(!h){var d=Yi(m.m,m.f,m.b,b,c,null,f,m.c,void 0,m.h);Wd(d,a)}}).s(function(a){"auth/network-request-failed"==a.code&&(m.a=null);throw a;})};
-function Xi(a){a.o||(a.v=a.c?re(a.c,Ri(a.b)):null,a.o=new Jh(a.f,yf(a.h),a.v));return a.o}g.Ca=function(a,b,c){this.a||(this.a=Ti(Xi(this)));var d=this;return this.a.then(function(){vg(b);var e=Yi(d.m,d.f,d.b,a,b,Vd(),c,d.c,void 0,d.h);Wd(e)}).s(function(a){"auth/network-request-failed"==a.code&&(d.a=null);throw a;})};g.ga=function(){var a=this;return Ui(this).then(function(){return a.i.fb}).s(function(){a.a=null;throw new L("network-request-failed");})};g.Qb=function(){return!0};
-function Yi(a,b,c,d,e,f,h,m,p,x){a=new Qi(a,b,c,d,e);a.i=f;a.g=h;a.h=m;a.b=$a(p||null);a.f=x;return a.toString()}function Vi(a){if(!a.i)throw Error("IfcHandler must be initialized!");Li(a.i,function(b){var c={};if(b&&b.authEvent){var d=!1;b=xg(b.authEvent);for(c=0;c<a.g.length;c++)d=a.g[c](b)||d;c={};c.status=d?"ACK":"ERROR";return B(c)}c.status="ERROR";return B(c)})}
-function Wi(a){var b={type:"webStorageSupport"};return Ui(a).then(function(){return Ki(a.i,b)}).then(function(a){if(a&&a.length&&"undefined"!==typeof a[0].webStorageSupport)return a[0].webStorageSupport;throw Error();})}g.wa=function(a){this.g.push(a)};g.Ka=function(a){w(this.g,function(b){return b==a})};function Zi(a){this.a=a||firebase.INTERNAL.reactNative&&firebase.INTERNAL.reactNative.AsyncStorage;if(!this.a)throw new L("internal-error","The React Native compatibility library was not found.");this.type="asyncStorage"}g=Zi.prototype;g.get=function(a){return B(this.a.getItem(a)).then(function(a){return a&&ze(a)})};g.set=function(a,b){return B(this.a.setItem(a,xe(b)))};g.P=function(a){return B(this.a.removeItem(a))};g.Y=function(){};g.ca=function(){};function $i(a){this.b=a;this.a={};this.c=r(this.f,this)}var aj=[];function bj(){var a=me()?self:null;v(aj,function(c){c.b==a&&(b=c)});if(!b){var b=new $i(a);aj.push(b)}return b}
+function Ti(a){var b=Vd();return ci(a).then(function(a){a:{var c=dd(b),e=c.c;c=c.b;for(var f=0;f<a.length;f++){var h=a[f];var m=c;var p=e;0==h.indexOf("chrome-extension://")?m=dd(h).b==m&&"chrome-extension"==p:"http"!=p&&"https"!=p?m=!1:fe.test(h)?m=m==h:(h=h.split(".").join("\\."),m=(new RegExp("^(.+\\."+h+"|"+h+")$","i")).test(m));if(m){a=!0;break a}}a=!1}if(!a)throw new zg(Vd());})}
+function Ui(a){if(a.l)return a.l;a.l=ge().then(function(){if(!a.u){var b=a.c,c=a.h,d=Ri(a.b),e=new Pi(a.m,a.f,a.b);e.f=b;e.b=c;e.c=Ja(d||[]);a.u=e.toString()}a.i=new Gi(a.u);Vi(a)});return a.l}g=Si.prototype;g.Ea=function(a,b,c){var d=new L("popup-closed-by-user"),e=new L("web-storage-unsupported"),f=this,h=!1;return this.ga().then(function(){Wi(f).then(function(c){c||(a&&be(a),b(e),h=!0)})}).s(function(){}).then(function(){if(!h)return ee(a)}).then(function(){if(!h)return Hc(c).then(function(){b(d)})})};
+g.Mb=function(){var a=H();return!ve(a)&&!ze(a)};g.Hb=function(){return!1};
+g.Cb=function(a,b,c,d,e,f,h){if(!a)return C(new L("popup-blocked"));if(h&&!ve())return this.ga().s(function(b){be(a);e(b)}),d(),B();this.a||(this.a=Ti(Xi(this)));var m=this;return this.a.then(function(){var b=m.ga().s(function(b){be(a);e(b);throw b;});d();return b}).then(function(){ug(c);if(!h){var d=Yi(m.m,m.f,m.b,b,c,null,f,m.c,void 0,m.h);Wd(d,a)}}).s(function(a){"auth/network-request-failed"==a.code&&(m.a=null);throw a;})};
+function Xi(a){a.o||(a.v=a.c?qe(a.c,Ri(a.b)):null,a.o=new Jh(a.f,xf(a.h),a.v));return a.o}g.Ca=function(a,b,c){this.a||(this.a=Ti(Xi(this)));var d=this;return this.a.then(function(){ug(b);var e=Yi(d.m,d.f,d.b,a,b,Vd(),c,d.c,void 0,d.h);Wd(e)}).s(function(a){"auth/network-request-failed"==a.code&&(d.a=null);throw a;})};g.ga=function(){var a=this;return Ui(this).then(function(){return a.i.fb}).s(function(){a.a=null;throw new L("network-request-failed");})};g.Qb=function(){return!0};
+function Yi(a,b,c,d,e,f,h,m,p,x){a=new Qi(a,b,c,d,e);a.i=f;a.g=h;a.h=m;a.b=$a(p||null);a.f=x;return a.toString()}function Vi(a){if(!a.i)throw Error("IfcHandler must be initialized!");Li(a.i,function(b){var c={};if(b&&b.authEvent){var d=!1;b=wg(b.authEvent);for(c=0;c<a.g.length;c++)d=a.g[c](b)||d;c={};c.status=d?"ACK":"ERROR";return B(c)}c.status="ERROR";return B(c)})}
+function Wi(a){var b={type:"webStorageSupport"};return Ui(a).then(function(){return Ki(a.i,b)}).then(function(a){if(a&&a.length&&"undefined"!==typeof a[0].webStorageSupport)return a[0].webStorageSupport;throw Error();})}g.wa=function(a){this.g.push(a)};g.Ka=function(a){w(this.g,function(b){return b==a})};function Zi(a){this.a=a||firebase.INTERNAL.reactNative&&firebase.INTERNAL.reactNative.AsyncStorage;if(!this.a)throw new L("internal-error","The React Native compatibility library was not found.");this.type="asyncStorage"}g=Zi.prototype;g.get=function(a){return B(this.a.getItem(a)).then(function(a){return a&&ye(a)})};g.set=function(a,b){return B(this.a.setItem(a,we(b)))};g.P=function(a){return B(this.a.removeItem(a))};g.Y=function(){};g.ca=function(){};function $i(a){this.b=a;this.a={};this.c=r(this.f,this)}var aj=[];function bj(){var a=le()?self:null;v(aj,function(c){c.b==a&&(b=c)});if(!b){var b=new $i(a);aj.push(b)}return b}
 $i.prototype.f=function(a){var b=a.data.eventType,c=a.data.eventId,d=this.a[b];if(d&&0<d.length){a.ports[0].postMessage({status:"ack",eventId:c,eventType:b,response:null});var e=[];v(d,function(b){e.push(B().then(function(){return b(a.origin,a.data.data)}))});wb(e).then(function(d){var e=[];v(d,function(a){e.push({fulfilled:a.Db,value:a.value,reason:a.reason?a.reason.message:void 0})});v(e,function(a){for(var b in a)"undefined"===typeof a[b]&&delete a[b]});a.ports[0].postMessage({status:"done",eventId:c,
 eventType:b,response:e})})}};$i.prototype.subscribe=function(a,b){Za(this.a)&&this.b.addEventListener("message",this.c);"undefined"===typeof this.a[a]&&(this.a[a]=[]);this.a[a].push(b)};$i.prototype.unsubscribe=function(a,b){"undefined"!==typeof this.a[a]&&b?(w(this.a[a],function(a){return a==b}),0==this.a[a].length&&delete this.a[a]):b||delete this.a[a];Za(this.a)&&this.b.removeEventListener("message",this.c)};function cj(a){this.a=a}cj.prototype.postMessage=function(a,b){this.a.postMessage(a,b)};function dj(a){this.c=a;this.b=!1;this.a=[]}
 function ej(a,b,c,d){var e,f=c||{},h,m,p,x=null;if(a.b)return C(Error("connection_unavailable"));var gb=d?800:50,la="undefined"!==typeof MessageChannel?new MessageChannel:null;return(new A(function(c,d){la?(e=Math.floor(Math.random()*Math.pow(10,20)).toString(),la.port1.start(),m=setTimeout(function(){d(Error("unsupported_event"))},gb),h=function(a){a.data.eventId===e&&("ack"===a.data.status?(clearTimeout(m),p=setTimeout(function(){d(Error("timeout"))},3E3)):"done"===a.data.status?(clearTimeout(p),
 "undefined"!==typeof a.data.response?c(a.data.response):d(Error("unknown_error"))):(clearTimeout(m),clearTimeout(p),d(Error("invalid_response"))))},x={messageChannel:la,onMessage:h},a.a.push(x),la.port1.addEventListener("message",h),a.c.postMessage({eventType:b,eventId:e,data:f},[la.port2])):d(Error("connection_unavailable"))})).then(function(b){fj(a,x);return b}).s(function(b){fj(a,x);throw b;})}
-function fj(a,b){if(b){var c=b.messageChannel,d=b.onMessage;c&&(c.port1.removeEventListener("message",d),c.port1.close());w(a.a,function(a){return a==b})}}dj.prototype.close=function(){for(;0<this.a.length;)fj(this,this.a[0]);this.b=!0};function gj(){if(!hj())throw new L("web-storage-unsupported");this.c={};this.a=[];this.b=0;this.m=k.indexedDB;this.type="indexedDB";this.g=this.l=this.f=this.i=null;this.u=!1;this.h=null;var a=this;me()&&self?(this.l=bj(),this.l.subscribe("keyChanged",function(b,c){return ij(a).then(function(b){0<b.length&&v(a.a,function(a){a(b)});return{keyProcessed:Ga(b,c.key)}})}),this.l.subscribe("ping",function(){return B(["keyChanged"])})):Ie().then(function(b){if(a.h=b)a.g=new dj(new cj(b)),ej(a.g,"ping",null,
+function fj(a,b){if(b){var c=b.messageChannel,d=b.onMessage;c&&(c.port1.removeEventListener("message",d),c.port1.close());w(a.a,function(a){return a==b})}}dj.prototype.close=function(){for(;0<this.a.length;)fj(this,this.a[0]);this.b=!0};function gj(){if(!hj())throw new L("web-storage-unsupported");this.c={};this.a=[];this.b=0;this.m=k.indexedDB;this.type="indexedDB";this.g=this.l=this.f=this.i=null;this.u=!1;this.h=null;var a=this;le()&&self?(this.l=bj(),this.l.subscribe("keyChanged",function(b,c){return ij(a).then(function(b){0<b.length&&v(a.a,function(a){a(b)});return{keyProcessed:Ga(b,c.key)}})}),this.l.subscribe("ping",function(){return B(["keyChanged"])})):He().then(function(b){if(a.h=b)a.g=new dj(new cj(b)),ej(a.g,"ping",null,
 !0).then(function(b){b[0].fulfilled&&Ga(b[0].value,"keyChanged")&&(a.u=!0)}).s(function(){})})}var jj;function kj(a){return new A(function(b,c){var d=a.m.deleteDatabase("firebaseLocalStorageDb");d.onsuccess=function(){b()};d.onerror=function(a){c(Error(a.target.error))}})}
 function lj(a){return new A(function(b,c){var d=a.m.open("firebaseLocalStorageDb",1);d.onerror=function(a){try{a.preventDefault()}catch(f){}c(Error(a.target.error))};d.onupgradeneeded=function(a){a=a.target.result;try{a.createObjectStore("firebaseLocalStorage",{keyPath:"fbase_key"})}catch(f){c(f)}};d.onsuccess=function(d){d=d.target.result;d.objectStoreNames.contains("firebaseLocalStorage")?b(d):kj(a).then(function(){return lj(a)}).then(function(a){b(a)}).s(function(a){c(a)})}})}
 function mj(a){a.o||(a.o=lj(a));return a.o}function hj(){try{return!!k.indexedDB}catch(a){return!1}}function nj(a){return a.objectStore("firebaseLocalStorage")}function oj(a,b){return a.transaction(["firebaseLocalStorage"],b?"readwrite":"readonly")}function pj(a){return new A(function(b,c){a.onsuccess=function(a){a&&a.target?b(a.target.result):b()};a.onerror=function(a){c(a.target.error)}})}g=gj.prototype;
-g.set=function(a,b){var c=!1,d,e=this;return mj(this).then(function(b){d=b;b=nj(oj(d,!0));return pj(b.get(a))}).then(function(f){var h=nj(oj(d,!0));if(f)return f.value=b,pj(h.put(f));e.b++;c=!0;f={};f.fbase_key=a;f.value=b;return pj(h.add(f))}).then(function(){e.c[a]=b;return qj(e,a)}).ia(function(){c&&e.b--})};function qj(a,b){return a.g&&a.h&&He()===a.h?ej(a.g,"keyChanged",{key:b},a.u).then(function(){}).s(function(){}):B()}
+g.set=function(a,b){var c=!1,d,e=this;return mj(this).then(function(b){d=b;b=nj(oj(d,!0));return pj(b.get(a))}).then(function(f){var h=nj(oj(d,!0));if(f)return f.value=b,pj(h.put(f));e.b++;c=!0;f={};f.fbase_key=a;f.value=b;return pj(h.add(f))}).then(function(){e.c[a]=b;return qj(e,a)}).ia(function(){c&&e.b--})};function qj(a,b){return a.g&&a.h&&Ge()===a.h?ej(a.g,"keyChanged",{key:b},a.u).then(function(){}).s(function(){}):B()}
 g.get=function(a){return mj(this).then(function(b){return pj(nj(oj(b,!1)).get(a))}).then(function(a){return a&&a.value})};g.P=function(a){var b=!1,c=this;return mj(this).then(function(d){b=!0;c.b++;return pj(nj(oj(d,!0))["delete"](a))}).then(function(){delete c.c[a];return qj(c,a)}).ia(function(){b&&c.b--})};
 function ij(a){return mj(a).then(function(a){var b=nj(oj(a,!1));return b.getAll?pj(b.getAll()):new A(function(a,c){var d=[],e=b.openCursor();e.onsuccess=function(b){(b=b.target.result)?(d.push(b.value),b["continue"]()):a(d)};e.onerror=function(a){c(a.target.error)}})}).then(function(b){var c={},d=[];if(0==a.b){for(d=0;d<b.length;d++)c[b[d].fbase_key]=b[d].value;d=Xd(a.c,c);a.c=c}return d})}g.Y=function(a){0==this.a.length&&rj(this);this.a.push(a)};
-g.ca=function(a){w(this.a,function(b){return b==a});0==this.a.length&&sj(this)};function rj(a){function b(){a.f=setTimeout(function(){a.i=ij(a).then(function(b){0<b.length&&v(a.a,function(a){a(b)})}).then(function(){b()}).s(function(a){"STOP_EVENT"!=a.message&&b()})},800)}sj(a);b()}function sj(a){a.i&&a.i.cancel("STOP_EVENT");a.f&&(clearTimeout(a.f),a.f=null)};function tj(a){var b=this,c=null;this.a=[];this.type="indexedDB";this.c=a;this.b=B().then(function(){if(hj()){var a=te(),e="__sak"+a;jj||(jj=new gj);c=jj;return c.set(e,a).then(function(){return c.get(e)}).then(function(b){if(b!==a)throw Error("indexedDB not supported!");return c.P(e)}).then(function(){return c}).s(function(){return b.c})}return b.c}).then(function(a){b.type=a.type;a.Y(function(a){v(b.a,function(b){b(a)})});return a})}g=tj.prototype;g.get=function(a){return this.b.then(function(b){return b.get(a)})};
-g.set=function(a,b){return this.b.then(function(c){return c.set(a,b)})};g.P=function(a){return this.b.then(function(b){return b.P(a)})};g.Y=function(a){this.a.push(a)};g.ca=function(a){w(this.a,function(b){return b==a})};function uj(){this.a={};this.type="inMemory"}g=uj.prototype;g.get=function(a){return B(this.a[a])};g.set=function(a,b){this.a[a]=b;return B()};g.P=function(a){delete this.a[a];return B()};g.Y=function(){};g.ca=function(){};function vj(){if(!wj()){if("Node"==ne())throw new L("internal-error","The LocalStorage compatibility library was not found.");throw new L("web-storage-unsupported");}this.a=xj()||firebase.INTERNAL.node.localStorage;this.type="localStorage"}function xj(){try{var a=k.localStorage,b=te();a&&(a.setItem(b,"1"),a.removeItem(b));return a}catch(c){return null}}
-function wj(){var a="Node"==ne();a=xj()||a&&firebase.INTERNAL.node&&firebase.INTERNAL.node.localStorage;if(!a)return!1;try{return a.setItem("__sak","1"),a.removeItem("__sak"),!0}catch(b){return!1}}g=vj.prototype;g.get=function(a){var b=this;return B().then(function(){var c=b.a.getItem(a);return ze(c)})};g.set=function(a,b){var c=this;return B().then(function(){var d=xe(b);null===d?c.P(a):c.a.setItem(a,d)})};g.P=function(a){var b=this;return B().then(function(){b.a.removeItem(a)})};
-g.Y=function(a){k.window&&rc(k.window,"storage",a)};g.ca=function(a){k.window&&E(k.window,"storage",a)};function yj(){this.type="nullStorage"}g=yj.prototype;g.get=function(){return B(null)};g.set=function(){return B()};g.P=function(){return B()};g.Y=function(){};g.ca=function(){};function zj(){if(!Aj()){if("Node"==ne())throw new L("internal-error","The SessionStorage compatibility library was not found.");throw new L("web-storage-unsupported");}this.a=Bj()||firebase.INTERNAL.node.sessionStorage;this.type="sessionStorage"}function Bj(){try{var a=k.sessionStorage,b=te();a&&(a.setItem(b,"1"),a.removeItem(b));return a}catch(c){return null}}
-function Aj(){var a="Node"==ne();a=Bj()||a&&firebase.INTERNAL.node&&firebase.INTERNAL.node.sessionStorage;if(!a)return!1;try{return a.setItem("__sak","1"),a.removeItem("__sak"),!0}catch(b){return!1}}g=zj.prototype;g.get=function(a){var b=this;return B().then(function(){var c=b.a.getItem(a);return ze(c)})};g.set=function(a,b){var c=this;return B().then(function(){var d=xe(b);null===d?c.P(a):c.a.setItem(a,d)})};g.P=function(a){var b=this;return B().then(function(){b.a.removeItem(a)})};g.Y=function(){};
-g.ca=function(){};function Cj(){var a={};a.Browser=Dj;a.Node=Ej;a.ReactNative=Fj;a.Worker=Gj;this.a=a[ne()]}var Hj,Dj={A:vj,Ra:zj},Ej={A:vj,Ra:zj},Fj={A:Zi,Ra:yj},Gj={A:vj,Ra:yj};var Ij={Zc:"local",NONE:"none",ad:"session"};function Jj(a){var b=new L("invalid-persistence-type"),c=new L("unsupported-persistence-type");a:{for(d in Ij)if(Ij[d]==a){var d=!0;break a}d=!1}if(!d||"string"!==typeof a)throw b;switch(ne()){case "ReactNative":if("session"===a)throw c;break;case "Node":if("none"!==a)throw c;break;default:if(!se()&&"none"!==a)throw c;}}
-function Kj(){var a=!Ae(H())&&le()?!0:!1,b=we(),c=se();this.o=a;this.h=b;this.l=c;this.a={};Hj||(Hj=new Cj);a=Hj;try{this.g=!Ud()&&Ge()||!k.indexedDB?new a.a.A:new tj(me()?new uj:new a.a.A)}catch(d){this.g=new uj,this.h=!0}try{this.i=new a.a.Ra}catch(d){this.i=new uj}this.m=new uj;this.f=r(this.Pb,this);this.b={}}var Lj;function Mj(){Lj||(Lj=new Kj);return Lj}function Nj(a,b){switch(b){case "session":return a.i;case "none":return a.m;default:return a.g}}
-function Oj(a,b){return"firebase:"+a.name+(b?":"+b:"")}function Pj(a,b,c){var d=Oj(b,c),e=Nj(a,b.A);return a.get(b,c).then(function(f){var h=null;try{h=ze(k.localStorage.getItem(d))}catch(m){}if(h&&!f)return k.localStorage.removeItem(d),a.set(b,h,c);h&&f&&"localStorage"!=e.type&&k.localStorage.removeItem(d)})}g=Kj.prototype;g.get=function(a,b){return Nj(this,a.A).get(Oj(a,b))};function Qj(a,b,c){c=Oj(b,c);"local"==b.A&&(a.b[c]=null);return Nj(a,b.A).P(c)}
-g.set=function(a,b,c){var d=Oj(a,c),e=this,f=Nj(this,a.A);return f.set(d,b).then(function(){return f.get(d)}).then(function(b){"local"==a.A&&(e.b[d]=b)})};g.addListener=function(a,b,c){a=Oj(a,b);this.l&&(this.b[a]=k.localStorage.getItem(a));Za(this.a)&&(Nj(this,"local").Y(this.f),this.h||(Ud()||!Ge())&&k.indexedDB||!this.l||Rj(this));this.a[a]||(this.a[a]=[]);this.a[a].push(c)};
+g.ca=function(a){w(this.a,function(b){return b==a});0==this.a.length&&sj(this)};function rj(a){function b(){a.f=setTimeout(function(){a.i=ij(a).then(function(b){0<b.length&&v(a.a,function(a){a(b)})}).then(function(){b()}).s(function(a){"STOP_EVENT"!=a.message&&b()})},800)}sj(a);b()}function sj(a){a.i&&a.i.cancel("STOP_EVENT");a.f&&(clearTimeout(a.f),a.f=null)};function tj(a){var b=this,c=null;this.a=[];this.type="indexedDB";this.c=a;this.b=B().then(function(){if(hj()){var a=se(),e="__sak"+a;jj||(jj=new gj);c=jj;return c.set(e,a).then(function(){return c.get(e)}).then(function(b){if(b!==a)throw Error("indexedDB not supported!");return c.P(e)}).then(function(){return c}).s(function(){return b.c})}return b.c}).then(function(a){b.type=a.type;a.Y(function(a){v(b.a,function(b){b(a)})});return a})}g=tj.prototype;g.get=function(a){return this.b.then(function(b){return b.get(a)})};
+g.set=function(a,b){return this.b.then(function(c){return c.set(a,b)})};g.P=function(a){return this.b.then(function(b){return b.P(a)})};g.Y=function(a){this.a.push(a)};g.ca=function(a){w(this.a,function(b){return b==a})};function uj(){this.a={};this.type="inMemory"}g=uj.prototype;g.get=function(a){return B(this.a[a])};g.set=function(a,b){this.a[a]=b;return B()};g.P=function(a){delete this.a[a];return B()};g.Y=function(){};g.ca=function(){};function vj(){if(!wj()){if("Node"==me())throw new L("internal-error","The LocalStorage compatibility library was not found.");throw new L("web-storage-unsupported");}this.a=xj()||firebase.INTERNAL.node.localStorage;this.type="localStorage"}function xj(){try{var a=k.localStorage,b=se();a&&(a.setItem(b,"1"),a.removeItem(b));return a}catch(c){return null}}
+function wj(){var a="Node"==me();a=xj()||a&&firebase.INTERNAL.node&&firebase.INTERNAL.node.localStorage;if(!a)return!1;try{return a.setItem("__sak","1"),a.removeItem("__sak"),!0}catch(b){return!1}}g=vj.prototype;g.get=function(a){var b=this;return B().then(function(){var c=b.a.getItem(a);return ye(c)})};g.set=function(a,b){var c=this;return B().then(function(){var d=we(b);null===d?c.P(a):c.a.setItem(a,d)})};g.P=function(a){var b=this;return B().then(function(){b.a.removeItem(a)})};
+g.Y=function(a){k.window&&rc(k.window,"storage",a)};g.ca=function(a){k.window&&E(k.window,"storage",a)};function yj(){this.type="nullStorage"}g=yj.prototype;g.get=function(){return B(null)};g.set=function(){return B()};g.P=function(){return B()};g.Y=function(){};g.ca=function(){};function zj(){if(!Aj()){if("Node"==me())throw new L("internal-error","The SessionStorage compatibility library was not found.");throw new L("web-storage-unsupported");}this.a=Bj()||firebase.INTERNAL.node.sessionStorage;this.type="sessionStorage"}function Bj(){try{var a=k.sessionStorage,b=se();a&&(a.setItem(b,"1"),a.removeItem(b));return a}catch(c){return null}}
+function Aj(){var a="Node"==me();a=Bj()||a&&firebase.INTERNAL.node&&firebase.INTERNAL.node.sessionStorage;if(!a)return!1;try{return a.setItem("__sak","1"),a.removeItem("__sak"),!0}catch(b){return!1}}g=zj.prototype;g.get=function(a){var b=this;return B().then(function(){var c=b.a.getItem(a);return ye(c)})};g.set=function(a,b){var c=this;return B().then(function(){var d=we(b);null===d?c.P(a):c.a.setItem(a,d)})};g.P=function(a){var b=this;return B().then(function(){b.a.removeItem(a)})};g.Y=function(){};
+g.ca=function(){};function Cj(){var a={};a.Browser=Dj;a.Node=Ej;a.ReactNative=Fj;a.Worker=Gj;this.a=a[me()]}var Hj,Dj={A:vj,Ra:zj},Ej={A:vj,Ra:zj},Fj={A:Zi,Ra:yj},Gj={A:vj,Ra:yj};var Ij={Zc:"local",NONE:"none",ad:"session"};function Jj(a){var b=new L("invalid-persistence-type"),c=new L("unsupported-persistence-type");a:{for(d in Ij)if(Ij[d]==a){var d=!0;break a}d=!1}if(!d||"string"!==typeof a)throw b;switch(me()){case "ReactNative":if("session"===a)throw c;break;case "Node":if("none"!==a)throw c;break;default:if(!re()&&"none"!==a)throw c;}}
+function Kj(){var a=!ze(H())&&ke()?!0:!1,b=ve(),c=re();this.o=a;this.h=b;this.l=c;this.a={};Hj||(Hj=new Cj);a=Hj;try{this.g=!Ud()&&Fe()||!k.indexedDB?new a.a.A:new tj(le()?new uj:new a.a.A)}catch(d){this.g=new uj,this.h=!0}try{this.i=new a.a.Ra}catch(d){this.i=new uj}this.m=new uj;this.f=r(this.Pb,this);this.b={}}var Lj;function Mj(){Lj||(Lj=new Kj);return Lj}function Nj(a,b){switch(b){case "session":return a.i;case "none":return a.m;default:return a.g}}
+function Oj(a,b){return"firebase:"+a.name+(b?":"+b:"")}function Pj(a,b,c){var d=Oj(b,c),e=Nj(a,b.A);return a.get(b,c).then(function(f){var h=null;try{h=ye(k.localStorage.getItem(d))}catch(m){}if(h&&!f)return k.localStorage.removeItem(d),a.set(b,h,c);h&&f&&"localStorage"!=e.type&&k.localStorage.removeItem(d)})}g=Kj.prototype;g.get=function(a,b){return Nj(this,a.A).get(Oj(a,b))};function Qj(a,b,c){c=Oj(b,c);"local"==b.A&&(a.b[c]=null);return Nj(a,b.A).P(c)}
+g.set=function(a,b,c){var d=Oj(a,c),e=this,f=Nj(this,a.A);return f.set(d,b).then(function(){return f.get(d)}).then(function(b){"local"==a.A&&(e.b[d]=b)})};g.addListener=function(a,b,c){a=Oj(a,b);this.l&&(this.b[a]=k.localStorage.getItem(a));Za(this.a)&&(Nj(this,"local").Y(this.f),this.h||(Ud()||!Fe())&&k.indexedDB||!this.l||Rj(this));this.a[a]||(this.a[a]=[]);this.a[a].push(c)};
 g.removeListener=function(a,b,c){a=Oj(a,b);this.a[a]&&(w(this.a[a],function(a){return a==c}),0==this.a[a].length&&delete this.a[a]);Za(this.a)&&(Nj(this,"local").ca(this.f),Sj(this))};function Rj(a){Sj(a);a.c=setInterval(function(){for(var b in a.a){var c=k.localStorage.getItem(b),d=a.b[b];c!=d&&(a.b[b]=c,c=new fc({type:"storage",key:b,target:window,oldValue:d,newValue:c,a:!0}),a.Pb(c))}},1E3)}function Sj(a){a.c&&(clearInterval(a.c),a.c=null)}
 g.Pb=function(a){if(a&&a.f){var b=a.a.key;if(null==b)for(var c in this.a){var d=this.b[c];"undefined"===typeof d&&(d=null);var e=k.localStorage.getItem(c);e!==d&&(this.b[c]=e,this.Xa(c))}else if(0==b.indexOf("firebase:")&&this.a[b]){"undefined"!==typeof a.a.a?Nj(this,"local").ca(this.f):Sj(this);if(this.o)if(c=k.localStorage.getItem(b),d=a.a.newValue,d!==c)null!==d?k.localStorage.setItem(b,d):k.localStorage.removeItem(b);else if(this.b[b]===d&&"undefined"===typeof a.a.a)return;var f=this;c=function(){if("undefined"!==
-typeof a.a.a||f.b[b]!==k.localStorage.getItem(b))f.b[b]=k.localStorage.getItem(b),f.Xa(b)};Pb&&$b&&10==$b&&k.localStorage.getItem(b)!==a.a.newValue&&a.a.newValue!==a.a.oldValue?setTimeout(c,10):c()}}else v(a,r(this.Xa,this))};g.Xa=function(a){this.a[a]&&v(this.a[a],function(a){a()})};function Tj(a){this.a=a;this.b=Mj()}var Uj={name:"authEvent",A:"local"};function Vj(a){return a.b.get(Uj,a.a).then(function(a){return xg(a)})};function Wj(){this.a=Mj()};function Xj(){this.b=-1};function Yj(a,b){this.b=Zj;this.f=k.Uint8Array?new Uint8Array(this.b):Array(this.b);this.g=this.c=0;this.a=[];this.i=a;this.h=b;this.l=k.Int32Array?new Int32Array(64):Array(64);void 0!==ak||(k.Int32Array?ak=new Int32Array(bk):ak=bk);this.reset()}var ak;t(Yj,Xj);for(var Zj=64,ck=Zj-1,dk=[],ek=0;ek<ck;ek++)dk[ek]=0;var fk=Ia(128,dk);Yj.prototype.reset=function(){this.g=this.c=0;this.a=k.Int32Array?new Int32Array(this.h):Ja(this.h)};
+typeof a.a.a||f.b[b]!==k.localStorage.getItem(b))f.b[b]=k.localStorage.getItem(b),f.Xa(b)};Pb&&$b&&10==$b&&k.localStorage.getItem(b)!==a.a.newValue&&a.a.newValue!==a.a.oldValue?setTimeout(c,10):c()}}else v(a,r(this.Xa,this))};g.Xa=function(a){this.a[a]&&v(this.a[a],function(a){a()})};function Tj(a){this.a=a;this.b=Mj()}var Uj={name:"authEvent",A:"local"};function Vj(a){return a.b.get(Uj,a.a).then(function(a){return wg(a)})};function Wj(){this.a=Mj()};function Xj(){this.b=-1};function Yj(a,b){this.b=Zj;this.f=k.Uint8Array?new Uint8Array(this.b):Array(this.b);this.g=this.c=0;this.a=[];this.i=a;this.h=b;this.l=k.Int32Array?new Int32Array(64):Array(64);void 0!==ak||(k.Int32Array?ak=new Int32Array(bk):ak=bk);this.reset()}var ak;t(Yj,Xj);for(var Zj=64,ck=Zj-1,dk=[],ek=0;ek<ck;ek++)dk[ek]=0;var fk=Ia(128,dk);Yj.prototype.reset=function(){this.g=this.c=0;this.a=k.Int32Array?new Int32Array(this.h):Ja(this.h)};
 function gk(a){for(var b=a.f,c=a.l,d=0,e=0;e<b.length;)c[d++]=b[e]<<24|b[e+1]<<16|b[e+2]<<8|b[e+3],e=4*d;for(b=16;64>b;b++){e=c[b-15]|0;d=c[b-2]|0;var f=(c[b-16]|0)+((e>>>7|e<<25)^(e>>>18|e<<14)^e>>>3)|0,h=(c[b-7]|0)+((d>>>17|d<<15)^(d>>>19|d<<13)^d>>>10)|0;c[b]=f+h|0}d=a.a[0]|0;e=a.a[1]|0;var m=a.a[2]|0,p=a.a[3]|0,x=a.a[4]|0,gb=a.a[5]|0,la=a.a[6]|0;f=a.a[7]|0;for(b=0;64>b;b++){var Rl=((d>>>2|d<<30)^(d>>>13|d<<19)^(d>>>22|d<<10))+(d&e^d&m^e&m)|0;h=x&gb^~x&la;f=f+((x>>>6|x<<26)^(x>>>11|x<<21)^(x>>>
 25|x<<7))|0;h=h+(ak[b]|0)|0;h=f+(h+(c[b]|0)|0)|0;f=la;la=gb;gb=x;x=p+h|0;p=m;m=e;e=d;d=h+Rl|0}a.a[0]=a.a[0]+d|0;a.a[1]=a.a[1]+e|0;a.a[2]=a.a[2]+m|0;a.a[3]=a.a[3]+p|0;a.a[4]=a.a[4]+x|0;a.a[5]=a.a[5]+gb|0;a.a[6]=a.a[6]+la|0;a.a[7]=a.a[7]+f|0}
 function hk(a,b,c){void 0===c&&(c=b.length);var d=0,e=a.c;if(l(b))for(;d<c;)a.f[e++]=b.charCodeAt(d++),e==a.b&&(gk(a),e=0);else if(ha(b))for(;d<c;){var f=b[d++];if(!("number"==typeof f&&0<=f&&255>=f&&f==(f|0)))throw Error("message must be a byte array");a.f[e++]=f;e==a.b&&(gk(a),e=0)}else throw Error("message must be string or array");a.c=e;a.g+=c}
 var bk=[1116352408,1899447441,3049323471,3921009573,961987163,1508970993,2453635748,2870763221,3624381080,310598401,607225278,1426881987,1925078388,2162078206,2614888103,3248222580,3835390401,4022224774,264347078,604807628,770255983,1249150122,1555081692,1996064986,2554220882,2821834349,2952996808,3210313671,3336571891,3584528711,113926993,338241895,666307205,773529912,1294757372,1396182291,1695183700,1986661051,2177026350,2456956037,2730485921,2820302411,3259730800,3345764771,3516065817,3600352804,
 4094571909,275423344,430227734,506948616,659060556,883997877,958139571,1322822218,1537002063,1747873779,1955562222,2024104815,2227730452,2361852424,2428436474,2756734187,3204031479,3329325298];function ik(){Yj.call(this,8,jk)}t(ik,Yj);var jk=[1779033703,3144134277,1013904242,2773480762,1359893119,2600822924,528734635,1541459225];function kk(a,b,c,d,e){this.m=a;this.i=b;this.l=c;this.o=d||null;this.u=e||null;this.h=b+":"+c;this.v=new Wj;this.g=new Tj(this.h);this.f=null;this.b=[];this.a=this.c=null}function lk(a){return new L("invalid-cordova-configuration",a)}g=kk.prototype;
-g.ga=function(){return this.za?this.za:this.za=ie().then(function(){if("function"!==typeof I("universalLinks.subscribe",k))throw lk("cordova-universal-links-plugin-fix is not installed");if("undefined"===typeof I("BuildInfo.packageName",k))throw lk("cordova-plugin-buildinfo is not installed");if("function"!==typeof I("cordova.plugins.browsertab.openUrl",k))throw lk("cordova-plugin-browsertab is not installed");if("function"!==typeof I("cordova.InAppBrowser.open",k))throw lk("cordova-plugin-inappbrowser is not installed");
-},function(){throw new L("cordova-not-ready");})};function mk(){for(var a=20,b=[];0<a;)b.push("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(62*Math.random()))),a--;return b.join("")}function nk(a){var b=new ik;hk(b,a);a=[];var c=8*b.g;56>b.c?hk(b,fk,56-b.c):hk(b,fk,b.b-(b.c-56));for(var d=63;56<=d;d--)b.f[d]=c&255,c/=256;gk(b);for(d=c=0;d<b.i;d++)for(var e=24;0<=e;e-=8)a[c++]=b.a[d]>>e&255;return of(a)}
+g.ga=function(){return this.za?this.za:this.za=he().then(function(){if("function"!==typeof I("universalLinks.subscribe",k))throw lk("cordova-universal-links-plugin-fix is not installed");if("undefined"===typeof I("BuildInfo.packageName",k))throw lk("cordova-plugin-buildinfo is not installed");if("function"!==typeof I("cordova.plugins.browsertab.openUrl",k))throw lk("cordova-plugin-browsertab is not installed");if("function"!==typeof I("cordova.InAppBrowser.open",k))throw lk("cordova-plugin-inappbrowser is not installed");
+},function(){throw new L("cordova-not-ready");})};function mk(){for(var a=20,b=[];0<a;)b.push("1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(62*Math.random()))),a--;return b.join("")}function nk(a){var b=new ik;hk(b,a);a=[];var c=8*b.g;56>b.c?hk(b,fk,56-b.c):hk(b,fk,b.b-(b.c-56));for(var d=63;56<=d;d--)b.f[d]=c&255,c/=256;gk(b);for(d=c=0;d<b.i;d++)for(var e=24;0<=e;e-=8)a[c++]=b.a[d]>>e&255;return nf(a)}
 g.Ea=function(a,b){b(new L("operation-not-supported-in-this-environment"));return B()};g.Cb=function(){return C(new L("operation-not-supported-in-this-environment"))};g.Qb=function(){return!1};g.Mb=function(){return!0};g.Hb=function(){return!0};
-g.Ca=function(a,b,c){if(this.c)return C(new L("redirect-operation-pending"));var d=this,e=k.document,f=null,h=null,m=null,p=null;return this.c=B().then(function(){vg(b);return ok(d)}).then(function(){return pk(d,a,b,c)}).then(function(){return(new A(function(a,b){h=function(){var b=I("cordova.plugins.browsertab.close",k);a();"function"===typeof b&&b();d.a&&"function"===typeof d.a.close&&(d.a.close(),d.a=null);return!1};d.wa(h);m=function(){f||(f=Hc(2E3).then(function(){b(new L("redirect-cancelled-by-user"))}))};
-p=function(){De()&&m()};e.addEventListener("resume",m,!1);H().toLowerCase().match(/android/)||e.addEventListener("visibilitychange",p,!1)})).s(function(a){return qk(d).then(function(){throw a;})})}).ia(function(){m&&e.removeEventListener("resume",m,!1);p&&e.removeEventListener("visibilitychange",p,!1);f&&f.cancel();h&&d.Ka(h);d.c=null})};
-function pk(a,b,c,d){var e=mk(),f=new wg(b,d,null,e,new L("no-auth-event")),h=I("BuildInfo.packageName",k);if("string"!==typeof h)throw new L("invalid-cordova-configuration");var m=I("BuildInfo.displayName",k),p={};if(H().toLowerCase().match(/iphone|ipad|ipod/))p.ibi=h;else if(H().toLowerCase().match(/android/))p.apn=h;else return C(new L("operation-not-supported-in-this-environment"));m&&(p.appDisplayName=m);e=nk(e);p.sessionId=e;var x=Yi(a.m,a.i,a.l,b,c,null,d,a.o,p,a.u);return a.ga().then(function(){var b=
+g.Ca=function(a,b,c){if(this.c)return C(new L("redirect-operation-pending"));var d=this,e=k.document,f=null,h=null,m=null,p=null;return this.c=B().then(function(){ug(b);return ok(d)}).then(function(){return pk(d,a,b,c)}).then(function(){return(new A(function(a,b){h=function(){var b=I("cordova.plugins.browsertab.close",k);a();"function"===typeof b&&b();d.a&&"function"===typeof d.a.close&&(d.a.close(),d.a=null);return!1};d.wa(h);m=function(){f||(f=Hc(2E3).then(function(){b(new L("redirect-cancelled-by-user"))}))};
+p=function(){Ce()&&m()};e.addEventListener("resume",m,!1);H().toLowerCase().match(/android/)||e.addEventListener("visibilitychange",p,!1)})).s(function(a){return qk(d).then(function(){throw a;})})}).ia(function(){m&&e.removeEventListener("resume",m,!1);p&&e.removeEventListener("visibilitychange",p,!1);f&&f.cancel();h&&d.Ka(h);d.c=null})};
+function pk(a,b,c,d){var e=mk(),f=new vg(b,d,null,e,new L("no-auth-event")),h=I("BuildInfo.packageName",k);if("string"!==typeof h)throw new L("invalid-cordova-configuration");var m=I("BuildInfo.displayName",k),p={};if(H().toLowerCase().match(/iphone|ipad|ipod/))p.ibi=h;else if(H().toLowerCase().match(/android/))p.apn=h;else return C(new L("operation-not-supported-in-this-environment"));m&&(p.appDisplayName=m);e=nk(e);p.sessionId=e;var x=Yi(a.m,a.i,a.l,b,c,null,d,a.o,p,a.u);return a.ga().then(function(){var b=
 a.h;return a.v.a.set(Uj,f.C(),b)}).then(function(){var b=I("cordova.plugins.browsertab.isAvailable",k);if("function"!==typeof b)throw new L("invalid-cordova-configuration");var c=null;b(function(b){if(b){c=I("cordova.plugins.browsertab.openUrl",k);if("function"!==typeof c)throw new L("invalid-cordova-configuration");c(x)}else{c=I("cordova.InAppBrowser.open",k);if("function"!==typeof c)throw new L("invalid-cordova-configuration");b=H();b=!(!b.match(/(iPad|iPhone|iPod).*OS 7_\d/i)&&!b.match(/(iPad|iPhone|iPod).*OS 8_\d/i));
 a.a=c(x,b?"_blank":"_system","location=yes")}})})}function rk(a,b){for(var c=0;c<a.b.length;c++)try{a.b[c](b)}catch(d){}}function ok(a){a.f||(a.f=a.ga().then(function(){return new A(function(b){function c(d){b(d);a.Ka(c);return!1}a.wa(c);sk(a)})}));return a.f}function qk(a){var b=null;return Vj(a.g).then(function(c){b=c;c=a.g;return Qj(c.b,Uj,c.a)}).then(function(){return b})}
-function sk(a){function b(b){d=!0;e&&e.cancel();qk(a).then(function(d){var e=c;if(d&&b&&b.url){var f=null;e=Of(b.url);-1!=e.indexOf("/__/auth/callback")&&(f=dd(e),f=ze(cd(f,"firebaseError")||null),f=(f="object"===typeof f?bf(f):null)?new wg(d.b,d.c,null,null,f):new wg(d.b,d.c,e,d.g));e=f||c}rk(a,e)})}var c=new wg("unknown",null,null,null,new L("no-auth-event")),d=!1,e=Hc(500).then(function(){return qk(a).then(function(){d||rk(a,c)})}),f=k.handleOpenURL;k.handleOpenURL=function(a){0==a.toLowerCase().indexOf(I("BuildInfo.packageName",
-k).toLowerCase()+"://")&&b({url:a});if("function"===typeof f)try{f(a)}catch(m){console.error(m)}};zg||(zg=new yg);zg.subscribe(b)}g.wa=function(a){this.b.push(a);ok(this).s(function(b){"auth/invalid-cordova-configuration"===b.code&&(b=new wg("unknown",null,null,null,new L("no-auth-event")),a(b))})};g.Ka=function(a){w(this.b,function(b){return b==a})};function tk(a){this.a=a;this.b=Mj()}var uk={name:"pendingRedirect",A:"session"};function vk(a){return a.b.set(uk,"pending",a.a)}function wk(a){return Qj(a.b,uk,a.a)}function xk(a){return a.b.get(uk,a.a).then(function(a){return"pending"==a})};function yk(a,b,c){this.u=a;this.l=b;this.m=c;this.h=[];this.f=!1;this.i=r(this.bb,this);this.b=new zk;this.o=new Ak;this.g=new tk(this.l+":"+this.m);this.c={};this.c.unknown=this.b;this.c.signInViaRedirect=this.b;this.c.linkViaRedirect=this.b;this.c.reauthViaRedirect=this.b;this.c.signInViaPopup=this.o;this.c.linkViaPopup=this.o;this.c.reauthViaPopup=this.o;this.a=Bk(this.u,this.l,this.m,zf)}function Bk(a,b,c,d){var e=firebase.SDK_VERSION||null;return je()?new kk(a,b,c,e,d):new Si(a,b,c,e,d)}g=yk.prototype;
-g.reset=function(){this.f=!1;this.a.Ka(this.i);this.a=Bk(this.u,this.l,this.m)};g.Ya=function(){this.b.Ya()};function Ck(a){a.f||(a.f=!0,a.a.wa(a.i));var b=a.a;return a.a.ga().s(function(c){a.a==b&&a.reset();throw c;})}function Dk(a){a.a.Mb()&&Ck(a).s(function(b){var c=new wg("unknown",null,null,null,new L("operation-not-supported-in-this-environment"));Ek(b)&&a.bb(c)});a.a.Hb()||Fk(a.b)}
-g.subscribe=function(a){Ga(this.h,a)||this.h.push(a);if(!this.f){var b=this;xk(this.g).then(function(a){a?wk(b.g).then(function(){Ck(b).s(function(a){var c=new wg("unknown",null,null,null,new L("operation-not-supported-in-this-environment"));Ek(a)&&b.bb(c)})}):Dk(b)}).s(function(){Dk(b)})}};g.unsubscribe=function(a){w(this.h,function(b){return b==a})};
-g.bb=function(a){if(!a)throw new L("invalid-auth-event");for(var b=!1,c=0;c<this.h.length;c++){var d=this.h[c];if(d.vb(a.b,a.c)){(b=this.c[a.b])&&b.h(a,d);b=!0;break}}Fk(this.b);return b};var Gk=new Ce(2E3,1E4),Hk=new Ce(3E4,6E4);yk.prototype.fa=function(){return this.b.fa()};function Ik(a,b,c,d,e,f){return a.a.Cb(b,c,d,function(){a.f||(a.f=!0,a.a.wa(a.i))},function(){a.reset()},e,f)}function Ek(a){return a&&"auth/cordova-not-ready"==a.code?!0:!1}
+function sk(a){function b(b){d=!0;e&&e.cancel();qk(a).then(function(d){var e=c;if(d&&b&&b.url){var f=null;e=Nf(b.url);-1!=e.indexOf("/__/auth/callback")&&(f=dd(e),f=ye(cd(f,"firebaseError")||null),f=(f="object"===typeof f?af(f):null)?new vg(d.b,d.c,null,null,f):new vg(d.b,d.c,e,d.g));e=f||c}rk(a,e)})}var c=new vg("unknown",null,null,null,new L("no-auth-event")),d=!1,e=Hc(500).then(function(){return qk(a).then(function(){d||rk(a,c)})}),f=k.handleOpenURL;k.handleOpenURL=function(a){0==a.toLowerCase().indexOf(I("BuildInfo.packageName",
+k).toLowerCase()+"://")&&b({url:a});if("function"===typeof f)try{f(a)}catch(m){console.error(m)}};yg||(yg=new xg);yg.subscribe(b)}g.wa=function(a){this.b.push(a);ok(this).s(function(b){"auth/invalid-cordova-configuration"===b.code&&(b=new vg("unknown",null,null,null,new L("no-auth-event")),a(b))})};g.Ka=function(a){w(this.b,function(b){return b==a})};function tk(a){this.a=a;this.b=Mj()}var uk={name:"pendingRedirect",A:"session"};function vk(a){return a.b.set(uk,"pending",a.a)}function wk(a){return Qj(a.b,uk,a.a)}function xk(a){return a.b.get(uk,a.a).then(function(a){return"pending"==a})};function yk(a,b,c){this.u=a;this.l=b;this.m=c;this.h=[];this.f=!1;this.i=r(this.bb,this);this.b=new zk;this.o=new Ak;this.g=new tk(this.l+":"+this.m);this.c={};this.c.unknown=this.b;this.c.signInViaRedirect=this.b;this.c.linkViaRedirect=this.b;this.c.reauthViaRedirect=this.b;this.c.signInViaPopup=this.o;this.c.linkViaPopup=this.o;this.c.reauthViaPopup=this.o;this.a=Bk(this.u,this.l,this.m,yf)}function Bk(a,b,c,d){var e=firebase.SDK_VERSION||null;return ie()?new kk(a,b,c,e,d):new Si(a,b,c,e,d)}g=yk.prototype;
+g.reset=function(){this.f=!1;this.a.Ka(this.i);this.a=Bk(this.u,this.l,this.m)};g.Ya=function(){this.b.Ya()};function Ck(a){a.f||(a.f=!0,a.a.wa(a.i));var b=a.a;return a.a.ga().s(function(c){a.a==b&&a.reset();throw c;})}function Dk(a){a.a.Mb()&&Ck(a).s(function(b){var c=new vg("unknown",null,null,null,new L("operation-not-supported-in-this-environment"));Ek(b)&&a.bb(c)});a.a.Hb()||Fk(a.b)}
+g.subscribe=function(a){Ga(this.h,a)||this.h.push(a);if(!this.f){var b=this;xk(this.g).then(function(a){a?wk(b.g).then(function(){Ck(b).s(function(a){var c=new vg("unknown",null,null,null,new L("operation-not-supported-in-this-environment"));Ek(a)&&b.bb(c)})}):Dk(b)}).s(function(){Dk(b)})}};g.unsubscribe=function(a){w(this.h,function(b){return b==a})};
+g.bb=function(a){if(!a)throw new L("invalid-auth-event");for(var b=!1,c=0;c<this.h.length;c++){var d=this.h[c];if(d.vb(a.b,a.c)){(b=this.c[a.b])&&b.h(a,d);b=!0;break}}Fk(this.b);return b};var Gk=new Be(2E3,1E4),Hk=new Be(3E4,6E4);yk.prototype.fa=function(){return this.b.fa()};function Ik(a,b,c,d,e,f){return a.a.Cb(b,c,d,function(){a.f||(a.f=!0,a.a.wa(a.i))},function(){a.reset()},e,f)}function Ek(a){return a&&"auth/cordova-not-ready"==a.code?!0:!1}
 yk.prototype.Ca=function(a,b,c){var d=this,e;return vk(this.g).then(function(){return d.a.Ca(a,b,c).s(function(a){if(Ek(a))throw new L("operation-not-supported-in-this-environment");e=a;return wk(d.g).then(function(){throw e;})}).then(function(){return d.a.Qb()?new A(function(){}):wk(d.g).then(function(){return d.fa()}).then(function(){}).s(function(){})})})};yk.prototype.Ea=function(a,b,c,d){return this.a.Ea(c,function(c){a.ha(b,null,c,d)},Gk.get())};var Jk={};
 function Kk(a,b,c){var d=b+":"+c;Jk[d]||(Jk[d]=new yk(a,b,c));return Jk[d]}function zk(){this.b=null;this.f=[];this.c=[];this.a=null;this.i=this.g=!1}zk.prototype.reset=function(){this.b=null;this.a&&(this.a.cancel(),this.a=null)};
 zk.prototype.h=function(a,b){if(a){this.reset();this.g=!0;var c=a.b,d=a.c,e=a.a&&"auth/web-storage-unsupported"==a.a.code,f=a.a&&"auth/operation-not-supported-in-this-environment"==a.a.code;this.i=!(!e&&!f);"unknown"!=c||e||f?a.a?(Lk(this,!0,null,a.a),B()):b.xa(c,d)?Mk(this,a,b):C(new L("invalid-auth-event")):(Lk(this,!1,null,null),B())}else C(new L("invalid-auth-event"))};function Fk(a){a.g||(a.g=!0,Lk(a,!1,null,null))}zk.prototype.Ya=function(){this.g&&!this.i&&Lk(this,!1,null,null)};
 function Mk(a,b,c){c=c.xa(b.b,b.c);var d=b.f,e=b.g,f=b.h,h=!!b.b.match(/Redirect$/);c(d,e,f).then(function(b){Lk(a,h,b,null)}).s(function(b){Lk(a,h,null,b)})}function Nk(a,b){a.b=function(){return C(b)};if(a.c.length)for(var c=0;c<a.c.length;c++)a.c[c](b)}function Ok(a,b){a.b=function(){return B(b)};if(a.f.length)for(var c=0;c<a.f.length;c++)a.f[c](b)}function Lk(a,b,c,d){b?d?Nk(a,d):Ok(a,c):Ok(a,{user:null});a.f=[];a.c=[]}
 zk.prototype.fa=function(){var a=this;return new A(function(b,c){a.b?a.b().then(b,c):(a.f.push(b),a.c.push(c),Pk(a))})};function Pk(a){var b=new L("timeout");a.a&&a.a.cancel();a.a=Hc(Hk.get()).then(function(){a.b||(a.g=!0,Lk(a,!0,null,b))})}function Ak(){}Ak.prototype.h=function(a,b){if(a){var c=a.b,d=a.c;a.a?(b.ha(a.b,null,a.a,a.c),B()):b.xa(c,d)?Qk(a,b):C(new L("invalid-auth-event"))}else C(new L("invalid-auth-event"))};
-function Qk(a,b){var c=a.c,d=a.b;b.xa(d,c)(a.f,a.g,a.h).then(function(a){b.ha(d,a,null,c)}).s(function(a){b.ha(d,null,a,c)})};function Rk(){this.sb=!1;Object.defineProperty(this,"appVerificationDisabled",{get:function(){return this.sb},set:function(a){this.sb=a},enumerable:!1})};function Sk(a,b){this.a=b;J(this,"verificationId",a)}Sk.prototype.confirm=function(a){a=tg(this.verificationId,a);return this.a(a)};function Tk(a,b,c,d){return(new rg(a)).Ua(b,c).then(function(a){return new Sk(a,d)})};function Uk(a){var b=wf(a);if(!(b&&b.exp&&b.auth_time&&b.iat))throw new L("internal-error","An internal error occurred. The token obtained by Firebase appears to be malformed. Please retry the operation.");K(this,{token:a,expirationTime:Fe(1E3*b.exp),authTime:Fe(1E3*b.auth_time),issuedAtTime:Fe(1E3*b.iat),signInProvider:b.firebase&&b.firebase.sign_in_provider?b.firebase.sign_in_provider:null,claims:b})};function Vk(a,b,c){this.h=a;this.i=b;this.g=c;this.c=3E4;this.f=96E4;this.b=null;this.a=this.c;if(this.f<this.c)throw Error("Proactive refresh lower bound greater than upper bound!");}Vk.prototype.start=function(){this.a=this.c;Wk(this,!0)};function Xk(a,b){if(b)return a.a=a.c,a.g();b=a.a;a.a*=2;a.a>a.f&&(a.a=a.f);return b}function Wk(a,b){a.stop();a.b=Hc(Xk(a,b)).then(function(){return Ee()}).then(function(){return a.h()}).then(function(){Wk(a,!0)}).s(function(b){a.i(b)&&Wk(a,!1)})}
+function Qk(a,b){var c=a.c,d=a.b;b.xa(d,c)(a.f,a.g,a.h).then(function(a){b.ha(d,a,null,c)}).s(function(a){b.ha(d,null,a,c)})};function Rk(){this.sb=!1;Object.defineProperty(this,"appVerificationDisabled",{get:function(){return this.sb},set:function(a){this.sb=a},enumerable:!1})};function Sk(a,b){this.a=b;J(this,"verificationId",a)}Sk.prototype.confirm=function(a){a=sg(this.verificationId,a);return this.a(a)};function Tk(a,b,c,d){return(new qg(a)).Ua(b,c).then(function(a){return new Sk(a,d)})};function Uk(a){var b=vf(a);if(!(b&&b.exp&&b.auth_time&&b.iat))throw new L("internal-error","An internal error occurred. The token obtained by Firebase appears to be malformed. Please retry the operation.");K(this,{token:a,expirationTime:Ee(1E3*b.exp),authTime:Ee(1E3*b.auth_time),issuedAtTime:Ee(1E3*b.iat),signInProvider:b.firebase&&b.firebase.sign_in_provider?b.firebase.sign_in_provider:null,claims:b})};function Vk(a,b,c){this.h=a;this.i=b;this.g=c;this.c=3E4;this.f=96E4;this.b=null;this.a=this.c;if(this.f<this.c)throw Error("Proactive refresh lower bound greater than upper bound!");}Vk.prototype.start=function(){this.a=this.c;Wk(this,!0)};function Xk(a,b){if(b)return a.a=a.c,a.g();b=a.a;a.a*=2;a.a>a.f&&(a.a=a.f);return b}function Wk(a,b){a.stop();a.b=Hc(Xk(a,b)).then(function(){return De()}).then(function(){return a.h()}).then(function(){Wk(a,!0)}).s(function(b){a.i(b)&&Wk(a,!1)})}
 Vk.prototype.stop=function(){this.b&&(this.b.cancel(),this.b=null)};function Yk(a){this.f=a;this.b=this.a=null;this.c=0}Yk.prototype.C=function(){return{apiKey:this.f.b,refreshToken:this.a,accessToken:this.b,expirationTime:this.c}};function Zk(a,b){var c=b[M],d=b.refreshToken;b=$k(b.expiresIn);a.b=c;a.c=b;a.a=d}function al(a,b){a.b=b.b;a.a=b.a;a.c=b.c}function $k(a){return oa()+1E3*parseInt(a,10)}
-function bl(a,b){return Vh(a.f,b).then(function(b){a.b=b.access_token;a.c=$k(b.expires_in);a.a=b.refresh_token;return{accessToken:a.b,expirationTime:a.c,refreshToken:a.a}}).s(function(b){"auth/user-token-expired"==b.code&&(a.a=null);throw b;})}Yk.prototype.getToken=function(a){a=!!a;return this.b&&!this.a?C(new L("user-token-expired")):a||!this.b||oa()>this.c-3E4?this.a?bl(this,{grant_type:"refresh_token",refresh_token:this.a}):B(null):B({accessToken:this.b,expirationTime:this.c,refreshToken:this.a})};function cl(a,b){this.a=a||null;this.b=b||null;K(this,{lastSignInTime:Fe(b||null),creationTime:Fe(a||null)})}function dl(a){return new cl(a.a,a.b)}cl.prototype.C=function(){return{lastLoginAt:this.b,createdAt:this.a}};function el(a,b,c,d,e,f){K(this,{uid:a,displayName:d||null,photoURL:e||null,email:c||null,phoneNumber:f||null,providerId:b})}function fl(a,b){D.call(this,a);for(var c in b)this[c]=b[c]}t(fl,D);
-function Q(a,b,c){this.G=[];this.m=a.apiKey;this.o=a.appName;this.u=a.authDomain||null;a=firebase.SDK_VERSION?re(firebase.SDK_VERSION):null;this.b=new Jh(this.m,yf(zf),a);this.h=new Yk(this.b);gl(this,b[M]);Zk(this.h,b);J(this,"refreshToken",this.h.a);hl(this,c||{});F.call(this);this.I=!1;this.u&&ue()&&(this.a=Kk(this.u,this.m,this.o));this.N=[];this.i=null;this.w=il(this);this.V=r(this.Ha,this);var d=this;this.ka=null;this.ta=function(a){d.pa(a.g)};this.X=null;this.O=[];this.sa=function(a){jl(d,
-a.c)};this.W=null}t(Q,F);Q.prototype.pa=function(a){this.ka=a;Ph(this.b,a)};Q.prototype.ea=function(){return this.ka};function kl(a,b){a.X&&E(a.X,"languageCodeChanged",a.ta);(a.X=b)&&rc(b,"languageCodeChanged",a.ta)}function jl(a,b){a.O=b;Qh(a.b,firebase.SDK_VERSION?re(firebase.SDK_VERSION,a.O):null)}Q.prototype.ya=function(){return Ja(this.O)};function ll(a,b){a.W&&E(a.W,"frameworkChanged",a.sa);(a.W=b)&&rc(b,"frameworkChanged",a.sa)}Q.prototype.Ha=function(){this.w.b&&(this.w.stop(),this.w.start())};
+function bl(a,b){return Vh(a.f,b).then(function(b){a.b=b.access_token;a.c=$k(b.expires_in);a.a=b.refresh_token;return{accessToken:a.b,expirationTime:a.c,refreshToken:a.a}}).s(function(b){"auth/user-token-expired"==b.code&&(a.a=null);throw b;})}Yk.prototype.getToken=function(a){a=!!a;return this.b&&!this.a?C(new L("user-token-expired")):a||!this.b||oa()>this.c-3E4?this.a?bl(this,{grant_type:"refresh_token",refresh_token:this.a}):B(null):B({accessToken:this.b,expirationTime:this.c,refreshToken:this.a})};function cl(a,b){this.a=a||null;this.b=b||null;K(this,{lastSignInTime:Ee(b||null),creationTime:Ee(a||null)})}function dl(a){return new cl(a.a,a.b)}cl.prototype.C=function(){return{lastLoginAt:this.b,createdAt:this.a}};function el(a,b,c,d,e,f){K(this,{uid:a,displayName:d||null,photoURL:e||null,email:c||null,phoneNumber:f||null,providerId:b})}function fl(a,b){D.call(this,a);for(var c in b)this[c]=b[c]}t(fl,D);
+function Q(a,b,c){this.G=[];this.m=a.apiKey;this.o=a.appName;this.u=a.authDomain||null;a=firebase.SDK_VERSION?qe(firebase.SDK_VERSION):null;this.b=new Jh(this.m,xf(yf),a);this.h=new Yk(this.b);gl(this,b[M]);Zk(this.h,b);J(this,"refreshToken",this.h.a);hl(this,c||{});F.call(this);this.I=!1;this.u&&te()&&(this.a=Kk(this.u,this.m,this.o));this.N=[];this.i=null;this.w=il(this);this.V=r(this.Ha,this);var d=this;this.ka=null;this.ta=function(a){d.pa(a.g)};this.X=null;this.O=[];this.sa=function(a){jl(d,
+a.c)};this.W=null}t(Q,F);Q.prototype.pa=function(a){this.ka=a;Ph(this.b,a)};Q.prototype.ea=function(){return this.ka};function kl(a,b){a.X&&E(a.X,"languageCodeChanged",a.ta);(a.X=b)&&rc(b,"languageCodeChanged",a.ta)}function jl(a,b){a.O=b;Qh(a.b,firebase.SDK_VERSION?qe(firebase.SDK_VERSION,a.O):null)}Q.prototype.ya=function(){return Ja(this.O)};function ll(a,b){a.W&&E(a.W,"frameworkChanged",a.sa);(a.W=b)&&rc(b,"frameworkChanged",a.sa)}Q.prototype.Ha=function(){this.w.b&&(this.w.stop(),this.w.start())};
 function ml(a){try{return firebase.app(a.o).auth()}catch(b){throw new L("internal-error","No firebase.auth.Auth instance is available for the Firebase App '"+a.o+"'!");}}function il(a){return new Vk(function(){return a.F(!0)},function(a){return a&&"auth/network-request-failed"==a.code?!0:!1},function(){var b=a.h.c-oa()-3E5;return 0<b?b:0})}function nl(a){a.D||a.w.b||(a.w.start(),E(a,"tokenChanged",a.V),rc(a,"tokenChanged",a.V))}function ol(a){E(a,"tokenChanged",a.V);a.w.stop()}
 function gl(a,b){a.ra=b;J(a,"_lat",b)}function pl(a,b){w(a.N,function(a){return a==b})}function ql(a){for(var b=[],c=0;c<a.N.length;c++)b.push(a.N[c](a));return wb(b).then(function(){return a})}function rl(a){a.a&&!a.I&&(a.I=!0,a.a.subscribe(a))}
 function hl(a,b){K(a,{uid:b.uid,displayName:b.displayName||null,photoURL:b.photoURL||null,email:b.email||null,emailVerified:b.emailVerified||!1,phoneNumber:b.phoneNumber||null,isAnonymous:b.isAnonymous||!1,metadata:new cl(b.createdAt,b.lastLoginAt),providerData:[]})}J(Q.prototype,"providerId","firebase");function sl(){}function tl(a){return B().then(function(){if(a.D)throw new L("app-deleted");})}function ul(a){return Ca(a.providerData,function(a){return a.providerId})}
@@ -3781,65 +4054,65 @@ function zl(a){return a.F().then(function(b){var c=a.isAnonymous;return Al(a,b).
 function Bl(a,b){b[M]&&a.ra!=b[M]&&(Zk(a.h,b),a.dispatchEvent(new fl("tokenChanged")),gl(a,b[M]),xl(a,"refreshToken",a.h.a))}function Al(a,b){return P(a.b,Di,{idToken:b}).then(r(a.xc,a))}
 g.xc=function(a){a=a.users;if(!a||!a.length)throw new L("internal-error");a=a[0];hl(this,{uid:a.localId,displayName:a.displayName,photoURL:a.photoUrl,email:a.email,emailVerified:!!a.emailVerified,phoneNumber:a.phoneNumber,lastLoginAt:a.lastLoginAt,createdAt:a.createdAt});for(var b=Cl(a),c=0;c<b.length;c++)vl(this,b[c]);xl(this,"isAnonymous",!(this.email&&a.passwordHash)&&!(this.providerData&&this.providerData.length))};
 function Cl(a){return(a=a.providerUserInfo)&&a.length?Ca(a,function(a){return new el(a.rawId,a.providerId,a.email,a.displayName,a.photoUrl,a.phoneNumber)}):[]}g.gb=function(a){var b=this,c=null;return R(this,a.f(this.b,this.uid).then(function(a){Bl(b,a);c=Dl(b,a,"reauthenticate");b.i=null;return b.reload()}).then(function(){return c}),!0)};
-g.yc=function(a){Ke("firebase.User.prototype.reauthenticateWithCredential is deprecated. Please use firebase.User.prototype.reauthenticateAndRetrieveDataWithCredential instead.");return this.gb(a).then(function(){})};function El(a,b){return zl(a).then(function(){if(Ga(ul(a),b))return ql(a).then(function(){throw new L("provider-already-linked");})})}
-g.eb=function(a){var b=this,c=null;return R(this,El(this,a.providerId).then(function(){return b.F()}).then(function(c){return a.b(b.b,c)}).then(function(a){c=Dl(b,a,"link");return Fl(b,a)}).then(function(){return c}))};g.pc=function(a){Ke("firebase.User.prototype.linkWithCredential is deprecated. Please use firebase.User.prototype.linkAndRetrieveDataWithCredential instead.");return this.eb(a).then(function(a){return a.user})};
-g.qc=function(a,b){var c=this;return R(this,El(this,"phone").then(function(){return Tk(ml(c),a,b,r(c.eb,c))}))};g.zc=function(a,b){var c=this;return R(this,B().then(function(){return Tk(ml(c),a,b,r(c.gb,c))}),!0)};function Dl(a,b,c){var d=ug(b);b=Ef(b);return Ne({user:a,credential:d,additionalUserInfo:b,operationType:c})}function Fl(a,b){Bl(a,b);return a.reload().then(function(){return a})}
+g.yc=function(a){Je("firebase.User.prototype.reauthenticateWithCredential is deprecated. Please use firebase.User.prototype.reauthenticateAndRetrieveDataWithCredential instead.");return this.gb(a).then(function(){})};function El(a,b){return zl(a).then(function(){if(Ga(ul(a),b))return ql(a).then(function(){throw new L("provider-already-linked");})})}
+g.eb=function(a){var b=this,c=null;return R(this,El(this,a.providerId).then(function(){return b.F()}).then(function(c){return a.b(b.b,c)}).then(function(a){c=Dl(b,a,"link");return Fl(b,a)}).then(function(){return c}))};g.pc=function(a){Je("firebase.User.prototype.linkWithCredential is deprecated. Please use firebase.User.prototype.linkAndRetrieveDataWithCredential instead.");return this.eb(a).then(function(a){return a.user})};
+g.qc=function(a,b){var c=this;return R(this,El(this,"phone").then(function(){return Tk(ml(c),a,b,r(c.eb,c))}))};g.zc=function(a,b){var c=this;return R(this,B().then(function(){return Tk(ml(c),a,b,r(c.gb,c))}),!0)};function Dl(a,b,c){var d=tg(b);b=Df(b);return Me({user:a,credential:d,additionalUserInfo:b,operationType:c})}function Fl(a,b){Bl(a,b);return a.reload().then(function(){return a})}
 g.pb=function(a){var b=this;return R(this,this.F().then(function(c){return b.b.pb(c,a)}).then(function(a){Bl(b,a);return b.reload()}))};g.Rc=function(a){var b=this;return R(this,this.F().then(function(c){return a.b(b.b,c)}).then(function(a){Bl(b,a);return b.reload()}))};g.qb=function(a){var b=this;return R(this,this.F().then(function(c){return b.b.qb(c,a)}).then(function(a){Bl(b,a);return b.reload()}))};
 g.rb=function(a){if(void 0===a.displayName&&void 0===a.photoURL)return tl(this);var b=this;return R(this,this.F().then(function(c){return b.b.rb(c,{displayName:a.displayName,photoUrl:a.photoURL})}).then(function(a){Bl(b,a);xl(b,"displayName",a.displayName||null);xl(b,"photoURL",a.photoUrl||null);v(b.providerData,function(a){"password"===a.providerId&&(J(a,"displayName",b.displayName),J(a,"photoURL",b.photoURL))});return ql(b)}).then(sl))};
-g.Pc=function(a){var b=this;return R(this,zl(this).then(function(c){return Ga(ul(b),a)?oi(b.b,c,[a]).then(function(a){var c={};v(a.providerUserInfo||[],function(a){c[a.providerId]=!0});v(ul(b),function(a){c[a]||wl(b,a)});c[rg.PROVIDER_ID]||J(b,"phoneNumber",null);return ql(b)}):ql(b).then(function(){throw new L("no-such-provider");})}))};
+g.Pc=function(a){var b=this;return R(this,zl(this).then(function(c){return Ga(ul(b),a)?oi(b.b,c,[a]).then(function(a){var c={};v(a.providerUserInfo||[],function(a){c[a.providerId]=!0});v(ul(b),function(a){c[a]||wl(b,a)});c[qg.PROVIDER_ID]||J(b,"phoneNumber",null);return ql(b)}):ql(b).then(function(){throw new L("no-such-provider");})}))};
 g.delete=function(){var a=this;return R(this,this.F().then(function(b){return P(a.b,Ci,{idToken:b})}).then(function(){a.dispatchEvent(new fl("userDeleted"))})).then(function(){for(var b=0;b<a.G.length;b++)a.G[b].cancel("app-deleted");kl(a,null);ll(a,null);a.G=[];a.D=!0;ol(a);J(a,"refreshToken",null);a.a&&a.a.unsubscribe(a)})};
 g.vb=function(a,b){return"linkViaPopup"==a&&(this.g||null)==b&&this.f||"reauthViaPopup"==a&&(this.g||null)==b&&this.f||"linkViaRedirect"==a&&(this.aa||null)==b||"reauthViaRedirect"==a&&(this.aa||null)==b?!0:!1};g.ha=function(a,b,c,d){"linkViaPopup"!=a&&"reauthViaPopup"!=a||d!=(this.g||null)||(c&&this.v?this.v(c):b&&!c&&this.f&&this.f(b),this.c&&(this.c.cancel(),this.c=null),delete this.f,delete this.v)};
 g.xa=function(a,b){return"linkViaPopup"==a&&b==(this.g||null)?r(this.Ab,this):"reauthViaPopup"==a&&b==(this.g||null)?r(this.Bb,this):"linkViaRedirect"==a&&(this.aa||null)==b?r(this.Ab,this):"reauthViaRedirect"==a&&(this.aa||null)==b?r(this.Bb,this):null};g.rc=function(a){var b=this;return Gl(this,"linkViaPopup",a,function(){return El(b,a.providerId).then(function(){return ql(b)})},!1)};g.Ac=function(a){return Gl(this,"reauthViaPopup",a,function(){return B()},!0)};
-function Gl(a,b,c,d,e){if(!ue())return C(new L("operation-not-supported-in-this-environment"));if(a.i&&!e)return C(a.i);var f=Df(c.providerId),h=te(a.uid+":::"),m=null;(!we()||le())&&a.u&&c.isOAuthProvider&&(m=Yi(a.u,a.m,a.o,b,c,null,h,firebase.SDK_VERSION||null));var p=ce(m,f&&f.Ba,f&&f.Aa);d=d().then(function(){Hl(a);if(!e)return a.F().then(function(){})}).then(function(){return Ik(a.a,p,b,c,h,!!m)}).then(function(){return new A(function(c,d){a.ha(b,null,new L("cancelled-popup-request"),a.g||null);
-a.f=c;a.v=d;a.g=h;a.c=a.a.Ea(a,b,p,h)})}).then(function(a){p&&be(p);return a?Ne(a):null}).s(function(a){p&&be(p);throw a;});return R(a,d,e)}g.sc=function(a){var b=this;return Il(this,"linkViaRedirect",a,function(){return El(b,a.providerId)},!1)};g.Bc=function(a){return Il(this,"reauthViaRedirect",a,function(){return B()},!0)};
-function Il(a,b,c,d,e){if(!ue())return C(new L("operation-not-supported-in-this-environment"));if(a.i&&!e)return C(a.i);var f=null,h=te(a.uid+":::");d=d().then(function(){Hl(a);if(!e)return a.F().then(function(){})}).then(function(){a.aa=h;return ql(a)}).then(function(b){a.ba&&(b=a.ba,b=b.b.set(Jl,a.C(),b.a));return b}).then(function(){return a.a.Ca(b,c,h)}).s(function(b){f=b;if(a.ba)return Kl(a.ba);throw f;}).then(function(){if(f)throw f;});return R(a,d,e)}
-function Hl(a){if(!a.a||!a.I){if(a.a&&!a.I)throw new L("internal-error");throw new L("auth-domain-config-required");}}g.Ab=function(a,b,c){var d=this;this.c&&(this.c.cancel(),this.c=null);var e=null,f=this.F().then(function(e){return Tf(d.b,{requestUri:a,postBody:c,sessionId:b,idToken:e})}).then(function(a){e=Dl(d,a,"link");return Fl(d,a)}).then(function(){return e});return R(this,f)};
-g.Bb=function(a,b,c){var d=this;this.c&&(this.c.cancel(),this.c=null);var e=null,f=B().then(function(){return Pf(Uf(d.b,{requestUri:a,sessionId:b,postBody:c}),d.uid)}).then(function(a){e=Dl(d,a,"reauthenticate");Bl(d,a);d.i=null;return d.reload()}).then(function(){return e});return R(this,f,!0)};g.jb=function(a){var b=this,c=null;return R(this,this.F().then(function(b){c=b;return"undefined"===typeof a||Za(a)?{}:nf(new cf(a))}).then(function(a){return b.b.jb(c,a)}).then(function(a){if(b.email!=a)return b.reload()}).then(function(){}))};
+function Gl(a,b,c,d,e){if(!te())return C(new L("operation-not-supported-in-this-environment"));if(a.i&&!e)return C(a.i);var f=Cf(c.providerId),h=se(a.uid+":::"),m=null;(!ve()||ke())&&a.u&&c.isOAuthProvider&&(m=Yi(a.u,a.m,a.o,b,c,null,h,firebase.SDK_VERSION||null));var p=ce(m,f&&f.Ba,f&&f.Aa);d=d().then(function(){Hl(a);if(!e)return a.F().then(function(){})}).then(function(){return Ik(a.a,p,b,c,h,!!m)}).then(function(){return new A(function(c,d){a.ha(b,null,new L("cancelled-popup-request"),a.g||null);
+a.f=c;a.v=d;a.g=h;a.c=a.a.Ea(a,b,p,h)})}).then(function(a){p&&be(p);return a?Me(a):null}).s(function(a){p&&be(p);throw a;});return R(a,d,e)}g.sc=function(a){var b=this;return Il(this,"linkViaRedirect",a,function(){return El(b,a.providerId)},!1)};g.Bc=function(a){return Il(this,"reauthViaRedirect",a,function(){return B()},!0)};
+function Il(a,b,c,d,e){if(!te())return C(new L("operation-not-supported-in-this-environment"));if(a.i&&!e)return C(a.i);var f=null,h=se(a.uid+":::");d=d().then(function(){Hl(a);if(!e)return a.F().then(function(){})}).then(function(){a.aa=h;return ql(a)}).then(function(b){a.ba&&(b=a.ba,b=b.b.set(Jl,a.C(),b.a));return b}).then(function(){return a.a.Ca(b,c,h)}).s(function(b){f=b;if(a.ba)return Kl(a.ba);throw f;}).then(function(){if(f)throw f;});return R(a,d,e)}
+function Hl(a){if(!a.a||!a.I){if(a.a&&!a.I)throw new L("internal-error");throw new L("auth-domain-config-required");}}g.Ab=function(a,b,c){var d=this;this.c&&(this.c.cancel(),this.c=null);var e=null,f=this.F().then(function(e){return Sf(d.b,{requestUri:a,postBody:c,sessionId:b,idToken:e})}).then(function(a){e=Dl(d,a,"link");return Fl(d,a)}).then(function(){return e});return R(this,f)};
+g.Bb=function(a,b,c){var d=this;this.c&&(this.c.cancel(),this.c=null);var e=null,f=B().then(function(){return Of(Tf(d.b,{requestUri:a,sessionId:b,postBody:c}),d.uid)}).then(function(a){e=Dl(d,a,"reauthenticate");Bl(d,a);d.i=null;return d.reload()}).then(function(){return e});return R(this,f,!0)};g.jb=function(a){var b=this,c=null;return R(this,this.F().then(function(b){c=b;return"undefined"===typeof a||Za(a)?{}:mf(new bf(a))}).then(function(a){return b.b.jb(c,a)}).then(function(a){if(b.email!=a)return b.reload()}).then(function(){}))};
 function R(a,b,c){var d=Ll(a,b,c);a.G.push(d);d.ia(function(){Ha(a.G,d)});return d}function Ll(a,b,c){return a.i&&!c?(b.cancel(),C(a.i)):b.s(function(b){!b||"auth/user-disabled"!=b.code&&"auth/user-token-expired"!=b.code||(a.i||a.dispatchEvent(new fl("userInvalidated")),a.i=b);throw b;})}g.toJSON=function(){return this.C()};
-g.C=function(){var a={uid:this.uid,displayName:this.displayName,photoURL:this.photoURL,email:this.email,emailVerified:this.emailVerified,phoneNumber:this.phoneNumber,isAnonymous:this.isAnonymous,providerData:[],apiKey:this.m,appName:this.o,authDomain:this.u,stsTokenManager:this.h.C(),redirectEventId:this.aa||null};this.metadata&&bb(a,this.metadata.C());v(this.providerData,function(b){a.providerData.push(Oe(b))});return a};
-function Ml(a){if(!a.apiKey)return null;var b={apiKey:a.apiKey,authDomain:a.authDomain,appName:a.appName},c={};if(a.stsTokenManager&&a.stsTokenManager.accessToken&&a.stsTokenManager.expirationTime)c[M]=a.stsTokenManager.accessToken,c.refreshToken=a.stsTokenManager.refreshToken||null,c.expiresIn=(a.stsTokenManager.expirationTime-oa())/1E3;else return null;var d=new Q(b,c,a);a.providerData&&v(a.providerData,function(a){a&&vl(d,Ne(a))});a.redirectEventId&&(d.aa=a.redirectEventId);return d}
+g.C=function(){var a={uid:this.uid,displayName:this.displayName,photoURL:this.photoURL,email:this.email,emailVerified:this.emailVerified,phoneNumber:this.phoneNumber,isAnonymous:this.isAnonymous,providerData:[],apiKey:this.m,appName:this.o,authDomain:this.u,stsTokenManager:this.h.C(),redirectEventId:this.aa||null};this.metadata&&bb(a,this.metadata.C());v(this.providerData,function(b){a.providerData.push(Ne(b))});return a};
+function Ml(a){if(!a.apiKey)return null;var b={apiKey:a.apiKey,authDomain:a.authDomain,appName:a.appName},c={};if(a.stsTokenManager&&a.stsTokenManager.accessToken&&a.stsTokenManager.expirationTime)c[M]=a.stsTokenManager.accessToken,c.refreshToken=a.stsTokenManager.refreshToken||null,c.expiresIn=(a.stsTokenManager.expirationTime-oa())/1E3;else return null;var d=new Q(b,c,a);a.providerData&&v(a.providerData,function(a){a&&vl(d,Me(a))});a.redirectEventId&&(d.aa=a.redirectEventId);return d}
 function Nl(a,b,c,d){var e=new Q(a,b);c&&(e.ba=c);d&&jl(e,d);return e.reload().then(function(){return e})}function Ol(a,b,c,d){b=b||{apiKey:a.m,authDomain:a.u,appName:a.o};var e=a.h,f={};f[M]=e.b;f.refreshToken=e.a;f.expiresIn=(e.c-oa())/1E3;b=new Q(b,f);c&&(b.ba=c);d&&jl(b,d);yl(b,a);return b};function Pl(a){this.a=a;this.b=Mj()}var Jl={name:"redirectUser",A:"session"};function Kl(a){return Qj(a.b,Jl,a.a)}function Ql(a,b){return a.b.get(Jl,a.a).then(function(a){a&&b&&(a.authDomain=b);return Ml(a||{})})};function Sl(a){this.a=a;this.b=Mj();this.c=null;this.f=Tl(this);this.b.addListener(Ul("local"),this.a,r(this.g,this))}Sl.prototype.g=function(){var a=this,b=Ul("local");Vl(this,function(){return B().then(function(){return a.c&&"local"!=a.c.A?a.b.get(b,a.a):null}).then(function(c){if(c)return Wl(a,"local").then(function(){a.c=b})})})};function Wl(a,b){var c=[],d;for(d in Ij)Ij[d]!==b&&c.push(Qj(a.b,Ul(Ij[d]),a.a));c.push(Qj(a.b,Xl,a.a));return vb(c)}
 function Tl(a){var b=Ul("local"),c=Ul("session"),d=Ul("none");return Pj(a.b,b,a.a).then(function(){return a.b.get(c,a.a)}).then(function(e){return e?c:a.b.get(d,a.a).then(function(c){return c?d:a.b.get(b,a.a).then(function(c){return c?b:a.b.get(Xl,a.a).then(function(a){return a?Ul(a):b})})})}).then(function(b){a.c=b;return Wl(a,b.A)}).s(function(){a.c||(a.c=b)})}var Xl={name:"persistence",A:"session"};function Ul(a){return{name:"authUser",A:a}}
 Sl.prototype.mb=function(a){var b=null,c=this;Jj(a);return Vl(this,function(){return a!=c.c.A?c.b.get(c.c,c.a).then(function(d){b=d;return Wl(c,a)}).then(function(){c.c=Ul(a);if(b)return c.b.set(c.c,b,c.a)}):B()})};function Yl(a){return Vl(a,function(){return a.b.set(Xl,a.c.A,a.a)})}function Zl(a,b){return Vl(a,function(){return a.b.set(a.c,b.C(),a.a)})}function $l(a){return Vl(a,function(){return Qj(a.b,a.c,a.a)})}
-function am(a,b){return Vl(a,function(){return a.b.get(a.c,a.a).then(function(a){a&&b&&(a.authDomain=b);return Ml(a||{})})})}function Vl(a,b){a.f=a.f.then(b,b);return a.f};function bm(a){this.m=!1;J(this,"settings",new Rk);J(this,"app",a);if(S(this).options&&S(this).options.apiKey)a=firebase.SDK_VERSION?re(firebase.SDK_VERSION):null,this.b=new Jh(S(this).options&&S(this).options.apiKey,yf(zf),a);else throw new L("invalid-api-key");this.N=[];this.o=[];this.I=[];this.Tb=firebase.INTERNAL.createSubscribe(r(this.mc,this));this.O=void 0;this.Ub=firebase.INTERNAL.createSubscribe(r(this.nc,this));cm(this,null);this.h=new Sl(S(this).options.apiKey+":"+S(this).name);this.w=
+function am(a,b){return Vl(a,function(){return a.b.get(a.c,a.a).then(function(a){a&&b&&(a.authDomain=b);return Ml(a||{})})})}function Vl(a,b){a.f=a.f.then(b,b);return a.f};function bm(a){this.m=!1;J(this,"settings",new Rk);J(this,"app",a);if(S(this).options&&S(this).options.apiKey)a=firebase.SDK_VERSION?qe(firebase.SDK_VERSION):null,this.b=new Jh(S(this).options&&S(this).options.apiKey,xf(yf),a);else throw new L("invalid-api-key");this.N=[];this.o=[];this.I=[];this.Tb=firebase.INTERNAL.createSubscribe(r(this.mc,this));this.O=void 0;this.Ub=firebase.INTERNAL.createSubscribe(r(this.nc,this));cm(this,null);this.h=new Sl(S(this).options.apiKey+":"+S(this).name);this.w=
 new Pl(S(this).options.apiKey+":"+S(this).name);this.V=T(this,dm(this));this.i=T(this,em(this));this.X=!1;this.ka=r(this.Mc,this);this.Ha=r(this.Z,this);this.ra=r(this.bc,this);this.sa=r(this.jc,this);this.ta=r(this.kc,this);fm(this);this.INTERNAL={};this.INTERNAL["delete"]=r(this.delete,this);this.INTERNAL.logFramework=r(this.tc,this);this.u=0;F.call(this);gm(this);this.G=[]}t(bm,F);function hm(a){D.call(this,"languageCodeChanged");this.g=a}t(hm,D);
-function im(a){D.call(this,"frameworkChanged");this.c=a}t(im,D);g=bm.prototype;g.mb=function(a){a=this.h.mb(a);return T(this,a)};g.pa=function(a){this.W===a||this.m||(this.W=a,Ph(this.b,this.W),this.dispatchEvent(new hm(this.ea())))};g.ea=function(){return this.W};g.Sc=function(){var a=k.navigator;this.pa(a?a.languages&&a.languages[0]||a.language||a.userLanguage||null:null)};g.tc=function(a){this.G.push(a);Qh(this.b,firebase.SDK_VERSION?re(firebase.SDK_VERSION,this.G):null);this.dispatchEvent(new im(this.G))};
+function im(a){D.call(this,"frameworkChanged");this.c=a}t(im,D);g=bm.prototype;g.mb=function(a){a=this.h.mb(a);return T(this,a)};g.pa=function(a){this.W===a||this.m||(this.W=a,Ph(this.b,this.W),this.dispatchEvent(new hm(this.ea())))};g.ea=function(){return this.W};g.Sc=function(){var a=k.navigator;this.pa(a?a.languages&&a.languages[0]||a.language||a.userLanguage||null:null)};g.tc=function(a){this.G.push(a);Qh(this.b,firebase.SDK_VERSION?qe(firebase.SDK_VERSION,this.G):null);this.dispatchEvent(new im(this.G))};
 g.ya=function(){return Ja(this.G)};function gm(a){Object.defineProperty(a,"lc",{get:function(){return this.ea()},set:function(a){this.pa(a)},enumerable:!1});a.W=null}g.toJSON=function(){return{apiKey:S(this).options.apiKey,authDomain:S(this).options.authDomain,appName:S(this).name,currentUser:U(this)&&U(this).C()}};function jm(a){return a.Sb||C(new L("auth-domain-config-required"))}
-function fm(a){var b=S(a).options.authDomain,c=S(a).options.apiKey;b&&ue()&&(a.Sb=a.V.then(function(){if(!a.m){a.a=Kk(b,c,S(a).name);a.a.subscribe(a);U(a)&&rl(U(a));if(a.D){rl(a.D);var d=a.D;d.pa(a.ea());kl(d,a);d=a.D;jl(d,a.G);ll(d,a);a.D=null}return a.a}}))}g.vb=function(a,b){switch(a){case "unknown":case "signInViaRedirect":return!0;case "signInViaPopup":return this.g==b&&!!this.f;default:return!1}};
+function fm(a){var b=S(a).options.authDomain,c=S(a).options.apiKey;b&&te()&&(a.Sb=a.V.then(function(){if(!a.m){a.a=Kk(b,c,S(a).name);a.a.subscribe(a);U(a)&&rl(U(a));if(a.D){rl(a.D);var d=a.D;d.pa(a.ea());kl(d,a);d=a.D;jl(d,a.G);ll(d,a);a.D=null}return a.a}}))}g.vb=function(a,b){switch(a){case "unknown":case "signInViaRedirect":return!0;case "signInViaPopup":return this.g==b&&!!this.f;default:return!1}};
 g.ha=function(a,b,c,d){"signInViaPopup"==a&&this.g==d&&(c&&this.v?this.v(c):b&&!c&&this.f&&this.f(b),this.c&&(this.c.cancel(),this.c=null),delete this.f,delete this.v)};g.xa=function(a,b){return"signInViaRedirect"==a||"signInViaPopup"==a&&this.g==b&&this.f?r(this.ac,this):null};
-g.ac=function(a,b,c){var d=this;a={requestUri:a,postBody:c,sessionId:b};this.c&&(this.c.cancel(),this.c=null);var e=null,f=null,h=Rf(d.b,a).then(function(a){e=ug(a);f=Ef(a);return a});a=d.V.then(function(){return h}).then(function(a){return km(d,a)}).then(function(){return Ne({user:U(d),credential:e,additionalUserInfo:f,operationType:"signIn"})});return T(this,a)};
-g.Kc=function(a){if(!ue())return C(new L("operation-not-supported-in-this-environment"));var b=this,c=Df(a.providerId),d=te(),e=null;(!we()||le())&&S(this).options.authDomain&&a.isOAuthProvider&&(e=Yi(S(this).options.authDomain,S(this).options.apiKey,S(this).name,"signInViaPopup",a,null,d,firebase.SDK_VERSION||null));var f=ce(e,c&&c.Ba,c&&c.Aa);c=jm(this).then(function(b){return Ik(b,f,"signInViaPopup",a,d,!!e)}).then(function(){return new A(function(a,c){b.ha("signInViaPopup",null,new L("cancelled-popup-request"),
-b.g);b.f=a;b.v=c;b.g=d;b.c=b.a.Ea(b,"signInViaPopup",f,d)})}).then(function(a){f&&be(f);return a?Ne(a):null}).s(function(a){f&&be(f);throw a;});return T(this,c)};g.Lc=function(a){if(!ue())return C(new L("operation-not-supported-in-this-environment"));var b=this,c=jm(this).then(function(){return Yl(b.h)}).then(function(){return b.a.Ca("signInViaRedirect",a)});return T(this,c)};
-g.fa=function(){if(!ue())return C(new L("operation-not-supported-in-this-environment"));var a=this,b=jm(this).then(function(){return a.a.fa()}).then(function(a){return a?Ne(a):null});return T(this,b)};
+g.ac=function(a,b,c){var d=this;a={requestUri:a,postBody:c,sessionId:b};this.c&&(this.c.cancel(),this.c=null);var e=null,f=null,h=Qf(d.b,a).then(function(a){e=tg(a);f=Df(a);return a});a=d.V.then(function(){return h}).then(function(a){return km(d,a)}).then(function(){return Me({user:U(d),credential:e,additionalUserInfo:f,operationType:"signIn"})});return T(this,a)};
+g.Kc=function(a){if(!te())return C(new L("operation-not-supported-in-this-environment"));var b=this,c=Cf(a.providerId),d=se(),e=null;(!ve()||ke())&&S(this).options.authDomain&&a.isOAuthProvider&&(e=Yi(S(this).options.authDomain,S(this).options.apiKey,S(this).name,"signInViaPopup",a,null,d,firebase.SDK_VERSION||null));var f=ce(e,c&&c.Ba,c&&c.Aa);c=jm(this).then(function(b){return Ik(b,f,"signInViaPopup",a,d,!!e)}).then(function(){return new A(function(a,c){b.ha("signInViaPopup",null,new L("cancelled-popup-request"),
+b.g);b.f=a;b.v=c;b.g=d;b.c=b.a.Ea(b,"signInViaPopup",f,d)})}).then(function(a){f&&be(f);return a?Me(a):null}).s(function(a){f&&be(f);throw a;});return T(this,c)};g.Lc=function(a){if(!te())return C(new L("operation-not-supported-in-this-environment"));var b=this,c=jm(this).then(function(){return Yl(b.h)}).then(function(){return b.a.Ca("signInViaRedirect",a)});return T(this,c)};
+g.fa=function(){if(!te())return C(new L("operation-not-supported-in-this-environment"));var a=this,b=jm(this).then(function(){return a.a.fa()}).then(function(a){return a?Me(a):null});return T(this,b)};
 g.Qc=function(a){if(!a)return C(new L("null-user"));var b=this,c={};c.apiKey=S(this).options.apiKey;c.authDomain=S(this).options.authDomain;c.appName=S(this).name;var d=Ol(a,c,b.w,b.ya());return T(this,this.i.then(function(){if(S(b).options.apiKey!=a.m)return d.reload()}).then(function(){if(U(b)&&a.uid==U(b).uid)return yl(U(b),a),b.Z(a);cm(b,d);rl(d);return b.Z(d)}).then(function(){lm(b)}))};
 function km(a,b){var c={};c.apiKey=S(a).options.apiKey;c.authDomain=S(a).options.authDomain;c.appName=S(a).name;return a.V.then(function(){return Nl(c,b,a.w,a.ya())}).then(function(b){if(U(a)&&b.uid==U(a).uid)return yl(U(a),b),a.Z(b);cm(a,b);rl(b);return a.Z(b)}).then(function(){lm(a)})}
 function cm(a,b){U(a)&&(pl(U(a),a.Ha),E(U(a),"tokenChanged",a.ra),E(U(a),"userDeleted",a.sa),E(U(a),"userInvalidated",a.ta),ol(U(a)));b&&(b.N.push(a.Ha),rc(b,"tokenChanged",a.ra),rc(b,"userDeleted",a.sa),rc(b,"userInvalidated",a.ta),0<a.u&&nl(b));J(a,"currentUser",b);b&&(b.pa(a.ea()),kl(b,a),jl(b,a.G),ll(b,a))}g.nb=function(){var a=this,b=this.i.then(function(){if(!U(a))return B();cm(a,null);return $l(a.h).then(function(){lm(a)})});return T(this,b)};
 function mm(a){var b=Ql(a.w,S(a).options.authDomain).then(function(b){if(a.D=b)b.ba=a.w;return Kl(a.w)});return T(a,b)}function dm(a){var b=S(a).options.authDomain,c=mm(a).then(function(){return am(a.h,b)}).then(function(b){return b?(b.ba=a.w,a.D&&(a.D.aa||null)==(b.aa||null)?b:b.reload().then(function(){return Zl(a.h,b).then(function(){return b})}).s(function(c){return"auth/network-request-failed"==c.code?b:$l(a.h)})):null}).then(function(b){cm(a,b||null)});return T(a,c)}
 function em(a){return a.V.then(function(){return a.fa()}).s(function(){}).then(function(){if(!a.m)return a.ka()}).s(function(){}).then(function(){if(!a.m){a.X=!0;var b=a.h;b.b.addListener(Ul("local"),b.a,a.ka)}})}
 g.Mc=function(){var a=this;return am(this.h,S(this).options.authDomain).then(function(b){if(!a.m){var c;if(c=U(a)&&b){c=U(a).uid;var d=b.uid;c=void 0===c||null===c||""===c||void 0===d||null===d||""===d?!1:c==d}if(c)return yl(U(a),b),U(a).F();if(U(a)||b)cm(a,b),b&&(rl(b),b.ba=a.w),a.a&&a.a.subscribe(a),lm(a)}})};g.Z=function(a){return Zl(this.h,a)};g.bc=function(){lm(this);this.Z(U(this))};g.jc=function(){this.nb()};g.kc=function(){this.nb()};
-function nm(a,b){var c=null,d=null;return T(a,b.then(function(b){c=ug(b);d=Ef(b);return km(a,b)}).then(function(){return Ne({user:U(a),credential:c,additionalUserInfo:d,operationType:"signIn"})}))}g.mc=function(a){var b=this;this.addAuthTokenListener(function(){a.next(U(b))})};g.nc=function(a){var b=this;om(this,function(){a.next(U(b))})};g.vc=function(a,b,c){var d=this;this.X&&firebase.Promise.resolve().then(function(){n(a)?a(U(d)):n(a.next)&&a.next(U(d))});return this.Tb(a,b,c)};
+function nm(a,b){var c=null,d=null;return T(a,b.then(function(b){c=tg(b);d=Df(b);return km(a,b)}).then(function(){return Me({user:U(a),credential:c,additionalUserInfo:d,operationType:"signIn"})}))}g.mc=function(a){var b=this;this.addAuthTokenListener(function(){a.next(U(b))})};g.nc=function(a){var b=this;om(this,function(){a.next(U(b))})};g.vc=function(a,b,c){var d=this;this.X&&firebase.Promise.resolve().then(function(){n(a)?a(U(d)):n(a.next)&&a.next(U(d))});return this.Tb(a,b,c)};
 g.uc=function(a,b,c){var d=this;this.X&&firebase.Promise.resolve().then(function(){d.O=d.getUid();n(a)?a(U(d)):n(a.next)&&a.next(U(d))});return this.Ub(a,b,c)};g.cc=function(a){var b=this,c=this.i.then(function(){return U(b)?U(b).F(a).then(function(a){return{accessToken:a}}):null});return T(this,c)};g.Nb=function(a){var b=this;return this.i.then(function(){return nm(b,P(b.b,Fi,{token:a}))}).then(function(a){var c=a.user;xl(c,"isAnonymous",!1);b.Z(c);return a})};
-g.Ec=function(a){Ke("firebase.auth.Auth.prototype.signInAndRetrieveDataWithCustomToken is deprecated. Please use firebase.auth.Auth.prototype.signInWithCustomToken instead.");return this.Nb(a)};g.Fc=function(a,b){Ke("firebase.auth.Auth.prototype.signInAndRetrieveDataWithEmailAndPassword is deprecated. Please use firebase.auth.Auth.prototype.signInWithEmailAndPassword instead.");return this.Ob(a,b)};g.Ob=function(a,b){var c=this;return this.i.then(function(){return nm(c,P(c.b,ig,{email:a,password:b}))})};
-g.xb=function(a,b){var c=this;return this.i.then(function(){return nm(c,P(c.b,Bi,{email:a,password:b}))})};g.Wb=function(a,b){Ke("firebase.auth.Auth.prototype.createUserAndRetrieveDataWithEmailAndPassword is deprecated. Please use firebase.auth.Auth.prototype.createUserWithEmailAndPassword instead.");return this.xb(a,b)};g.Hc=function(a){Ke("firebase.auth.Auth.prototype.signInWithCredential is deprecated. Please use firebase.auth.Auth.prototype.signInAndRetrieveDataWithCredential instead.");return this.Pa(a).then(function(a){return a.user})};
-g.Pa=function(a){var b=this;return this.i.then(function(){return nm(b,a.la(b.b))})};g.Qa=function(){var a=this;return this.i.then(function(){var b=U(a);if(b&&b.isAnonymous){var c=Ne({providerId:null,isNewUser:!1});return Ne({user:b,credential:null,additionalUserInfo:c,operationType:"signIn"})}return nm(a,a.b.Qa()).then(function(b){var c=b.user;xl(c,"isAnonymous",!0);a.Z(c);return b})})};
-g.Gc=function(){Ke("firebase.auth.Auth.prototype.signInAnonymouslyAndRetrieveData is deprecated. Please use firebase.auth.Auth.prototype.signInAnonymously instead.");return this.Qa()};function S(a){return a.app}function U(a){return a.currentUser}g.getUid=function(){return U(this)&&U(this).uid||null};function pm(a){return U(a)&&U(a)._lat||null}
+g.Ec=function(a){Je("firebase.auth.Auth.prototype.signInAndRetrieveDataWithCustomToken is deprecated. Please use firebase.auth.Auth.prototype.signInWithCustomToken instead.");return this.Nb(a)};g.Fc=function(a,b){Je("firebase.auth.Auth.prototype.signInAndRetrieveDataWithEmailAndPassword is deprecated. Please use firebase.auth.Auth.prototype.signInWithEmailAndPassword instead.");return this.Ob(a,b)};g.Ob=function(a,b){var c=this;return this.i.then(function(){return nm(c,P(c.b,hg,{email:a,password:b}))})};
+g.xb=function(a,b){var c=this;return this.i.then(function(){return nm(c,P(c.b,Bi,{email:a,password:b}))})};g.Wb=function(a,b){Je("firebase.auth.Auth.prototype.createUserAndRetrieveDataWithEmailAndPassword is deprecated. Please use firebase.auth.Auth.prototype.createUserWithEmailAndPassword instead.");return this.xb(a,b)};g.Hc=function(a){Je("firebase.auth.Auth.prototype.signInWithCredential is deprecated. Please use firebase.auth.Auth.prototype.signInAndRetrieveDataWithCredential instead.");return this.Pa(a).then(function(a){return a.user})};
+g.Pa=function(a){var b=this;return this.i.then(function(){return nm(b,a.la(b.b))})};g.Qa=function(){var a=this;return this.i.then(function(){var b=U(a);if(b&&b.isAnonymous){var c=Me({providerId:null,isNewUser:!1});return Me({user:b,credential:null,additionalUserInfo:c,operationType:"signIn"})}return nm(a,a.b.Qa()).then(function(b){var c=b.user;xl(c,"isAnonymous",!0);a.Z(c);return b})})};
+g.Gc=function(){Je("firebase.auth.Auth.prototype.signInAnonymouslyAndRetrieveData is deprecated. Please use firebase.auth.Auth.prototype.signInAnonymously instead.");return this.Qa()};function S(a){return a.app}function U(a){return a.currentUser}g.getUid=function(){return U(this)&&U(this).uid||null};function pm(a){return U(a)&&U(a)._lat||null}
 function lm(a){if(a.X){for(var b=0;b<a.o.length;b++)if(a.o[b])a.o[b](pm(a));if(a.O!==a.getUid()&&a.I.length)for(a.O=a.getUid(),b=0;b<a.I.length;b++)if(a.I[b])a.I[b](pm(a))}}g.Vb=function(a){this.addAuthTokenListener(a);this.u++;0<this.u&&U(this)&&nl(U(this))};g.Cc=function(a){var b=this;v(this.o,function(c){c==a&&b.u--});0>this.u&&(this.u=0);0==this.u&&U(this)&&ol(U(this));this.removeAuthTokenListener(a)};
 g.addAuthTokenListener=function(a){var b=this;this.o.push(a);T(this,this.i.then(function(){b.m||Ga(b.o,a)&&a(pm(b))}))};g.removeAuthTokenListener=function(a){w(this.o,function(b){return b==a})};function om(a,b){a.I.push(b);T(a,a.i.then(function(){!a.m&&Ga(a.I,b)&&a.O!==a.getUid()&&(a.O=a.getUid(),b(pm(a)))}))}
 g.delete=function(){this.m=!0;for(var a=0;a<this.N.length;a++)this.N[a].cancel("app-deleted");this.N=[];this.h&&(a=this.h,a.b.removeListener(Ul("local"),a.a,this.ka));this.a&&(this.a.unsubscribe(this),this.a.Ya());return firebase.Promise.resolve()};function T(a,b){a.N.push(b);b.ia(function(){Ha(a.N,b)});return b}
-g.Zb=function(a){Ke("firebase.auth.Auth.prototype.fetchProvidersForEmail is deprecated. Please use firebase.auth.Auth.prototype.fetchSignInMethodsForEmail instead.");return T(this,$h(this.b,a))};g.$b=function(a){return T(this,bi(this.b,a))};g.oc=function(a){return!!mg(a)};g.lb=function(a,b){var c=this;return T(this,B().then(function(){var a=new cf(b);if(!a.c)throw new L("argument-error",lf+" must be true when sending sign in link to email");return nf(a)}).then(function(b){return c.b.lb(a,b)}).then(function(){}))};
-g.Tc=function(a){return this.Ja(a).then(function(a){return a.data.email})};g.Za=function(a,b){return T(this,this.b.Za(a,b).then(function(){}))};g.Ja=function(a){return T(this,this.b.Ja(a).then(function(a){return new Re(a)}))};g.Wa=function(a){return T(this,this.b.Wa(a).then(function(){}))};g.kb=function(a,b){var c=this;return T(this,B().then(function(){return"undefined"===typeof b||Za(b)?{}:nf(new cf(b))}).then(function(b){return c.b.kb(a,b)}).then(function(){}))};
-g.Jc=function(a,b){return T(this,Tk(this,a,b,r(this.Pa,this)))};g.Ic=function(a,b){var c=this;return T(this,B().then(function(){var d=lg(a,b||Vd());return c.Pa(d)}))};function qm(){}qm.prototype.render=function(){};qm.prototype.reset=function(){};qm.prototype.getResponse=function(){};qm.prototype.execute=function(){};function rm(){this.a={};this.b=1E12}var sm=null;rm.prototype.render=function(a,b){this.a[this.b.toString()]=new tm(a,b);return this.b++};rm.prototype.reset=function(a){var b=um(this,a);a=vm(a);b&&a&&(b.delete(),delete this.a[a])};rm.prototype.getResponse=function(a){return(a=um(this,a))?a.getResponse():null};rm.prototype.execute=function(a){(a=um(this,a))&&a.execute()};function um(a,b){return(b=vm(b))?a.a[b]||null:null}function vm(a){return(a="undefined"===typeof a?1E12:a)?a.toString():null}
+g.Zb=function(a){Je("firebase.auth.Auth.prototype.fetchProvidersForEmail is deprecated. Please use firebase.auth.Auth.prototype.fetchSignInMethodsForEmail instead.");return T(this,$h(this.b,a))};g.$b=function(a){return T(this,bi(this.b,a))};g.oc=function(a){return!!lg(a)};g.lb=function(a,b){var c=this;return T(this,B().then(function(){var a=new bf(b);if(!a.c)throw new L("argument-error",kf+" must be true when sending sign in link to email");return mf(a)}).then(function(b){return c.b.lb(a,b)}).then(function(){}))};
+g.Tc=function(a){return this.Ja(a).then(function(a){return a.data.email})};g.Za=function(a,b){return T(this,this.b.Za(a,b).then(function(){}))};g.Ja=function(a){return T(this,this.b.Ja(a).then(function(a){return new Qe(a)}))};g.Wa=function(a){return T(this,this.b.Wa(a).then(function(){}))};g.kb=function(a,b){var c=this;return T(this,B().then(function(){return"undefined"===typeof b||Za(b)?{}:mf(new bf(b))}).then(function(b){return c.b.kb(a,b)}).then(function(){}))};
+g.Jc=function(a,b){return T(this,Tk(this,a,b,r(this.Pa,this)))};g.Ic=function(a,b){var c=this;return T(this,B().then(function(){var d=kg(a,b||Vd());return c.Pa(d)}))};function qm(){}qm.prototype.render=function(){};qm.prototype.reset=function(){};qm.prototype.getResponse=function(){};qm.prototype.execute=function(){};function rm(){this.a={};this.b=1E12}var sm=null;rm.prototype.render=function(a,b){this.a[this.b.toString()]=new tm(a,b);return this.b++};rm.prototype.reset=function(a){var b=um(this,a);a=vm(a);b&&a&&(b.delete(),delete this.a[a])};rm.prototype.getResponse=function(a){return(a=um(this,a))?a.getResponse():null};rm.prototype.execute=function(a){(a=um(this,a))&&a.execute()};function um(a,b){return(b=vm(b))?a.a[b]||null:null}function vm(a){return(a="undefined"===typeof a?1E12:a)?a.toString():null}
 function tm(a,b){this.g=!1;this.c=b;this.a=this.b=null;this.h="invisible"!==this.c.size;this.f=Id(a);var c=this;this.i=function(){c.execute()};this.h?this.execute():rc(this.f,"click",this.i)}tm.prototype.getResponse=function(){wm(this);return this.b};
-tm.prototype.execute=function(){wm(this);var a=this;this.a||(this.a=setTimeout(function(){a.b=pe();var b=a.c.callback,c=a.c["expired-callback"];if(b)try{b(a.b)}catch(d){}a.a=setTimeout(function(){a.a=null;a.b=null;if(c)try{c()}catch(d){}a.h&&a.execute()},6E4)},500))};tm.prototype.delete=function(){wm(this);this.g=!0;clearTimeout(this.a);this.a=null;E(this.f,"click",this.i)};function wm(a){if(a.g)throw Error("reCAPTCHA mock was already deleted!");};function xm(){}xm.prototype.g=function(){sm||(sm=new rm);return B(sm)};xm.prototype.c=function(){};var ym=null;function zm(){this.b=k.grecaptcha?Infinity:0;this.f=null;this.a="__rcb"+Math.floor(1E6*Math.random()).toString()}var Am=qd("https://www.google.com/recaptcha/api.js?onload=%{onload}&render=explicit&hl=%{hl}"),Bm=new Ce(3E4,6E4);
+tm.prototype.execute=function(){wm(this);var a=this;this.a||(this.a=setTimeout(function(){a.b=oe();var b=a.c.callback,c=a.c["expired-callback"];if(b)try{b(a.b)}catch(d){}a.a=setTimeout(function(){a.a=null;a.b=null;if(c)try{c()}catch(d){}a.h&&a.execute()},6E4)},500))};tm.prototype.delete=function(){wm(this);this.g=!0;clearTimeout(this.a);this.a=null;E(this.f,"click",this.i)};function wm(a){if(a.g)throw Error("reCAPTCHA mock was already deleted!");};function xm(){}xm.prototype.g=function(){sm||(sm=new rm);return B(sm)};xm.prototype.c=function(){};var ym=null;function zm(){this.b=k.grecaptcha?Infinity:0;this.f=null;this.a="__rcb"+Math.floor(1E6*Math.random()).toString()}var Am=qd("https://www.google.com/recaptcha/api.js?onload=%{onload}&render=explicit&hl=%{hl}"),Bm=new Be(3E4,6E4);
 zm.prototype.g=function(a){var b=this;return new A(function(c,d){var e=setTimeout(function(){d(new L("network-request-failed"))},Bm.get());if(!k.grecaptcha||a!==b.f&&!b.b){k[b.a]=function(){if(k.grecaptcha){b.f=a;var f=k.grecaptcha.render;k.grecaptcha.render=function(a,c){a=f(a,c);b.b++;return a};clearTimeout(e);c(k.grecaptcha)}else clearTimeout(e),d(new L("internal-error"));delete k[b.a]};var f=ud(Am,{onload:b.a,hl:a||""});B(Bh(f)).s(function(){clearTimeout(e);d(new L("internal-error","Unable to load external reCAPTCHA dependencies!"))})}else clearTimeout(e),
 c(k.grecaptcha)})};zm.prototype.c=function(){this.b--};var Cm=null;function Dm(a,b,c,d,e,f,h){J(this,"type","recaptcha");this.c=this.f=null;this.D=!1;this.m=b;this.g=null;h?(ym||(ym=new xm),h=ym):(Cm||(Cm=new zm),h=Cm);this.o=h;this.a=c||{theme:"light",type:"image"};this.h=[];if(this.a[Em])throw new L("argument-error","sitekey should not be provided for reCAPTCHA as one is automatically provisioned for the current project.");this.i="invisible"===this.a[Fm];if(!k.document)throw new L("operation-not-supported-in-this-environment","RecaptchaVerifier is only supported in a browser HTTP/HTTPS environment with DOM support.");
 if(!Id(b)||!this.i&&Id(b).hasChildNodes())throw new L("argument-error","reCAPTCHA container is either not found or already contains inner elements!");this.u=new Jh(a,f||null,e||null);this.v=d||function(){return null};var m=this;this.l=[];var p=this.a[Gm];this.a[Gm]=function(a){Hm(m,a);if("function"===typeof p)p(a);else if("string"===typeof p){var b=I(p,k);"function"===typeof b&&b(a)}};var x=this.a[Im];this.a[Im]=function(){Hm(m,null);if("function"===typeof x)x();else if("string"===typeof x){var a=
 I(x,k);"function"===typeof a&&a()}}}var Gm="callback",Im="expired-callback",Em="sitekey",Fm="size";function Hm(a,b){for(var c=0;c<a.l.length;c++)try{a.l[c](b)}catch(d){}}function Jm(a,b){w(a.l,function(a){return a==b})}function Km(a,b){a.h.push(b);b.ia(function(){Ha(a.h,b)});return b}g=Dm.prototype;
-g.za=function(){var a=this;return this.f?this.f:this.f=Km(this,B().then(function(){if(ve()&&!me())return he();throw new L("operation-not-supported-in-this-environment","RecaptchaVerifier is only supported in a browser HTTP/HTTPS environment.");}).then(function(){return a.o.g(a.v())}).then(function(b){a.g=b;return P(a.u,Ei,{})}).then(function(b){a.a[Em]=b.recaptchaSiteKey}).s(function(b){a.f=null;throw b;}))};
+g.za=function(){var a=this;return this.f?this.f:this.f=Km(this,B().then(function(){if(ue()&&!le())return ge();throw new L("operation-not-supported-in-this-environment","RecaptchaVerifier is only supported in a browser HTTP/HTTPS environment.");}).then(function(){return a.o.g(a.v())}).then(function(b){a.g=b;return P(a.u,Ei,{})}).then(function(b){a.a[Em]=b.recaptchaSiteKey}).s(function(b){a.f=null;throw b;}))};
 g.render=function(){Lm(this);var a=this;return Km(this,this.za().then(function(){if(null===a.c){var b=a.m;if(!a.i){var c=Id(b);b=Ld("DIV");c.appendChild(b)}a.c=a.g.render(b,a.a)}return a.c}))};g.verify=function(){Lm(this);var a=this;return Km(this,this.render().then(function(b){return new A(function(c){var d=a.g.getResponse(b);if(d)c(d);else{var e=function(b){b&&(Jm(a,e),c(b))};a.l.push(e);a.i&&a.g.execute(a.c)}})}))};g.reset=function(){Lm(this);null!==this.c&&this.g.reset(this.c)};
 function Lm(a){if(a.D)throw new L("internal-error","RecaptchaVerifier instance has been destroyed.");}g.clear=function(){Lm(this);this.D=!0;this.o.c();for(var a=0;a<this.h.length;a++)this.h[a].cancel("RecaptchaVerifier instance has been destroyed.");if(!this.i){a=Id(this.m);for(var b;b=a.firstChild;)a.removeChild(b)}};
-function Mm(a,b,c){var d=!1;try{this.b=c||firebase.app()}catch(h){throw new L("argument-error","No firebase.app.App instance is currently initialized.");}if(this.b.options&&this.b.options.apiKey)c=this.b.options.apiKey;else throw new L("invalid-api-key");var e=this,f=null;try{f=this.b.auth().ya()}catch(h){}try{d=this.b.auth().settings.appVerificationDisabledForTesting}catch(h){}f=firebase.SDK_VERSION?re(firebase.SDK_VERSION,f):null;Dm.call(this,c,a,b,function(){try{var a=e.b.auth().ea()}catch(m){a=
-null}return a},f,yf(zf),d)}t(Mm,Dm);function Nm(a,b,c,d){a:{c=Array.prototype.slice.call(c);var e=0;for(var f=!1,h=0;h<b.length;h++)if(b[h].optional)f=!0;else{if(f)throw new L("internal-error","Argument validator encountered a required argument after an optional argument.");e++}f=b.length;if(c.length<e||f<c.length)d="Expected "+(e==f?1==e?"1 argument":e+" arguments":e+"-"+f+" arguments")+" but got "+c.length+".";else{for(e=0;e<c.length;e++)if(f=b[e].optional&&void 0===c[e],!b[e].M(c[e])&&!f){b=b[e];if(0>e||e>=Om.length)throw new L("internal-error",
+function Mm(a,b,c){var d=!1;try{this.b=c||firebase.app()}catch(h){throw new L("argument-error","No firebase.app.App instance is currently initialized.");}if(this.b.options&&this.b.options.apiKey)c=this.b.options.apiKey;else throw new L("invalid-api-key");var e=this,f=null;try{f=this.b.auth().ya()}catch(h){}try{d=this.b.auth().settings.appVerificationDisabledForTesting}catch(h){}f=firebase.SDK_VERSION?qe(firebase.SDK_VERSION,f):null;Dm.call(this,c,a,b,function(){try{var a=e.b.auth().ea()}catch(m){a=
+null}return a},f,xf(yf),d)}t(Mm,Dm);function Nm(a,b,c,d){a:{c=Array.prototype.slice.call(c);var e=0;for(var f=!1,h=0;h<b.length;h++)if(b[h].optional)f=!0;else{if(f)throw new L("internal-error","Argument validator encountered a required argument after an optional argument.");e++}f=b.length;if(c.length<e||f<c.length)d="Expected "+(e==f?1==e?"1 argument":e+" arguments":e+"-"+f+" arguments")+" but got "+c.length+".";else{for(e=0;e<c.length;e++)if(f=b[e].optional&&void 0===c[e],!b[e].M(c[e])&&!f){b=b[e];if(0>e||e>=Om.length)throw new L("internal-error",
 "Argument validator received an unsupported number of arguments.");c=Om[e];d=(d?"":c+" argument ")+(b.name?'"'+b.name+'" ':"")+"must be "+b.K+".";break a}d=null}}if(d)throw new L("argument-error",a+" failed: "+d);}var Om="First Second Third Fourth Fifth Sixth Seventh Eighth Ninth".split(" ");function V(a,b){return{name:a||"",K:"a valid string",optional:!!b,M:l}}function Pm(a,b){return{name:a||"",K:"a boolean",optional:!!b,M:ba}}
 function W(a,b){return{name:a||"",K:"a valid object",optional:!!b,M:q}}function Qm(a,b){return{name:a||"",K:"a function",optional:!!b,M:n}}function Rm(a,b){return{name:a||"",K:"null",optional:!!b,M:ea}}function Sm(){return{name:"",K:"an HTML element",optional:!1,M:function(a){return!!(a&&a instanceof Element)}}}function Tm(){return{name:"auth",K:"an instance of Firebase Auth",optional:!0,M:function(a){return!!(a&&a instanceof bm)}}}
 function Um(){return{name:"app",K:"an instance of Firebase App",optional:!0,M:function(a){return!!(a&&a instanceof firebase.app.App)}}}function Vm(a){return{name:a?a+"Credential":"credential",K:a?"a valid "+a+" credential":"a valid credential",optional:!1,M:function(b){if(!b)return!1;var c=!a||b.providerId===a;return!(!b.la||!c)}}}
@@ -3852,17 +4125,17 @@ bm.Persistence.LOCAL="local";bm.Persistence.SESSION="session";bm.Persistence.NON
 Y(Q.prototype,{"delete":{name:"delete",j:[]},dc:{name:"getIdTokenResult",j:[Pm("opt_forceRefresh",!0)]},F:{name:"getIdToken",j:[Pm("opt_forceRefresh",!0)]},eb:{name:"linkAndRetrieveDataWithCredential",j:[Vm()]},pc:{name:"linkWithCredential",j:[Vm()]},qc:{name:"linkWithPhoneNumber",j:[V("phoneNumber"),Xm()]},rc:{name:"linkWithPopup",j:[Wm()]},sc:{name:"linkWithRedirect",j:[Wm()]},gb:{name:"reauthenticateAndRetrieveDataWithCredential",j:[Vm()]},yc:{name:"reauthenticateWithCredential",j:[Vm()]},zc:{name:"reauthenticateWithPhoneNumber",
 j:[V("phoneNumber"),Xm()]},Ac:{name:"reauthenticateWithPopup",j:[Wm()]},Bc:{name:"reauthenticateWithRedirect",j:[Wm()]},reload:{name:"reload",j:[]},jb:{name:"sendEmailVerification",j:[X(W("opt_actionCodeSettings",!0),Rm(null,!0),"opt_actionCodeSettings",!0)]},toJSON:{name:"toJSON",j:[V(null,!0)]},Pc:{name:"unlink",j:[V("provider")]},pb:{name:"updateEmail",j:[V("email")]},qb:{name:"updatePassword",j:[V("password")]},Rc:{name:"updatePhoneNumber",j:[Vm("phone")]},rb:{name:"updateProfile",j:[W("profile")]}});
 Y(rm.prototype,{execute:{name:"execute"},render:{name:"render"},reset:{name:"reset"},getResponse:{name:"getResponse"}});Y(qm.prototype,{execute:{name:"execute"},render:{name:"render"},reset:{name:"reset"},getResponse:{name:"getResponse"}});Y(A.prototype,{ia:{name:"finally"},s:{name:"catch"},then:{name:"then"}});Zm(Rk.prototype,{appVerificationDisabled:{name:"appVerificationDisabledForTesting",tb:Pm("appVerificationDisabledForTesting")}});Y(Sk.prototype,{confirm:{name:"confirm",j:[V("verificationCode")]}});
-Z(O,"credential",function(a,b){return new gg(a,b)},[V("email"),V("password")]);Y(Zf.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(Zf,"credential",$f,[X(V(),W(),"token")]);Z(O,"credentialWithLink",lg,[V("email"),V("emailLink")]);Y(ag.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(ag,"credential",bg,[X(V(),W(),"token")]);
-Y(cg.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(cg,"credential",dg,[X(V(),X(W(),Rm()),"idToken"),X(V(),Rm(),"accessToken",!0)]);Y(eg.prototype,{Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(eg,"credential",fg,[X(V(),W(),"token"),V("secret",!0)]);
-Y(N.prototype,{ua:{name:"addScope",j:[V("scope")]},credential:{name:"credential",j:[X(V(),Rm(),"idToken",!0),X(V(),Rm(),"accessToken",!0),X(V(),Rm(),"nonce",!0)]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(rg,"credential",tg,[V("verificationId"),V("verificationCode")]);Y(rg.prototype,{Ua:{name:"verifyPhoneNumber",j:[V("phoneNumber"),Xm()]}});Y(L.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});Y(Bg.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});
-Y(Ag.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});Y(Mm.prototype,{clear:{name:"clear",j:[]},render:{name:"render",j:[]},verify:{name:"verify",j:[]}});
-(function(){if("undefined"!==typeof firebase&&firebase.INTERNAL&&firebase.INTERNAL.registerService){var a={Auth:bm,Error:L};Z(a,"EmailAuthProvider",O,[]);Z(a,"FacebookAuthProvider",Zf,[]);Z(a,"GithubAuthProvider",ag,[]);Z(a,"GoogleAuthProvider",cg,[]);Z(a,"TwitterAuthProvider",eg,[]);Z(a,"OAuthProvider",N,[V("providerId")]);Z(a,"SAMLAuthProvider",Yf,[V("providerId")]);Z(a,"PhoneAuthProvider",rg,[Tm()]);Z(a,"RecaptchaVerifier",Mm,[X(V(),Sm(),"recaptchaContainer"),W("recaptchaParameters",!0),Um()]);
+Z(O,"credential",function(a,b){return new fg(a,b)},[V("email"),V("password")]);Y(Yf.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(Yf,"credential",Zf,[X(V(),W(),"token")]);Z(O,"credentialWithLink",kg,[V("email"),V("emailLink")]);Y($f.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z($f,"credential",ag,[X(V(),W(),"token")]);
+Y(bg.prototype,{ua:{name:"addScope",j:[V("scope")]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(bg,"credential",cg,[X(V(),X(W(),Rm()),"idToken"),X(V(),Rm(),"accessToken",!0)]);Y(dg.prototype,{Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(dg,"credential",eg,[X(V(),W(),"token"),V("secret",!0)]);
+Y(N.prototype,{ua:{name:"addScope",j:[V("scope")]},credential:{name:"credential",j:[X(V(),Rm(),"idToken",!0),X(V(),Rm(),"accessToken",!0),X(V(),Rm(),"nonce",!0)]},Da:{name:"setCustomParameters",j:[W("customOAuthParameters")]}});Z(qg,"credential",sg,[V("verificationId"),V("verificationCode")]);Y(qg.prototype,{Ua:{name:"verifyPhoneNumber",j:[V("phoneNumber"),Xm()]}});Y(L.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});Y(Ag.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});
+Y(zg.prototype,{toJSON:{name:"toJSON",j:[V(null,!0)]}});Y(Mm.prototype,{clear:{name:"clear",j:[]},render:{name:"render",j:[]},verify:{name:"verify",j:[]}});
+(function(){if("undefined"!==typeof firebase&&firebase.INTERNAL&&firebase.INTERNAL.registerService){var a={Auth:bm,Error:L};Z(a,"EmailAuthProvider",O,[]);Z(a,"FacebookAuthProvider",Yf,[]);Z(a,"GithubAuthProvider",$f,[]);Z(a,"GoogleAuthProvider",bg,[]);Z(a,"TwitterAuthProvider",dg,[]);Z(a,"OAuthProvider",N,[V("providerId")]);Z(a,"SAMLAuthProvider",Xf,[V("providerId")]);Z(a,"PhoneAuthProvider",qg,[Tm()]);Z(a,"RecaptchaVerifier",Mm,[X(V(),Sm(),"recaptchaContainer"),W("recaptchaParameters",!0),Um()]);
 firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{getUid:r(a.getUid,a),getToken:r(a.cc,a),addAuthTokenListener:r(a.Vb,a),removeAuthTokenListener:r(a.Cc,a)}});return a},a,function(a,c){if("create"===a)try{c.auth()}catch(d){}});firebase.INTERNAL.extendNamespace({User:Q})}else throw Error("Cannot find the firebase namespace; be sure to include firebase-app.js before this library.");})();}).apply(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {});
 
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":16}],18:[function(require,module,exports){
+},{"@firebase/app":18}],20:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -3874,10 +4147,8 @@ var firebase = _interopDefault(require('@firebase/app'));
 var logger = require('@firebase/logger');
 var tslib_1 = require('tslib');
 var webchannelWrapper = require('@firebase/webchannel-wrapper');
-var util = require('@firebase/util');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3896,7 +4167,6 @@ var util = require('@firebase/util');
 var SDK_VERSION = firebase.SDK_VERSION;
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -3988,7 +4258,6 @@ function argToString(obj) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4031,7 +4300,6 @@ function assert(assertion, message) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4077,7 +4345,6 @@ function emptyByteString() {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4229,7 +4496,6 @@ var FirestoreError = /** @class */ (function (_super) {
 }(Error));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4277,7 +4543,6 @@ function makeConstructorPrivate(cls, optionalMessage) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4342,7 +4607,6 @@ function shallowCopy(obj) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4619,7 +4883,6 @@ function formatPlural(num, str) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4690,7 +4953,6 @@ function immediateSuccessor(s) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4797,7 +5059,6 @@ var Blob = /** @class */ (function () {
 var PublicBlob = makeConstructorPrivate(Blob, 'Use Blob.fromUint8Array() or Blob.fromBase64String() instead.');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4865,7 +5126,6 @@ var GeoPoint = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4936,7 +5196,6 @@ var Timestamp = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -4998,7 +5257,6 @@ var DatabaseId = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -5290,7 +5548,6 @@ var FieldPath = /** @class */ (function (_super) {
 }(Path));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -5347,7 +5604,6 @@ var DocumentKey = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -5382,15 +5638,9 @@ var MaybeDocument = /** @class */ (function () {
  */
 var Document = /** @class */ (function (_super) {
     tslib_1.__extends(Document, _super);
-    function Document(key, version, data, options, 
-    /**
-     * Memoized serialized form of the document for optimization purposes (avoids repeated
-     * serialization). Might be undefined.
-     */
-    proto) {
+    function Document(key, version, data, options) {
         var _this = _super.call(this, key, version) || this;
         _this.data = data;
-        _this.proto = proto;
         _this.hasLocalMutations = !!options.hasLocalMutations;
         _this.hasCommittedMutations = !!options.hasCommittedMutations;
         return _this;
@@ -5495,7 +5745,6 @@ var UnknownDocument = /** @class */ (function (_super) {
 }(MaybeDocument));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -5929,7 +6178,6 @@ var LLRBEmptyNode = /** @class */ (function () {
 LLRBNode.EMPTY = new LLRBEmptyNode();
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -6184,7 +6432,7 @@ var TimestampValue = /** @class */ (function (_super) {
         return _this;
     }
     TimestampValue.prototype.value = function (options) {
-        if (!options || options.timestampsInSnapshots) {
+        if (options && options.timestampsInSnapshots) {
             return this.internalValue;
         }
         else {
@@ -6504,7 +6752,6 @@ var ArrayValue = /** @class */ (function (_super) {
 }(FieldValue));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -6561,7 +6808,6 @@ function isSafeInteger(value) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7183,7 +7429,6 @@ var KEY_ORDERING_ASC = new OrderBy(FieldPath.keyField(), Direction.ASCENDING);
 var KEY_ORDERING_DESC = new OrderBy(FieldPath.keyField(), Direction.DESCENDING);
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7241,7 +7486,6 @@ var SnapshotVersion = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7327,7 +7571,6 @@ var QueryData = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7424,12 +7667,6 @@ var SortedSet = /** @class */ (function () {
         var iter = this.data.getIteratorFrom(elem);
         return iter.hasNext() ? iter.getNext().key : null;
     };
-    SortedSet.prototype.getIterator = function () {
-        return new SortedSetIterator(this.data.getIterator());
-    };
-    SortedSet.prototype.getIteratorFrom = function (key) {
-        return new SortedSetIterator(this.data.getIteratorFrom(key));
-    };
     /** Inserts or updates an element */
     SortedSet.prototype.add = function (elem) {
         return this.copy(this.data.remove(elem).insert(elem, true));
@@ -7484,21 +7721,8 @@ var SortedSet = /** @class */ (function () {
     };
     return SortedSet;
 }());
-var SortedSetIterator = /** @class */ (function () {
-    function SortedSetIterator(iter) {
-        this.iter = iter;
-    }
-    SortedSetIterator.prototype.getNext = function () {
-        return this.iter.getNext().key;
-    };
-    SortedSetIterator.prototype.hasNext = function () {
-        return this.iter.hasNext();
-    };
-    return SortedSetIterator;
-}());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -7528,9 +7752,6 @@ var FieldMask = /** @class */ (function () {
         this.fields = fields;
         // TODO(dimond): validation of FieldMask
     }
-    FieldMask.fromSet = function (fields) {
-        return new FieldMask(fields);
-    };
     FieldMask.fromArray = function (fields) {
         var fieldsAsSet = new SortedSet(FieldPath.comparator);
         fields.forEach(function (fieldPath) { return (fieldsAsSet = fieldsAsSet.add(fieldPath)); });
@@ -8023,7 +8244,6 @@ var DeleteMutation = /** @class */ (function (_super) {
 }(Mutation));
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8129,7 +8349,6 @@ function coercedFieldValuesArray(value) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8156,7 +8375,6 @@ var ExistenceFilter = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8201,12 +8419,6 @@ var RpcCode;
     RpcCode[RpcCode["UNAVAILABLE"] = 14] = "UNAVAILABLE";
     RpcCode[RpcCode["DATA_LOSS"] = 15] = "DATA_LOSS";
 })(RpcCode || (RpcCode = {}));
-/**
- * Determines whether an error code represents a permanent error when received
- * in response to a non-write operation.
- *
- * See isPermanentWriteError for classifying write errors.
- */
 function isPermanentError(code) {
     switch (code) {
         case Code.OK:
@@ -8237,21 +8449,6 @@ function isPermanentError(code) {
         default:
             return fail('Unknown status code: ' + code);
     }
-}
-/**
- * Determines whether an error code represents a permanent error when received
- * in response to a write operation.
- *
- * Write operations must be handled specially because as of b/119437764, ABORTED
- * errors on the write stream should be retried too (even though ABORTED errors
- * are not generally retryable).
- *
- * Note that during the initial handshake on the write stream an ABORTED error
- * signals that we should discard our stream token (i.e. it is permanent). This
- * means a handshake error should be classified with isPermanentError, above.
- */
-function isPermanentWriteError(code) {
-    return isPermanentError(code) && code !== Code.ABORTED;
 }
 /**
  * Maps an error Code from a GRPC status identifier like 'NOT_FOUND'.
@@ -8428,7 +8625,6 @@ function mapCodeFromHttpStatus(status) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8446,9 +8642,6 @@ function mapCodeFromHttpStatus(status) {
 var EMPTY_MAYBE_DOCUMENT_MAP = new SortedMap(DocumentKey.comparator);
 function maybeDocumentMap() {
     return EMPTY_MAYBE_DOCUMENT_MAP;
-}
-function nullableMaybeDocumentMap() {
-    return maybeDocumentMap();
 }
 var EMPTY_DOCUMENT_MAP = new SortedMap(DocumentKey.comparator);
 function documentMap() {
@@ -8477,7 +8670,6 @@ function targetIdSet() {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8612,7 +8804,6 @@ var DocumentSet = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8773,7 +8964,6 @@ var ViewSnapshot = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -8895,7 +9085,6 @@ var TargetChange = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -9436,7 +9625,6 @@ function snapshotChangesMap() {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -9669,14 +9857,15 @@ var JsonProtoSerializer = /** @class */ (function () {
         return new DocumentKey(this.extractLocalPathFromResourceName(resource));
     };
     JsonProtoSerializer.prototype.toQueryPath = function (path) {
+        if (path.length === 0) {
+            // If the path is empty, the backend requires we leave off the /documents
+            // at the end.
+            return this.encodedDatabaseId;
+        }
         return this.toResourceName(this.databaseId, path);
     };
     JsonProtoSerializer.prototype.fromQueryPath = function (name) {
         var resourceName = this.fromResourceName(name);
-        // In v1beta1 queries for collections at the root did not have a trailing
-        // "/documents". In v1 all resource paths contain "/documents". Preserve the
-        // ability to read the v1beta1 form for compatibility with queries persisted
-        // in the local query cache.
         if (resourceName.length === 4) {
             return ResourcePath.EMPTY_PATH;
         }
@@ -9899,7 +10088,7 @@ var JsonProtoSerializer = /** @class */ (function () {
         var key = this.fromName(doc.found.name);
         var version = this.fromVersion(doc.found.updateTime);
         var fields = this.fromFields(doc.found.fields || {});
-        return new Document(key, version, fields, {}, doc.found);
+        return new Document(key, version, fields, {});
     };
     JsonProtoSerializer.prototype.fromMissing = function (result) {
         assert(!!result.missing, 'Tried to deserialize a missing document from a found document.');
@@ -10021,9 +10210,7 @@ var JsonProtoSerializer = /** @class */ (function () {
             var key = this.fromName(entityChange.document.name);
             var version = this.fromVersion(entityChange.document.updateTime);
             var fields = this.fromFields(entityChange.document.fields || {});
-            // The document may soon be re-serialized back to protos in order to store it in local
-            // persistence. Memoize the encoded form to avoid encoding it again.
-            var doc = new Document(key, version, fields, {}, entityChange.document);
+            var doc = new Document(key, version, fields, {});
             var updatedTargetIds = entityChange.targetIds || [];
             var removedTargetIds = entityChange.removedTargetIds || [];
             watchChange = new DocumentWatchChange(updatedTargetIds, removedTargetIds, doc.key, doc);
@@ -10595,7 +10782,406 @@ function hasTag(obj, type, tag) {
 }
 
 /**
- * @license
+ * Detect React Native.
+ *
+ * @return {boolean} True if ReactNative environment is detected.
+ */
+var isReactNative = function () {
+    return (typeof navigator === 'object' && navigator['product'] === 'ReactNative');
+};
+
+var ERROR_NAME = 'FirebaseError';
+var captureStackTrace = Error
+    .captureStackTrace;
+var FirebaseError = /** @class */ (function () {
+    function FirebaseError(code, message) {
+        this.code = code;
+        this.message = message;
+        // We want the stack value, if implemented by Error
+        if (captureStackTrace) {
+            // Patches this.stack, omitted calls above ErrorFactory#create
+            captureStackTrace(this, ErrorFactory.prototype.create);
+        }
+        else {
+            try {
+                // In case of IE11, stack will be set only after error is raised.
+                // https://docs.microsoft.com/en-us/scripting/javascript/reference/stack-property-error-javascript
+                throw Error.apply(this, arguments);
+            }
+            catch (err) {
+                this.name = ERROR_NAME;
+                // Make non-enumerable getter for the property.
+                Object.defineProperty(this, 'stack', {
+                    get: function () {
+                        return err.stack;
+                    }
+                });
+            }
+        }
+    }
+    return FirebaseError;
+}());
+// Back-door inheritance
+FirebaseError.prototype = Object.create(Error.prototype);
+FirebaseError.prototype.constructor = FirebaseError;
+FirebaseError.prototype.name = ERROR_NAME;
+var ErrorFactory = /** @class */ (function () {
+    function ErrorFactory(service, serviceName, errors) {
+        this.service = service;
+        this.serviceName = serviceName;
+        this.errors = errors;
+        // Matches {$name}, by default.
+        this.pattern = /\{\$([^}]+)}/g;
+        // empty
+    }
+    ErrorFactory.prototype.create = function (code, data) {
+        if (data === undefined) {
+            data = {};
+        }
+        var template = this.errors[code];
+        var fullCode = this.service + '/' + code;
+        var message;
+        if (template === undefined) {
+            message = 'Error';
+        }
+        else {
+            message = template.replace(this.pattern, function (match, key) {
+                var value = data[key];
+                return value !== undefined ? value.toString() : '<' + key + '?>';
+            });
+        }
+        // Service: Error message (service/code).
+        message = this.serviceName + ': ' + message + ' (' + fullCode + ').';
+        var err = new FirebaseError(fullCode, message);
+        // Populate the Error object with message parts for programmatic
+        // accesses (e.g., e.file).
+        for (var prop in data) {
+            if (!data.hasOwnProperty(prop) || prop.slice(-1) === '_') {
+                continue;
+            }
+            err[prop] = data[prop];
+        }
+        return err;
+    };
+    return ErrorFactory;
+}());
+
+/**
+ * Copyright 2017 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+// Copyright 2011 The Closure Library Authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS-IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+/**
+ * @fileoverview Abstract cryptographic hash interface.
+ *
+ * See Sha1 and Md5 for sample implementations.
+ *
+ */
+/**
+ * Create a cryptographic hash instance.
+ *
+ * @constructor
+ * @struct
+ */
+var Hash = /** @class */ (function () {
+    function Hash() {
+        /**
+         * The block size for the hasher.
+         * @type {number}
+         */
+        this.blockSize = -1;
+    }
+    return Hash;
+}());
+
+/**
+ * Copyright 2017 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
+ * @fileoverview SHA-1 cryptographic hash.
+ * Variable names follow the notation in FIPS PUB 180-3:
+ * http://csrc.nist.gov/publications/fips/fips180-3/fips180-3_final.pdf.
+ *
+ * Usage:
+ *   var sha1 = new sha1();
+ *   sha1.update(bytes);
+ *   var hash = sha1.digest();
+ *
+ * Performance:
+ *   Chrome 23:   ~400 Mbit/s
+ *   Firefox 16:  ~250 Mbit/s
+ *
+ */
+/**
+ * SHA-1 cryptographic hash constructor.
+ *
+ * The properties declared here are discussed in the above algorithm document.
+ * @constructor
+ * @extends {Hash}
+ * @final
+ * @struct
+ */
+var Sha1 = /** @class */ (function (_super) {
+    tslib_1.__extends(Sha1, _super);
+    function Sha1() {
+        var _this = _super.call(this) || this;
+        /**
+         * Holds the previous values of accumulated variables a-e in the compress_
+         * function.
+         * @type {!Array<number>}
+         * @private
+         */
+        _this.chain_ = [];
+        /**
+         * A buffer holding the partially computed hash result.
+         * @type {!Array<number>}
+         * @private
+         */
+        _this.buf_ = [];
+        /**
+         * An array of 80 bytes, each a part of the message to be hashed.  Referred to
+         * as the message schedule in the docs.
+         * @type {!Array<number>}
+         * @private
+         */
+        _this.W_ = [];
+        /**
+         * Contains data needed to pad messages less than 64 bytes.
+         * @type {!Array<number>}
+         * @private
+         */
+        _this.pad_ = [];
+        /**
+         * @private {number}
+         */
+        _this.inbuf_ = 0;
+        /**
+         * @private {number}
+         */
+        _this.total_ = 0;
+        _this.blockSize = 512 / 8;
+        _this.pad_[0] = 128;
+        for (var i = 1; i < _this.blockSize; ++i) {
+            _this.pad_[i] = 0;
+        }
+        _this.reset();
+        return _this;
+    }
+    Sha1.prototype.reset = function () {
+        this.chain_[0] = 0x67452301;
+        this.chain_[1] = 0xefcdab89;
+        this.chain_[2] = 0x98badcfe;
+        this.chain_[3] = 0x10325476;
+        this.chain_[4] = 0xc3d2e1f0;
+        this.inbuf_ = 0;
+        this.total_ = 0;
+    };
+    /**
+     * Internal compress helper function.
+     * @param {!Array<number>|!Uint8Array|string} buf Block to compress.
+     * @param {number=} opt_offset Offset of the block in the buffer.
+     * @private
+     */
+    Sha1.prototype.compress_ = function (buf, opt_offset) {
+        if (!opt_offset) {
+            opt_offset = 0;
+        }
+        var W = this.W_;
+        // get 16 big endian words
+        if (typeof buf === 'string') {
+            for (var i = 0; i < 16; i++) {
+                // TODO(user): [bug 8140122] Recent versions of Safari for Mac OS and iOS
+                // have a bug that turns the post-increment ++ operator into pre-increment
+                // during JIT compilation.  We have code that depends heavily on SHA-1 for
+                // correctness and which is affected by this bug, so I've removed all uses
+                // of post-increment ++ in which the result value is used.  We can revert
+                // this change once the Safari bug
+                // (https://bugs.webkit.org/show_bug.cgi?id=109036) has been fixed and
+                // most clients have been updated.
+                W[i] =
+                    (buf.charCodeAt(opt_offset) << 24) |
+                        (buf.charCodeAt(opt_offset + 1) << 16) |
+                        (buf.charCodeAt(opt_offset + 2) << 8) |
+                        buf.charCodeAt(opt_offset + 3);
+                opt_offset += 4;
+            }
+        }
+        else {
+            for (var i = 0; i < 16; i++) {
+                W[i] =
+                    (buf[opt_offset] << 24) |
+                        (buf[opt_offset + 1] << 16) |
+                        (buf[opt_offset + 2] << 8) |
+                        buf[opt_offset + 3];
+                opt_offset += 4;
+            }
+        }
+        // expand to 80 words
+        for (var i = 16; i < 80; i++) {
+            var t = W[i - 3] ^ W[i - 8] ^ W[i - 14] ^ W[i - 16];
+            W[i] = ((t << 1) | (t >>> 31)) & 0xffffffff;
+        }
+        var a = this.chain_[0];
+        var b = this.chain_[1];
+        var c = this.chain_[2];
+        var d = this.chain_[3];
+        var e = this.chain_[4];
+        var f, k;
+        // TODO(user): Try to unroll this loop to speed up the computation.
+        for (var i = 0; i < 80; i++) {
+            if (i < 40) {
+                if (i < 20) {
+                    f = d ^ (b & (c ^ d));
+                    k = 0x5a827999;
+                }
+                else {
+                    f = b ^ c ^ d;
+                    k = 0x6ed9eba1;
+                }
+            }
+            else {
+                if (i < 60) {
+                    f = (b & c) | (d & (b | c));
+                    k = 0x8f1bbcdc;
+                }
+                else {
+                    f = b ^ c ^ d;
+                    k = 0xca62c1d6;
+                }
+            }
+            var t = (((a << 5) | (a >>> 27)) + f + e + k + W[i]) & 0xffffffff;
+            e = d;
+            d = c;
+            c = ((b << 30) | (b >>> 2)) & 0xffffffff;
+            b = a;
+            a = t;
+        }
+        this.chain_[0] = (this.chain_[0] + a) & 0xffffffff;
+        this.chain_[1] = (this.chain_[1] + b) & 0xffffffff;
+        this.chain_[2] = (this.chain_[2] + c) & 0xffffffff;
+        this.chain_[3] = (this.chain_[3] + d) & 0xffffffff;
+        this.chain_[4] = (this.chain_[4] + e) & 0xffffffff;
+    };
+    Sha1.prototype.update = function (bytes, opt_length) {
+        // TODO(johnlenz): tighten the function signature and remove this check
+        if (bytes == null) {
+            return;
+        }
+        if (opt_length === undefined) {
+            opt_length = bytes.length;
+        }
+        var lengthMinusBlock = opt_length - this.blockSize;
+        var n = 0;
+        // Using local instead of member variables gives ~5% speedup on Firefox 16.
+        var buf = this.buf_;
+        var inbuf = this.inbuf_;
+        // The outer while loop should execute at most twice.
+        while (n < opt_length) {
+            // When we have no data in the block to top up, we can directly process the
+            // input buffer (assuming it contains sufficient data). This gives ~25%
+            // speedup on Chrome 23 and ~15% speedup on Firefox 16, but requires that
+            // the data is provided in large chunks (or in multiples of 64 bytes).
+            if (inbuf == 0) {
+                while (n <= lengthMinusBlock) {
+                    this.compress_(bytes, n);
+                    n += this.blockSize;
+                }
+            }
+            if (typeof bytes === 'string') {
+                while (n < opt_length) {
+                    buf[inbuf] = bytes.charCodeAt(n);
+                    ++inbuf;
+                    ++n;
+                    if (inbuf == this.blockSize) {
+                        this.compress_(buf);
+                        inbuf = 0;
+                        // Jump to the outer loop so we use the full-block optimization.
+                        break;
+                    }
+                }
+            }
+            else {
+                while (n < opt_length) {
+                    buf[inbuf] = bytes[n];
+                    ++inbuf;
+                    ++n;
+                    if (inbuf == this.blockSize) {
+                        this.compress_(buf);
+                        inbuf = 0;
+                        // Jump to the outer loop so we use the full-block optimization.
+                        break;
+                    }
+                }
+            }
+        }
+        this.inbuf_ = inbuf;
+        this.total_ += opt_length;
+    };
+    /** @override */
+    Sha1.prototype.digest = function () {
+        var digest = [];
+        var totalBits = this.total_ * 8;
+        // Add pad 0x80 0x00*.
+        if (this.inbuf_ < 56) {
+            this.update(this.pad_, 56 - this.inbuf_);
+        }
+        else {
+            this.update(this.pad_, this.blockSize - (this.inbuf_ - 56));
+        }
+        // Add # bits.
+        for (var i = this.blockSize - 1; i >= 56; i--) {
+            this.buf_[i] = totalBits & 255;
+            totalBits /= 256; // Don't use bit-shifting here!
+        }
+        this.compress_(this.buf_);
+        var n = 0;
+        for (var i = 0; i < 5; i++) {
+            for (var j = 24; j >= 0; j -= 8) {
+                digest[n] = (this.chain_[i] >> j) & 255;
+                ++n;
+            }
+        }
+        return digest;
+    };
+    return Sha1;
+}(Hash));
+
+/**
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -10654,7 +11240,6 @@ var StreamBridge = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -10670,8 +11255,8 @@ var StreamBridge = /** @class */ (function () {
  * limitations under the License.
  */
 var LOG_TAG = 'Connection';
-var RPC_STREAM_SERVICE = 'google.firestore.v1.Firestore';
-var RPC_URL_VERSION = 'v1';
+var RPC_STREAM_SERVICE = 'google.firestore.v1beta1.Firestore';
+var RPC_URL_VERSION = 'v1beta1';
 /** Maps RPC names to the corresponding REST endpoint name. */
 var RPC_NAME_REST_MAPPING = {
     BatchGetDocuments: 'batchGet',
@@ -10814,7 +11399,7 @@ var WebChannelConnection = /** @class */ (function () {
         // https://github.com/firebase/firebase-js-sdk/issues/703), this breaks
         // ReactNative and so we exclude it, which just means ReactNative may be
         // subject to the extra network roundtrip for CORS preflight.
-        if (!util.isReactNative()) {
+        if (!isReactNative()) {
             request['httpHeadersOverwriteParam'] = '$httpHeaders';
         }
         var url = urlParts.join('');
@@ -10948,7 +11533,6 @@ var WebChannelConnection = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11001,7 +11585,6 @@ var BrowserPlatform = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11026,7 +11609,6 @@ var BrowserPlatform = /** @class */ (function () {
 PlatformSupport.setPlatform(new BrowserPlatform());
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11076,7 +11658,6 @@ var ListenSequence = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11091,7 +11672,7 @@ var ListenSequence = /** @class */ (function () {
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var Deferred = /** @class */ (function () {
+var Deferred$1 = /** @class */ (function () {
     function Deferred() {
         var _this = this;
         this.promise = new Promise(function (resolve, reject) {
@@ -11103,7 +11684,6 @@ var Deferred = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11167,7 +11747,7 @@ var DelayedOperation = /** @class */ (function () {
         this.targetTimeMs = targetTimeMs;
         this.op = op;
         this.removalCallback = removalCallback;
-        this.deferred = new Deferred();
+        this.deferred = new Deferred$1();
         this.then = this.deferred.promise.then.bind(this.deferred.promise);
         this.catch = this.deferred.promise.catch.bind(this.deferred.promise);
         // It's normal for the deferred promise to be canceled (due to cancellation)
@@ -11389,7 +11969,6 @@ var AsyncQueue = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11450,7 +12029,7 @@ function encodeSeparator(result) {
  * decoding resource names from the server; those are One Platform format
  * strings.
  */
-function decode(path) {
+function decode$1(path) {
     // Event the empty path must encode as a path of at least length 2. A path
     // with exactly 2 must be the empty path.
     var length = path.length;
@@ -11505,7 +12084,6 @@ function decode(path) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11624,7 +12202,6 @@ var MutationBatchResult = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11705,7 +12282,6 @@ var TargetIdGenerator = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11905,7 +12481,6 @@ var PersistencePromise = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -11932,14 +12507,7 @@ var SimpleDb = /** @class */ (function () {
     function SimpleDb(db) {
         this.db = db;
     }
-    /**
-     * Opens the specified database, creating or upgrading it if necessary.
-     *
-     * Note that `version` must not be a downgrade. IndexedDB does not support downgrading the schema
-     * version. We currently do not support any way to do versioning outside of IndexedDB's versioning
-     * mechanism, as only version-upgrade transactions are allowed to do things like create
-     * objectstores.
-     */
+    /** Opens the specified database, creating or upgrading it if necessary. */
     SimpleDb.openOrCreate = function (name, version, schemaConverter) {
         assert(SimpleDb.isAvailable(), 'IndexedDB not supported in current environment.');
         debug(LOG_TAG$1, 'Opening database:', name);
@@ -11959,17 +12527,7 @@ var SimpleDb = /** @class */ (function () {
                     'Close all tabs that access Firestore and reload this page to proceed.'));
             };
             request.onerror = function (event) {
-                var error$$1 = event.target.error;
-                if (error$$1.name === 'VersionError') {
-                    reject(new FirestoreError(Code.FAILED_PRECONDITION, 'A newer version of the Firestore SDK was previously used and so the persisted ' +
-                        'data is not compatible with the version of the SDK you are now using. The SDK ' +
-                        'will operate with persistence disabled. If you need persistence, please ' +
-                        're-upgrade to a newer version of the SDK or else clear the persisted IndexedDB ' +
-                        'data for your app to start fresh.'));
-                }
-                else {
-                    reject(error$$1);
-                }
+                reject(event.target.error);
             };
             request.onupgradeneeded = function (event) {
                 debug(LOG_TAG$1, 'Database "' + name + '" requires upgrade from version:', event.oldVersion);
@@ -12037,11 +12595,6 @@ var SimpleDb = /** @class */ (function () {
             .catch(function (error$$1) {
             // Abort the transaction if there was an error.
             transaction.abort(error$$1);
-            // We cannot actually recover, and calling `abort()` will cause the transaction's
-            // completion promise to be rejected. This in turn means that we won't use
-            // `transactionFnResult` below. We return a rejection here so that we don't add the
-            // possibility of returning `void` to the type of `transactionFnResult`.
-            return PersistencePromise.reject(error$$1);
         })
             .toPromise();
         // Wait for the transaction to complete (i.e. IndexedDb's onsuccess event to
@@ -12121,7 +12674,7 @@ var SimpleDbTransaction = /** @class */ (function () {
         /**
          * A promise that resolves with the result of the IndexedDb transaction.
          */
-        this.completionDeferred = new Deferred();
+        this.completionDeferred = new Deferred$1();
         this.transaction.oncomplete = function () {
             _this.completionDeferred.resolve();
         };
@@ -12399,7 +12952,6 @@ function wrapRequest(request) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12599,7 +13151,7 @@ var IndexedDbQueryCache = /** @class */ (function () {
         var result = documentKeySet();
         return store
             .iterate({ range: range, keysOnly: true }, function (key, _, control) {
-            var path = decode(key[1]);
+            var path = decode$1(key[1]);
             var docKey = new DocumentKey(path);
             result = result.add(docKey);
         })
@@ -12673,7 +13225,6 @@ function documentTargetStore(txn) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12776,7 +13327,6 @@ var ObjectMap = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -12852,32 +13402,6 @@ var RemoteDocumentChangeBuffer = /** @class */ (function () {
         }
     };
     /**
-     * Looks up several entries in the cache, forwarding to
-     * `RemoteDocumentCache.getEntry()`.
-     *
-     * @param transaction The transaction in which to perform any persistence
-     *     operations.
-     * @param documentKeys The keys of the entries to look up.
-     * @return A map of cached `Document`s or `NoDocument`s, indexed by key. If an
-     *     entry cannot be found, the corresponding key will be mapped to a null
-     *     value.
-     */
-    RemoteDocumentChangeBuffer.prototype.getEntries = function (transaction, documentKeys) {
-        var _this = this;
-        // Record the size of everything we load from the cache so we can compute
-        // a delta later.
-        return this.getAllFromCache(transaction, documentKeys).next(function (_a) {
-            var maybeDocuments = _a.maybeDocuments, sizeMap = _a.sizeMap;
-            // Note: `getAllFromCache` returns two maps instead of a single map from
-            // keys to `DocumentSizeEntry`s. This is to allow returning the
-            // `NullableMaybeDocumentMap` directly, without a conversion.
-            sizeMap.forEach(function (documentKey, size) {
-                _this.documentSizes.set(documentKey, size);
-            });
-            return maybeDocuments;
-        });
-    };
-    /**
      * Applies buffered changes to the underlying RemoteDocumentCache, using
      * the provided transaction.
      */
@@ -12896,7 +13420,6 @@ var RemoteDocumentChangeBuffer = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13017,80 +13540,6 @@ var IndexedDbRemoteDocumentCache = /** @class */ (function () {
                     size: dbDocumentSize(dbRemoteDoc)
                 }
                 : null;
-        });
-    };
-    IndexedDbRemoteDocumentCache.prototype.getEntries = function (transaction, documentKeys) {
-        var _this = this;
-        var results = nullableMaybeDocumentMap();
-        return this.forEachDbEntry(transaction, documentKeys, function (key, dbRemoteDoc) {
-            if (dbRemoteDoc) {
-                results = results.insert(key, _this.serializer.fromDbRemoteDocument(dbRemoteDoc));
-            }
-            else {
-                results = results.insert(key, null);
-            }
-        }).next(function () { return results; });
-    };
-    /**
-     * Looks up several entries in the cache.
-     *
-     * @param documentKeys The set of keys entries to look up.
-     * @return A map of MaybeDocuments indexed by key (if a document cannot be
-     *     found, the key will be mapped to null) and a map of sizes indexed by
-     *     key (zero if the key cannot be found).
-     */
-    IndexedDbRemoteDocumentCache.prototype.getSizedEntries = function (transaction, documentKeys) {
-        var _this = this;
-        var results = nullableMaybeDocumentMap();
-        var sizeMap = new SortedMap(DocumentKey.comparator);
-        return this.forEachDbEntry(transaction, documentKeys, function (key, dbRemoteDoc) {
-            if (dbRemoteDoc) {
-                results = results.insert(key, _this.serializer.fromDbRemoteDocument(dbRemoteDoc));
-                sizeMap = sizeMap.insert(key, dbDocumentSize(dbRemoteDoc));
-            }
-            else {
-                results = results.insert(key, null);
-                sizeMap = sizeMap.insert(key, 0);
-            }
-        }).next(function () {
-            return { maybeDocuments: results, sizeMap: sizeMap };
-        });
-    };
-    IndexedDbRemoteDocumentCache.prototype.forEachDbEntry = function (transaction, documentKeys, callback) {
-        if (documentKeys.isEmpty()) {
-            return PersistencePromise.resolve();
-        }
-        var range = IDBKeyRange.bound(documentKeys.first().path.toArray(), documentKeys.last().path.toArray());
-        var keyIter = documentKeys.getIterator();
-        var nextKey = keyIter.getNext();
-        return remoteDocumentsStore(transaction)
-            .iterate({ range: range }, function (potentialKeyRaw, dbRemoteDoc, control) {
-            var potentialKey = DocumentKey.fromSegments(potentialKeyRaw);
-            // Go through keys not found in cache.
-            while (nextKey && DocumentKey.comparator(nextKey, potentialKey) < 0) {
-                callback(nextKey, null);
-                nextKey = keyIter.getNext();
-            }
-            if (nextKey && nextKey.isEqual(potentialKey)) {
-                // Key found in cache.
-                callback(nextKey, dbRemoteDoc);
-                nextKey = keyIter.hasNext() ? keyIter.getNext() : null;
-            }
-            // Skip to the next key (if there is one).
-            if (nextKey) {
-                control.skip(nextKey.path.toArray());
-            }
-            else {
-                control.done();
-            }
-        })
-            .next(function () {
-            // The rest of the keys are not in the cache. One case where `iterate`
-            // above won't go through them is when the cache is empty.
-            while (nextKey) {
-                callback(nextKey, null);
-                nextKey = keyIter.hasNext() ? keyIter.getNext() : null;
-            }
         });
     };
     IndexedDbRemoteDocumentCache.prototype.getDocumentsMatchingQuery = function (transaction, query) {
@@ -13234,9 +13683,6 @@ var IndexedDbRemoteDocumentChangeBuffer = /** @class */ (function (_super) {
     IndexedDbRemoteDocumentChangeBuffer.prototype.getFromCache = function (transaction, documentKey) {
         return this.documentCache.getSizedEntry(transaction, documentKey);
     };
-    IndexedDbRemoteDocumentChangeBuffer.prototype.getAllFromCache = function (transaction, documentKeys) {
-        return this.documentCache.getSizedEntries(transaction, documentKeys);
-    };
     return IndexedDbRemoteDocumentChangeBuffer;
 }(RemoteDocumentChangeBuffer));
 function isDocumentChangeMissingError(err) {
@@ -13280,7 +13726,6 @@ function dbDocumentSize(doc) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13502,8 +13947,6 @@ var DbMutationQueue = /** @class */ (function () {
      * by the server. All MutationBatches in this queue with batchIds less
      * than or equal to this value are considered to have been acknowledged by
      * the server.
-     *
-     * NOTE: this is deprecated and no longer used by the code.
      */
     lastAcknowledgedBatchId, 
     /**
@@ -14032,7 +14475,6 @@ var V6_STORES = V4_STORES.concat([DbRemoteDocumentGlobal.store]);
 var ALL_STORES = V6_STORES;
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14098,6 +14540,9 @@ var IndexedDbMutationQueue = /** @class */ (function () {
     };
     IndexedDbMutationQueue.prototype.acknowledgeBatch = function (transaction, batch, streamToken) {
         return this.getMutationQueueMetadata(transaction).next(function (metadata) {
+            var batchId = batch.batchId;
+            assert(batchId > metadata.lastAcknowledgedBatchId, 'Mutation batchIDs must be acknowledged in order');
+            metadata.lastAcknowledgedBatchId = batchId;
             metadata.lastStreamToken = convertStreamToken(streamToken);
             return mutationQueuesStore(transaction).put(metadata);
         });
@@ -14171,7 +14616,10 @@ var IndexedDbMutationQueue = /** @class */ (function () {
     IndexedDbMutationQueue.prototype.getNextMutationBatchAfterBatchId = function (transaction, batchId) {
         var _this = this;
         return this.getMutationQueueMetadata(transaction).next(function (metadata) {
-            var nextBatchId = batchId + 1;
+            // All batches with batchId <= this.metadata.lastAcknowledgedBatchId have
+            // been acknowledged so the first unacknowledged batch after batchID will
+            // have a batchID larger than both of these values.
+            var nextBatchId = Math.max(batchId, metadata.lastAcknowledgedBatchId) + 1;
             var range = IDBKeyRange.lowerBound([_this.userId, nextBatchId]);
             var foundBatch = null;
             return mutationsStore(transaction)
@@ -14211,7 +14659,7 @@ var IndexedDbMutationQueue = /** @class */ (function () {
             // the rows for documentKey will occur before any rows for
             // documents nested in a subcollection beneath documentKey so we
             // can stop as soon as we hit any such row.
-            var path = decode(encodedPath);
+            var path = decode$1(encodedPath);
             if (userID !== _this.userId || !documentKey.path.isEqual(path)) {
                 control.done();
                 return;
@@ -14248,7 +14696,7 @@ var IndexedDbMutationQueue = /** @class */ (function () {
                 // the rows for documentKey will occur before any rows for
                 // documents nested in a subcollection beneath documentKey so we
                 // can stop as soon as we hit any such row.
-                var path = decode(encodedPath);
+                var path = decode$1(encodedPath);
                 if (userID !== _this.userId || !documentKey.path.isEqual(path)) {
                     control.done();
                     return;
@@ -14286,7 +14734,7 @@ var IndexedDbMutationQueue = /** @class */ (function () {
         return documentMutationsStore(transaction)
             .iterate({ range: indexStart }, function (indexKey, _, control) {
             var userID = indexKey[0], encodedPath = indexKey[1], batchID = indexKey[2];
-            var path = decode(encodedPath);
+            var path = decode$1(encodedPath);
             if (userID !== _this.userId || !queryPath.isPrefixOf(path)) {
                 control.done();
                 return;
@@ -14353,7 +14801,7 @@ var IndexedDbMutationQueue = /** @class */ (function () {
                     return;
                 }
                 else {
-                    var path = decode(key[1]);
+                    var path = decode$1(key[1]);
                     danglingMutationReferences.push(path);
                 }
             })
@@ -14471,7 +14919,6 @@ function mutationQueuesStore(txn) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14515,9 +14962,7 @@ var LocalSerializer = /** @class */ (function () {
     /** Encodes a document for storage locally. */
     LocalSerializer.prototype.toDbRemoteDocument = function (maybeDoc) {
         if (maybeDoc instanceof Document) {
-            var doc = maybeDoc.proto
-                ? maybeDoc.proto
-                : this.remoteSerializer.toDocument(maybeDoc);
+            var doc = this.remoteSerializer.toDocument(maybeDoc);
             var hasCommittedMutations = maybeDoc.hasCommittedMutations;
             return new DbRemoteDocument(
             /* unknownDocument= */ null, 
@@ -14583,7 +15028,7 @@ var LocalSerializer = /** @class */ (function () {
         var keys = documentKeySet();
         for (var _i = 0, encodedPaths_1 = encodedPaths; _i < encodedPaths_1.length; _i++) {
             var documentKey = encodedPaths_1[_i];
-            keys = keys.add(new DocumentKey(decode(documentKey)));
+            keys = keys.add(new DocumentKey(decode$1(documentKey)));
         }
         return keys;
     };
@@ -14635,7 +15080,6 @@ function isDocumentQuery(dbQuery) {
 }
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14754,7 +15198,7 @@ var LruScheduler = /** @class */ (function () {
     LruScheduler.prototype.start = function () {
         assert(this.gcTask === null, 'Cannot start an already started LruScheduler');
         if (this.garbageCollector.params.cacheSizeCollectionThreshold !==
-            LruParams.COLLECTION_DISABLED) {
+            CACHE_SIZE_UNLIMITED) {
             this.scheduleGC();
         }
     };
@@ -14764,13 +15208,6 @@ var LruScheduler = /** @class */ (function () {
             this.gcTask = null;
         }
     };
-    Object.defineProperty(LruScheduler.prototype, "started", {
-        get: function () {
-            return this.gcTask !== null;
-        },
-        enumerable: true,
-        configurable: true
-    });
     LruScheduler.prototype.scheduleGC = function () {
         var _this = this;
         assert(this.gcTask === null, 'Cannot schedule GC while a task is pending');
@@ -14781,8 +15218,7 @@ var LruScheduler = /** @class */ (function () {
             _this.hasRun = true;
             return _this.localStore
                 .collectGarbage(_this.garbageCollector)
-                .then(function () { return _this.scheduleGC(); })
-                .catch(ignoreIfPrimaryLeaseLoss);
+                .then(function () { return _this.scheduleGC(); });
         });
     };
     return LruScheduler;
@@ -14906,7 +15342,6 @@ var LruGarbageCollector = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14935,7 +15370,6 @@ var PersistenceTransaction = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15651,29 +16085,6 @@ function isPrimaryLeaseLostError(err) {
         err.message === PRIMARY_LEASE_LOST_ERROR_MSG);
 }
 /**
- * Verifies the error thrown by a LocalStore operation. If a LocalStore
- * operation fails because the primary lease has been taken by another client,
- * we ignore the error (the persistence layer will immediately call
- * `applyPrimaryLease` to propagate the primary state change). All other errors
- * are re-thrown.
- *
- * @param err An error returned by a LocalStore operation.
- * @return A Promise that resolves after we recovered, or the original error.
- */
-function ignoreIfPrimaryLeaseLoss(err) {
-    return tslib_1.__awaiter(this, void 0, void 0, function () {
-        return tslib_1.__generator(this, function (_a) {
-            if (isPrimaryLeaseLostError(err)) {
-                debug(LOG_TAG$2, 'Unexpectedly lost primary lease');
-            }
-            else {
-                throw err;
-            }
-            return [2 /*return*/];
-        });
-    });
-}
-/**
  * Helper to get a typed SimpleDbStore for the primary client object store.
  */
 function primaryClientStore(txn) {
@@ -15814,7 +16225,7 @@ var IndexedDbLruDelegate = /** @class */ (function () {
                 // if nextToReport is valid, report it, this is a new key so the
                 // last one must not be a member of any targets.
                 if (nextToReport !== ListenSequence.INVALID) {
-                    f(new DocumentKey(decode(nextPath)), nextToReport);
+                    f(new DocumentKey(decode$1(nextPath)), nextToReport);
                 }
                 // set nextToReport to be this sequence number. It's the next one we
                 // might report, if we don't find any targets for this document.
@@ -15834,7 +16245,7 @@ var IndexedDbLruDelegate = /** @class */ (function () {
             // need to check if the last key we iterated over was an orphaned
             // document and report it.
             if (nextToReport !== ListenSequence.INVALID) {
-                f(new DocumentKey(decode(nextPath)), nextToReport);
+                f(new DocumentKey(decode$1(nextPath)), nextToReport);
             }
         });
     };
@@ -15858,7 +16269,6 @@ function writeSentinelKey(txn, key) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15906,19 +16316,6 @@ var LocalDocumentsView = /** @class */ (function () {
             return doc;
         });
     };
-    // Returns the view of the given `docs` as they would appear after applying
-    // all mutations in the given `batches`.
-    LocalDocumentsView.prototype.applyLocalMutationsToDocuments = function (transaction, docs, batches) {
-        var results = nullableMaybeDocumentMap();
-        docs.forEach(function (key, localView) {
-            for (var _i = 0, batches_1 = batches; _i < batches_1.length; _i++) {
-                var batch = batches_1[_i];
-                localView = batch.applyToLocalView(key, localView);
-            }
-            results = results.insert(key, localView);
-        });
-        return results;
-    };
     /**
      * Gets the local view of the documents identified by `keys`.
      *
@@ -15927,29 +16324,21 @@ var LocalDocumentsView = /** @class */ (function () {
      */
     LocalDocumentsView.prototype.getDocuments = function (transaction, keys) {
         var _this = this;
-        return this.remoteDocumentCache
-            .getEntries(transaction, keys)
-            .next(function (docs) { return _this.getLocalViewOfDocuments(transaction, docs); });
-    };
-    /**
-     * Similar to `getDocuments`, but creates the local view from the given
-     * `baseDocs` without retrieving documents from the local store.
-     */
-    LocalDocumentsView.prototype.getLocalViewOfDocuments = function (transaction, baseDocs) {
-        var _this = this;
         return this.mutationQueue
-            .getAllMutationBatchesAffectingDocumentKeys(transaction, baseDocs)
+            .getAllMutationBatchesAffectingDocumentKeys(transaction, keys)
             .next(function (batches) {
-            var docs = _this.applyLocalMutationsToDocuments(transaction, baseDocs, batches);
+            var promises = [];
             var results = maybeDocumentMap();
-            docs.forEach(function (key, maybeDoc) {
-                // TODO(http://b/32275378): Don't conflate missing / deleted.
-                if (!maybeDoc) {
-                    maybeDoc = new NoDocument(key, SnapshotVersion.forDeletedDoc());
-                }
-                results = results.insert(key, maybeDoc);
+            keys.forEach(function (key) {
+                promises.push(_this.getDocumentInternal(transaction, key, batches).next(function (maybeDoc) {
+                    // TODO(http://b/32275378): Don't conflate missing / deleted.
+                    if (!maybeDoc) {
+                        maybeDoc = new NoDocument(key, SnapshotVersion.forDeletedDoc());
+                    }
+                    results = results.insert(key, maybeDoc);
+                }));
             });
-            return results;
+            return PersistencePromise.waitFor(promises).next(function () { return results; });
         });
     };
     /** Performs a query against the local view of all documents. */
@@ -16017,7 +16406,6 @@ var LocalDocumentsView = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16140,7 +16528,6 @@ var DocReference = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16456,16 +16843,10 @@ var LocalStore = /** @class */ (function () {
                     }
                 }
             });
-            var changedDocs = maybeDocumentMap();
-            var updatedKeys = documentKeySet();
+            var changedDocKeys = documentKeySet();
             remoteEvent.documentUpdates.forEach(function (key, doc) {
-                updatedKeys = updatedKeys.add(key);
-            });
-            // Each loop iteration only affects its "own" doc, so it's safe to get all the remote
-            // documents in advance in a single call.
-            promises.push(documentBuffer.getEntries(txn, updatedKeys).next(function (existingDocs) {
-                remoteEvent.documentUpdates.forEach(function (key, doc) {
-                    var existingDoc = existingDocs.get(key);
+                changedDocKeys = changedDocKeys.add(key);
+                promises.push(documentBuffer.getEntry(txn, key).next(function (existingDoc) {
                     // If a document update isn't authoritative, make sure we don't
                     // apply an old document version to the remote cache. We make an
                     // exception for SnapshotVersion.MIN which can happen for
@@ -16477,16 +16858,15 @@ var LocalStore = /** @class */ (function () {
                             !existingDoc.hasPendingWrites) ||
                         doc.version.compareTo(existingDoc.version) >= 0) {
                         documentBuffer.addEntry(doc);
-                        changedDocs = changedDocs.insert(key, doc);
                     }
                     else {
                         debug(LOG_TAG$3, 'Ignoring outdated watch update for ', key, '. Current version:', existingDoc.version, ' Watch version:', doc.version);
                     }
-                    if (remoteEvent.resolvedLimboDocuments.has(key)) {
-                        promises.push(_this.persistence.referenceDelegate.updateLimboDocument(txn, key));
-                    }
-                });
-            }));
+                }));
+                if (remoteEvent.resolvedLimboDocuments.has(key)) {
+                    promises.push(_this.persistence.referenceDelegate.updateLimboDocument(txn, key));
+                }
+            });
             // HACK: The only reason we allow a null snapshot version is so that we
             // can synthesize remote events when we get permission denied errors while
             // trying to resolve the state of a locally cached document that is in
@@ -16507,7 +16887,7 @@ var LocalStore = /** @class */ (function () {
             return PersistencePromise.waitFor(promises)
                 .next(function () { return documentBuffer.apply(txn); })
                 .next(function () {
-                return _this.localDocuments.getLocalViewOfDocuments(txn, changedDocs);
+                return _this.localDocuments.getDocuments(txn, changedDocKeys);
             });
         });
     };
@@ -16758,7 +17138,6 @@ var LocalStore = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16783,6 +17162,8 @@ var MemoryMutationQueue = /** @class */ (function () {
         this.mutationQueue = [];
         /** Next value to use when assigning sequential IDs to each mutation batch. */
         this.nextBatchId = 1;
+        /** The highest acknowledged mutation in the queue. */
+        this.highestAcknowledgedBatchId = BATCHID_UNKNOWN;
         /** The last received stream token from the server, used to acknowledge which
          * responses the client has processed. Stream tokens are opaque checkpoint
          * markers whose only real value is their inclusion in the next request.
@@ -16796,6 +17177,7 @@ var MemoryMutationQueue = /** @class */ (function () {
     };
     MemoryMutationQueue.prototype.acknowledgeBatch = function (transaction, batch, streamToken) {
         var batchId = batch.batchId;
+        assert(batchId > this.highestAcknowledgedBatchId, 'Mutation batchIDs must be acknowledged in order');
         var batchIndex = this.indexOfExistingBatchId(batchId, 'acknowledged');
         assert(batchIndex === 0, 'Can only acknowledge the first batch in the mutation queue');
         // Verify that the batch in the queue is the one to be acknowledged.
@@ -16804,6 +17186,7 @@ var MemoryMutationQueue = /** @class */ (function () {
             batchId +
             ', got batch ' +
             check.batchId);
+        this.highestAcknowledgedBatchId = batchId;
         this.lastStreamToken = streamToken;
         return PersistencePromise.resolve();
     };
@@ -16840,7 +17223,10 @@ var MemoryMutationQueue = /** @class */ (function () {
         return PersistencePromise.resolve(mutationBatch.keys());
     };
     MemoryMutationQueue.prototype.getNextMutationBatchAfterBatchId = function (transaction, batchId) {
-        var nextBatchId = batchId + 1;
+        // All batches with batchId <= this.highestAcknowledgedBatchId have been
+        // acknowledged so the first unacknowledged batch after batchID will have a
+        // batchID larger than both of these values.
+        var nextBatchId = Math.max(batchId, this.highestAcknowledgedBatchId) + 1;
         // The requested batchId may still be out of range so normalize it to the
         // start of the queue.
         var rawIndex = this.indexOfBatchId(nextBatchId);
@@ -17006,7 +17392,6 @@ var MemoryMutationQueue = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17161,7 +17546,6 @@ var MemoryQueryCache = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17229,34 +17613,6 @@ var MemoryRemoteDocumentCache = /** @class */ (function () {
      */
     MemoryRemoteDocumentCache.prototype.getSizedEntry = function (transaction, documentKey) {
         return PersistencePromise.resolve(this.docs.get(documentKey));
-    };
-    MemoryRemoteDocumentCache.prototype.getEntries = function (transaction, documentKeys) {
-        var _this = this;
-        var results = nullableMaybeDocumentMap();
-        documentKeys.forEach(function (documentKey) {
-            var entry = _this.docs.get(documentKey);
-            results = results.insert(documentKey, entry ? entry.maybeDocument : null);
-        });
-        return PersistencePromise.resolve(results);
-    };
-    /**
-     * Looks up several entries in the cache.
-     *
-     * @param documentKeys The set of keys entries to look up.
-     * @return A map of MaybeDocuments indexed by key (if a document cannot be
-     *     found, the key will be mapped to null) and a map of sizes indexed by
-     *     key (zero if the key cannot be found).
-     */
-    MemoryRemoteDocumentCache.prototype.getSizedEntries = function (transaction, documentKeys) {
-        var _this = this;
-        var results = nullableMaybeDocumentMap();
-        var sizeMap = new SortedMap(DocumentKey.comparator);
-        documentKeys.forEach(function (documentKey) {
-            var entry = _this.docs.get(documentKey);
-            results = results.insert(documentKey, entry ? entry.maybeDocument : null);
-            sizeMap = sizeMap.insert(documentKey, entry ? entry.size : 0);
-        });
-        return PersistencePromise.resolve({ maybeDocuments: results, sizeMap: sizeMap });
     };
     MemoryRemoteDocumentCache.prototype.getDocumentsMatchingQuery = function (transaction, query) {
         var results = documentMap();
@@ -17327,14 +17683,10 @@ var MemoryRemoteDocumentChangeBuffer = /** @class */ (function (_super) {
     MemoryRemoteDocumentChangeBuffer.prototype.getFromCache = function (transaction, documentKey) {
         return this.documentCache.getSizedEntry(transaction, documentKey);
     };
-    MemoryRemoteDocumentChangeBuffer.prototype.getAllFromCache = function (transaction, documentKeys) {
-        return this.documentCache.getSizedEntries(transaction, documentKeys);
-    };
     return MemoryRemoteDocumentChangeBuffer;
 }(RemoteDocumentChangeBuffer));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17667,7 +18019,6 @@ var MemoryLruDelegate = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17796,7 +18147,6 @@ var ExponentialBackoff = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18346,7 +18696,6 @@ var PersistentWriteStream = /** @class */ (function (_super) {
 }(PersistentStream));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18444,7 +18793,6 @@ var Datastore = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18582,7 +18930,6 @@ var Transaction = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18634,7 +18981,6 @@ var OnlineStateSource;
 })(OnlineStateSource || (OnlineStateSource = {}));
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18792,7 +19138,6 @@ var OnlineStateTracker = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19301,7 +19646,23 @@ var RemoteStore = /** @class */ (function () {
                 _this.writeStream.writeMutations(batch.mutations);
             }
         })
-            .catch(ignoreIfPrimaryLeaseLoss);
+            .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); });
+    };
+    /**
+     * Verifies the error thrown by an LocalStore operation. If a LocalStore
+     * operation fails because the primary lease has been taken by another client,
+     * we ignore the error. All other errors are re-thrown.
+     *
+     * @param err An error returned by a LocalStore operation.
+     * @return A Promise that resolves after we recovered, or the original error.
+     */
+    RemoteStore.prototype.ignoreIfPrimaryLeaseLoss = function (err) {
+        if (isPrimaryLeaseLostError(err)) {
+            debug(LOG_TAG$8, 'Unexpectedly lost primary lease');
+        }
+        else {
+            throw err;
+        }
     };
     RemoteStore.prototype.onMutationResult = function (commitVersion, results) {
         var _this = this;
@@ -19354,16 +19715,16 @@ var RemoteStore = /** @class */ (function () {
     };
     RemoteStore.prototype.handleHandshakeError = function (error$$1) {
         return tslib_1.__awaiter(this, void 0, void 0, function () {
+            var _this = this;
             return tslib_1.__generator(this, function (_a) {
-                // Reset the token if it's a permanent error, signaling the write stream is
-                // no longer valid. Note that the handshake does not count as a write: see
-                // comments on isPermanentWriteError for details.
-                if (isPermanentError(error$$1.code)) {
+                // Reset the token if it's a permanent error or the error code is
+                // ABORTED, signaling the write stream is no longer valid.
+                if (isPermanentError(error$$1.code) || error$$1.code === Code.ABORTED) {
                     debug(LOG_TAG$8, 'RemoteStore error before completed handshake; resetting stream token: ', this.writeStream.lastStreamToken);
                     this.writeStream.lastStreamToken = emptyByteString();
                     return [2 /*return*/, this.localStore
                             .setLastStreamToken(emptyByteString())
-                            .catch(ignoreIfPrimaryLeaseLoss)];
+                            .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); })];
                 }
                 else {
                     // Some other error, don't reset stream token. Our stream logic will
@@ -19378,9 +19739,7 @@ var RemoteStore = /** @class */ (function () {
             var _this = this;
             var batch;
             return tslib_1.__generator(this, function (_a) {
-                // Only handle permanent errors here. If it's transient, just let the retry
-                // logic kick in.
-                if (isPermanentWriteError(error$$1.code)) {
+                if (isPermanentError(error$$1.code)) {
                     batch = this.writePipeline.shift();
                     // In this case it's also unlikely that the server itself is melting
                     // down -- this was just a bad request so inhibit backoff on the next
@@ -19458,7 +19817,6 @@ var RemoteStore = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19677,7 +20035,6 @@ var QueryListener = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19725,7 +20082,6 @@ var LocalViewChanges = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20118,7 +20474,6 @@ function compareChangeType(c1, c2) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20337,7 +20692,7 @@ var SyncEngine = /** @class */ (function () {
                                 _this.remoteStore.unlisten(queryView.targetId);
                                 _this.removeAndCleanupQuery(queryView);
                             })
-                                .catch(ignoreIfPrimaryLeaseLoss)];
+                                .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); })];
                     case 1:
                         _a.sent();
                         _a.label = 2;
@@ -20468,7 +20823,7 @@ var SyncEngine = /** @class */ (function () {
             });
             return _this.emitNewSnapsAndNotifyLocalStore(changes, remoteEvent);
         })
-            .catch(ignoreIfPrimaryLeaseLoss);
+            .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); });
     };
     /**
      * Applies an OnlineState change to the sync engine and notifies any views of
@@ -20527,7 +20882,7 @@ var SyncEngine = /** @class */ (function () {
                         return [4 /*yield*/, this.localStore
                                 .releaseQuery(queryView_1.query, /* keepPersistedQueryData */ false)
                                 .then(function () { return _this.removeAndCleanupQuery(queryView_1); })
-                                .catch(ignoreIfPrimaryLeaseLoss)];
+                                .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); })];
                     case 2:
                         _a.sent();
                         this.syncEngineListener.onWatchError(queryView_1.query, err);
@@ -20604,7 +20959,7 @@ var SyncEngine = /** @class */ (function () {
             _this.sharedClientState.updateMutationState(batchId, 'acknowledged');
             return _this.emitNewSnapsAndNotifyLocalStore(changes);
         })
-            .catch(ignoreIfPrimaryLeaseLoss);
+            .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); });
     };
     SyncEngine.prototype.rejectFailedWrite = function (batchId, error$$1) {
         var _this = this;
@@ -20620,7 +20975,7 @@ var SyncEngine = /** @class */ (function () {
             _this.sharedClientState.updateMutationState(batchId, 'rejected', error$$1);
             return _this.emitNewSnapsAndNotifyLocalStore(changes);
         })
-            .catch(ignoreIfPrimaryLeaseLoss);
+            .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); });
     };
     SyncEngine.prototype.addMutationCallback = function (batchId, callback) {
         var newCallbacks = this.mutationUserCallbacks[this.currentUser.toKey()];
@@ -20766,6 +21121,29 @@ var SyncEngine = /** @class */ (function () {
                         _a.sent();
                         return [2 /*return*/];
                 }
+            });
+        });
+    };
+    /**
+     * Verifies the error thrown by an LocalStore operation. If a LocalStore
+     * operation fails because the primary lease has been taken by another client,
+     * we ignore the error (the persistence layer will immediately call
+     * `applyPrimaryLease` to propagate the primary state change). All other
+     * errors are re-thrown.
+     *
+     * @param err An error returned by a LocalStore operation.
+     * @return A Promise that resolves after we recovered, or the original error.
+     */
+    SyncEngine.prototype.ignoreIfPrimaryLeaseLoss = function (err) {
+        return tslib_1.__awaiter(this, void 0, void 0, function () {
+            return tslib_1.__generator(this, function (_a) {
+                if (isPrimaryLeaseLostError(err)) {
+                    debug(LOG_TAG$9, 'Unexpectedly lost primary lease');
+                }
+                else {
+                    throw err;
+                }
+                return [2 /*return*/];
             });
         });
     };
@@ -21056,7 +21434,7 @@ var SyncEngine = /** @class */ (function () {
                                                 _this.remoteStore.unlisten(targetId);
                                                 _this.removeAndCleanupQuery(queryView);
                                             })
-                                                .catch(ignoreIfPrimaryLeaseLoss)];
+                                                .catch(function (err) { return _this.ignoreIfPrimaryLeaseLoss(err); })];
                                     case 1:
                                         _a.sent();
                                         _a.label = 2;
@@ -21109,7 +21487,6 @@ var SyncEngine = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21160,7 +21537,6 @@ var User = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21883,7 +22259,6 @@ var MemorySharedClientState = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21984,14 +22359,14 @@ var FirestoreClient = /** @class */ (function () {
         //
         // If initializationDone resolved then the FirestoreClient is in a usable
         // state.
-        var initializationDone = new Deferred();
+        var initializationDone = new Deferred$1();
         // If usePersistence is true, certain classes of errors while starting are
         // recoverable but only by falling back to persistence disabled.
         //
         // If there's an error in the first case but not in recovery we cannot
         // reject the promise blocking the async queue because this will cause the
         // async queue to panic.
-        var persistenceResult = new Deferred();
+        var persistenceResult = new Deferred$1();
         var initialized = false;
         this.credentials.setChangeListener(function (user) {
             if (!initialized) {
@@ -22165,6 +22540,7 @@ var FirestoreClient = /** @class */ (function () {
                         if (maybeLruGc) {
                             // We're running LRU Garbage collection. Set up the scheduler.
                             this.lruScheduler = new LruScheduler(maybeLruGc, this.asyncQueue, this.localStore);
+                            this.lruScheduler.start();
                         }
                         serializer = this.platform.newSerializer(this.databaseInfo.databaseId);
                         datastore = new Datastore(this.asyncQueue, connection, this.credentials, serializer);
@@ -22191,24 +22567,9 @@ var FirestoreClient = /** @class */ (function () {
                         _a.sent();
                         // NOTE: This will immediately call the listener, so we make sure to
                         // set it after localStore / remoteStore are started.
-                        return [4 /*yield*/, this.persistence.setPrimaryStateListener(function (isPrimary) { return tslib_1.__awaiter(_this, void 0, void 0, function () {
-                                return tslib_1.__generator(this, function (_a) {
-                                    switch (_a.label) {
-                                        case 0: return [4 /*yield*/, this.syncEngine.applyPrimaryState(isPrimary)];
-                                        case 1:
-                                            _a.sent();
-                                            if (this.lruScheduler) {
-                                                if (isPrimary && !this.lruScheduler.started) {
-                                                    this.lruScheduler.start();
-                                                }
-                                                else if (!isPrimary) {
-                                                    this.lruScheduler.stop();
-                                                }
-                                            }
-                                            return [2 /*return*/];
-                                    }
-                                });
-                            }); })];
+                        return [4 /*yield*/, this.persistence.setPrimaryStateListener(function (isPrimary) {
+                                return _this.syncEngine.applyPrimaryState(isPrimary);
+                            })];
                     case 3:
                         // NOTE: This will immediately call the listener, so we make sure to
                         // set it after localStore / remoteStore are started.
@@ -22309,7 +22670,7 @@ var FirestoreClient = /** @class */ (function () {
     };
     FirestoreClient.prototype.write = function (mutations) {
         var _this = this;
-        var deferred = new Deferred();
+        var deferred = new Deferred$1();
         this.asyncQueue.enqueueAndForget(function () {
             return _this.syncEngine.write(mutations, deferred);
         });
@@ -22331,7 +22692,6 @@ var FirestoreClient = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22383,7 +22743,6 @@ var AsyncObserver = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22470,7 +22829,6 @@ function fromDotSeparatedString(path) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22673,7 +23031,6 @@ function makeCredentialsProvider(credentials) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22689,13 +23046,13 @@ function makeCredentialsProvider(credentials) {
  * limitations under the License.
  */
 function isPartialObserver(obj) {
-    return implementsAnyMethods(obj, ['next', 'error', 'complete']);
+    return implementsAnyMethods$1(obj, ['next', 'error', 'complete']);
 }
 /**
  * Returns true if obj is an object and contains at least one of the specified
  * methods.
  */
-function implementsAnyMethods(obj, methods) {
+function implementsAnyMethods$1(obj, methods) {
     if (typeof obj !== 'object' || obj === null) {
         return false;
     }
@@ -22710,7 +23067,6 @@ function implementsAnyMethods(obj, methods) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22812,7 +23168,6 @@ var ArrayRemoveFieldValueImpl = /** @class */ (function (_super) {
 var PublicFieldValue = makeConstructorPrivate(FieldValueImpl, 'Use FieldValue.<field>() instead.');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23027,7 +23382,7 @@ var UserDataConverter = /** @class */ (function () {
             fieldTransforms = context.fieldTransforms;
         }
         else {
-            var validatedFieldPaths = new SortedSet(FieldPath.comparator);
+            var validatedFieldPaths = [];
             for (var _i = 0, fieldPaths_1 = fieldPaths; _i < fieldPaths_1.length; _i++) {
                 var stringOrFieldPath = fieldPaths_1[_i];
                 var fieldPath = void 0;
@@ -23043,9 +23398,9 @@ var UserDataConverter = /** @class */ (function () {
                 if (!context.contains(fieldPath)) {
                     throw new FirestoreError(Code.INVALID_ARGUMENT, "Field '" + fieldPath + "' is specified in your field mask but missing from your input data.");
                 }
-                validatedFieldPaths = validatedFieldPaths.add(fieldPath);
+                validatedFieldPaths.push(fieldPath);
             }
-            fieldMask = FieldMask.fromSet(validatedFieldPaths);
+            fieldMask = FieldMask.fromArray(validatedFieldPaths);
             fieldTransforms = context.fieldTransforms.filter(function (transform) {
                 return fieldMask.covers(transform.field);
             });
@@ -23057,7 +23412,7 @@ var UserDataConverter = /** @class */ (function () {
         var _this = this;
         var context = new ParseContext(UserDataSource.Update, methodName, FieldPath.EMPTY_PATH);
         validatePlainObject('Data must be an object, but it was:', context, input);
-        var fieldMaskPaths = new SortedSet(FieldPath.comparator);
+        var fieldMaskPaths = [];
         var updateData = ObjectValue.EMPTY;
         forEach(input, function (key, value) {
             var path = fieldPathFromDotSeparatedString(methodName, key);
@@ -23065,17 +23420,17 @@ var UserDataConverter = /** @class */ (function () {
             value = _this.runPreConverter(value, childContext);
             if (value instanceof DeleteFieldValueImpl) {
                 // Add it to the field mask, but don't add anything to updateData.
-                fieldMaskPaths = fieldMaskPaths.add(path);
+                fieldMaskPaths.push(path);
             }
             else {
                 var parsedValue = _this.parseData(value, childContext);
                 if (parsedValue != null) {
-                    fieldMaskPaths = fieldMaskPaths.add(path);
+                    fieldMaskPaths.push(path);
                     updateData = updateData.set(path, parsedValue);
                 }
             }
         });
-        var mask = FieldMask.fromSet(fieldMaskPaths);
+        var mask = FieldMask.fromArray(fieldMaskPaths);
         return new ParsedUpdateData(updateData, mask, context.fieldTransforms);
     };
     /** Parse update data from a list of field/value arguments. */
@@ -23091,7 +23446,7 @@ var UserDataConverter = /** @class */ (function () {
             keys.push(fieldPathFromArgument(methodName, moreFieldsAndValues[i]));
             values$$1.push(moreFieldsAndValues[i + 1]);
         }
-        var fieldMaskPaths = new SortedSet(FieldPath.comparator);
+        var fieldMaskPaths = [];
         var updateData = ObjectValue.EMPTY;
         for (var i = 0; i < keys.length; ++i) {
             var path = keys[i];
@@ -23099,17 +23454,17 @@ var UserDataConverter = /** @class */ (function () {
             var value_1 = this.runPreConverter(values$$1[i], childContext);
             if (value_1 instanceof DeleteFieldValueImpl) {
                 // Add it to the field mask, but don't add anything to updateData.
-                fieldMaskPaths = fieldMaskPaths.add(path);
+                fieldMaskPaths.push(path);
             }
             else {
                 var parsedValue = this.parseData(value_1, childContext);
                 if (parsedValue != null) {
-                    fieldMaskPaths = fieldMaskPaths.add(path);
+                    fieldMaskPaths.push(path);
                     updateData = updateData.set(path, parsedValue);
                 }
             }
         }
-        var mask = FieldMask.fromSet(fieldMaskPaths);
+        var mask = FieldMask.fromArray(fieldMaskPaths);
         return new ParsedUpdateData(updateData, mask, context.fieldTransforms);
     };
     /**
@@ -23386,7 +23741,6 @@ function errorMessage(error) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23408,7 +23762,7 @@ function errorMessage(error) {
 // settings() defaults:
 var DEFAULT_HOST = 'firestore.googleapis.com';
 var DEFAULT_SSL = true;
-var DEFAULT_TIMESTAMPS_IN_SNAPSHOTS = true;
+var DEFAULT_TIMESTAMPS_IN_SNAPSHOTS = false;
 /**
  * Constant used to indicate the LRU garbage collection should be disabled.
  * Set this value as the `cacheSizeBytes` on the settings passed to the
@@ -23447,14 +23801,6 @@ var FirestoreSettings = /** @class */ (function () {
         validateNamedOptionalType('settings', 'object', 'credentials', settings.credentials);
         this.credentials = settings.credentials;
         validateNamedOptionalType('settings', 'boolean', 'timestampsInSnapshots', settings.timestampsInSnapshots);
-        // Nobody should set timestampsInSnapshots anymore, but the error depends on
-        // whether they set it to true or false...
-        if (settings.timestampsInSnapshots === true) {
-            error("\n  The timestampsInSnapshots setting now defaults to true and you no\n  longer need to explicitly set it. In a future release, the setting\n  will be removed entirely and so it is recommended that you remove it\n  from your firestore.settings() call now.");
-        }
-        else if (settings.timestampsInSnapshots === false) {
-            error("\n  The timestampsInSnapshots setting will soon be removed. YOU MUST UPDATE\n  YOUR CODE.\n\n  To hide this warning, stop using the timestampsInSnapshots setting in your\n  firestore.settings({ ... }) call.\n\n  Once you remove the setting, Timestamps stored in Cloud Firestore will be\n  read back as Firebase Timestamp objects instead of as system Date objects.\n  So you will also need to update code expecting a Date to instead expect a\n  Timestamp. For example:\n\n  // Old:\n  const date = snapshot.get('created_at');\n  // New:\n  const timestamp = snapshot.get('created_at'); const date =\n  timestamp.toDate();\n\n  Please audit all existing usages of Date when you enable the new\n  behavior.");
-        }
         this.timestampsInSnapshots = defaulted(settings.timestampsInSnapshots, DEFAULT_TIMESTAMPS_IN_SNAPSHOTS);
         validateNamedOptionalType('settings', 'number', 'cacheSizeBytes', settings.cacheSizeBytes);
         if (settings.cacheSizeBytes === undefined) {
@@ -23573,6 +23919,9 @@ var Firestore = /** @class */ (function () {
     Firestore.prototype.configureClient = function (persistenceSettings) {
         var _this = this;
         assert(!!this._config.settings.host, 'FirestoreSettings.host cannot be falsey');
+        if (!this._config.settings.timestampsInSnapshots) {
+            error("\nThe behavior for Date objects stored in Firestore is going to change\nAND YOUR APP MAY BREAK.\nTo hide this warning and ensure your app does not break, you need to add the\nfollowing code to your app before calling any other Cloud Firestore methods:\n\n  const firestore = firebase.firestore();\n  const settings = {/* your settings... */ timestampsInSnapshots: true};\n  firestore.settings(settings);\n\nWith this change, timestamps stored in Cloud Firestore will be read back as\nFirebase Timestamp objects instead of as system Date objects. So you will also\nneed to update code expecting a Date to instead expect a Timestamp. For example:\n\n  // Old:\n  const date = snapshot.get('created_at');\n  // New:\n  const timestamp = snapshot.get('created_at');\n  const date = timestamp.toDate();\n\nPlease audit all existing usages of Date when you enable the new behavior. In a\nfuture release, the behavior will change to the new behavior, so if you do not\nfollow these steps, YOUR APP MAY BREAK.");
+        }
         assert(!this._firestoreClient, 'configureClient() called multiple times');
         var databaseInfo = new DatabaseInfo(this._config.databaseId, this._config.persistenceKey, this._config.settings.host, this._config.settings.ssl);
         var preConverter = function (value) {
@@ -24316,8 +24665,7 @@ var Query$1 = /** @class */ (function () {
      * position.
      *
      * Will throw if the document does not contain all fields of the order by
-     * of the query or if any of the fields in the order by are an uncommitted
-     * server timestamp.
+     * of the query.
      */
     Query$$1.prototype.boundFromDocument = function (methodName, doc, before) {
         var components = [];
@@ -24335,14 +24683,7 @@ var Query$1 = /** @class */ (function () {
             }
             else {
                 var value = doc.field(orderBy.field);
-                if (value instanceof ServerTimestampValue) {
-                    throw new FirestoreError(Code.INVALID_ARGUMENT, 'Invalid query. You are trying to start or end a query using a ' +
-                        'document for which the field "' +
-                        orderBy.field +
-                        '" is an uncommitted server timestamp. (Since the value of ' +
-                        'this field is unknown, you cannot start/end a query with it.)');
-                }
-                else if (value !== undefined) {
+                if (value !== undefined) {
                     components.push(value);
                 }
                 else {
@@ -24821,7 +25162,6 @@ var PublicCollectionReference = makeConstructorPrivate(CollectionReference, 'Use
 // tslint:enable:variable-name
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24862,7 +25202,6 @@ function configureForFirebase(firebase$$1) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24885,13 +25224,12 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":16,"@firebase/logger":19,"@firebase/util":23,"@firebase/webchannel-wrapper":24,"_process":121,"tslib":119}],19:[function(require,module,exports){
+},{"@firebase/app":18,"@firebase/logger":21,"@firebase/webchannel-wrapper":26,"_process":1,"tslib":39}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25051,7 +25389,6 @@ var Logger = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25075,21 +25412,1525 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
+(function (global){
 'use strict';
 
 require('whatwg-fetch');
-require('promise-polyfill/lib/polyfill');
-require('core-js/fn/array/find');
-require('core-js/fn/array/find-index');
-require('core-js/fn/object/assign');
-require('core-js/fn/string/starts-with');
-require('core-js/fn/string/repeat');
-require('core-js/fn/symbol');
-require('core-js/fn/symbol/iterator');
+
+// Store setTimeout reference so promise-polyfill will be unaffected by
+// other code modifying setTimeout (like sinon.useFakeTimers())
+var setTimeoutFunc = setTimeout;
+
+function noop() {}
+
+// Polyfill for Function.prototype.bind
+function bind(fn, thisArg) {
+  return function() {
+    fn.apply(thisArg, arguments);
+  };
+}
+
+function Promise(fn) {
+  if (!(this instanceof Promise))
+    throw new TypeError('Promises must be constructed via new');
+  if (typeof fn !== 'function') throw new TypeError('not a function');
+  this._state = 0;
+  this._handled = false;
+  this._value = undefined;
+  this._deferreds = [];
+
+  doResolve(fn, this);
+}
+
+function handle(self, deferred) {
+  while (self._state === 3) {
+    self = self._value;
+  }
+  if (self._state === 0) {
+    self._deferreds.push(deferred);
+    return;
+  }
+  self._handled = true;
+  Promise._immediateFn(function() {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+    if (cb === null) {
+      (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
+      return;
+    }
+    var ret;
+    try {
+      ret = cb(self._value);
+    } catch (e) {
+      reject(deferred.promise, e);
+      return;
+    }
+    resolve(deferred.promise, ret);
+  });
+}
+
+function resolve(self, newValue) {
+  try {
+    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+    if (newValue === self)
+      throw new TypeError('A promise cannot be resolved with itself.');
+    if (
+      newValue &&
+      (typeof newValue === 'object' || typeof newValue === 'function')
+    ) {
+      var then = newValue.then;
+      if (newValue instanceof Promise) {
+        self._state = 3;
+        self._value = newValue;
+        finale(self);
+        return;
+      } else if (typeof then === 'function') {
+        doResolve(bind(then, newValue), self);
+        return;
+      }
+    }
+    self._state = 1;
+    self._value = newValue;
+    finale(self);
+  } catch (e) {
+    reject(self, e);
+  }
+}
+
+function reject(self, newValue) {
+  self._state = 2;
+  self._value = newValue;
+  finale(self);
+}
+
+function finale(self) {
+  if (self._state === 2 && self._deferreds.length === 0) {
+    Promise._immediateFn(function() {
+      if (!self._handled) {
+        Promise._unhandledRejectionFn(self._value);
+      }
+    });
+  }
+
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    handle(self, self._deferreds[i]);
+  }
+  self._deferreds = null;
+}
+
+function Handler(onFulfilled, onRejected, promise) {
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+  this.promise = promise;
+}
 
 /**
- * @license
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, self) {
+  var done = false;
+  try {
+    fn(
+      function(value) {
+        if (done) return;
+        done = true;
+        resolve(self, value);
+      },
+      function(reason) {
+        if (done) return;
+        done = true;
+        reject(self, reason);
+      }
+    );
+  } catch (ex) {
+    if (done) return;
+    done = true;
+    reject(self, ex);
+  }
+}
+
+Promise.prototype['catch'] = function(onRejected) {
+  return this.then(null, onRejected);
+};
+
+Promise.prototype.then = function(onFulfilled, onRejected) {
+  var prom = new this.constructor(noop);
+
+  handle(this, new Handler(onFulfilled, onRejected, prom));
+  return prom;
+};
+
+Promise.prototype['finally'] = function(callback) {
+  var constructor = this.constructor;
+  return this.then(
+    function(value) {
+      return constructor.resolve(callback()).then(function() {
+        return value;
+      });
+    },
+    function(reason) {
+      return constructor.resolve(callback()).then(function() {
+        return constructor.reject(reason);
+      });
+    }
+  );
+};
+
+Promise.all = function(arr) {
+  return new Promise(function(resolve, reject) {
+    if (!arr || typeof arr.length === 'undefined')
+      throw new TypeError('Promise.all accepts an array');
+    var args = Array.prototype.slice.call(arr);
+    if (args.length === 0) return resolve([]);
+    var remaining = args.length;
+
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then;
+          if (typeof then === 'function') {
+            then.call(
+              val,
+              function(val) {
+                res(i, val);
+              },
+              reject
+            );
+            return;
+          }
+        }
+        args[i] = val;
+        if (--remaining === 0) {
+          resolve(args);
+        }
+      } catch (ex) {
+        reject(ex);
+      }
+    }
+
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i]);
+    }
+  });
+};
+
+Promise.resolve = function(value) {
+  if (value && typeof value === 'object' && value.constructor === Promise) {
+    return value;
+  }
+
+  return new Promise(function(resolve) {
+    resolve(value);
+  });
+};
+
+Promise.reject = function(value) {
+  return new Promise(function(resolve, reject) {
+    reject(value);
+  });
+};
+
+Promise.race = function(values) {
+  return new Promise(function(resolve, reject) {
+    for (var i = 0, len = values.length; i < len; i++) {
+      values[i].then(resolve, reject);
+    }
+  });
+};
+
+// Use polyfill for setImmediate for performance gains
+Promise._immediateFn =
+  (typeof setImmediate === 'function' &&
+    function(fn) {
+      setImmediate(fn);
+    }) ||
+  function(fn) {
+    setTimeoutFunc(fn, 0);
+  };
+
+Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+  if (typeof console !== 'undefined' && console) {
+    console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
+  }
+};
+
+var globalNS = (function() {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+  throw new Error('unable to locate global object');
+})();
+
+if (!globalNS.Promise) {
+  globalNS.Promise = Promise;
+}
+
+function createCommonjsModule(fn, module) {
+	return module = { exports: {} }, fn(module, module.exports), module.exports;
+}
+
+var _global = createCommonjsModule(function (module) {
+// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
+var global = module.exports = typeof window != 'undefined' && window.Math == Math
+  ? window : typeof self != 'undefined' && self.Math == Math ? self
+  // eslint-disable-next-line no-new-func
+  : Function('return this')();
+if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
+});
+
+var _core = createCommonjsModule(function (module) {
+var core = module.exports = { version: '2.5.5' };
+if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
+});
+var _core_1 = _core.version;
+
+var _isObject = function (it) {
+  return typeof it === 'object' ? it !== null : typeof it === 'function';
+};
+
+var _anObject = function (it) {
+  if (!_isObject(it)) throw TypeError(it + ' is not an object!');
+  return it;
+};
+
+var _fails = function (exec) {
+  try {
+    return !!exec();
+  } catch (e) {
+    return true;
+  }
+};
+
+// Thank's IE8 for his funny defineProperty
+var _descriptors = !_fails(function () {
+  return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
+});
+
+var document = _global.document;
+// typeof document.createElement is 'object' in old IE
+var is = _isObject(document) && _isObject(document.createElement);
+var _domCreate = function (it) {
+  return is ? document.createElement(it) : {};
+};
+
+var _ie8DomDefine = !_descriptors && !_fails(function () {
+  return Object.defineProperty(_domCreate('div'), 'a', { get: function () { return 7; } }).a != 7;
+});
+
+// 7.1.1 ToPrimitive(input [, PreferredType])
+
+// instead of the ES6 spec version, we didn't implement @@toPrimitive case
+// and the second argument - flag - preferred type is a string
+var _toPrimitive = function (it, S) {
+  if (!_isObject(it)) return it;
+  var fn, val;
+  if (S && typeof (fn = it.toString) == 'function' && !_isObject(val = fn.call(it))) return val;
+  if (typeof (fn = it.valueOf) == 'function' && !_isObject(val = fn.call(it))) return val;
+  if (!S && typeof (fn = it.toString) == 'function' && !_isObject(val = fn.call(it))) return val;
+  throw TypeError("Can't convert object to primitive value");
+};
+
+var dP = Object.defineProperty;
+
+var f = _descriptors ? Object.defineProperty : function defineProperty(O, P, Attributes) {
+  _anObject(O);
+  P = _toPrimitive(P, true);
+  _anObject(Attributes);
+  if (_ie8DomDefine) try {
+    return dP(O, P, Attributes);
+  } catch (e) { /* empty */ }
+  if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported!');
+  if ('value' in Attributes) O[P] = Attributes.value;
+  return O;
+};
+
+var _objectDp = {
+	f: f
+};
+
+var _propertyDesc = function (bitmap, value) {
+  return {
+    enumerable: !(bitmap & 1),
+    configurable: !(bitmap & 2),
+    writable: !(bitmap & 4),
+    value: value
+  };
+};
+
+var _hide = _descriptors ? function (object, key, value) {
+  return _objectDp.f(object, key, _propertyDesc(1, value));
+} : function (object, key, value) {
+  object[key] = value;
+  return object;
+};
+
+var hasOwnProperty = {}.hasOwnProperty;
+var _has = function (it, key) {
+  return hasOwnProperty.call(it, key);
+};
+
+var id = 0;
+var px = Math.random();
+var _uid = function (key) {
+  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
+};
+
+var _redefine = createCommonjsModule(function (module) {
+var SRC = _uid('src');
+var TO_STRING = 'toString';
+var $toString = Function[TO_STRING];
+var TPL = ('' + $toString).split(TO_STRING);
+
+_core.inspectSource = function (it) {
+  return $toString.call(it);
+};
+
+(module.exports = function (O, key, val, safe) {
+  var isFunction = typeof val == 'function';
+  if (isFunction) _has(val, 'name') || _hide(val, 'name', key);
+  if (O[key] === val) return;
+  if (isFunction) _has(val, SRC) || _hide(val, SRC, O[key] ? '' + O[key] : TPL.join(String(key)));
+  if (O === _global) {
+    O[key] = val;
+  } else if (!safe) {
+    delete O[key];
+    _hide(O, key, val);
+  } else if (O[key]) {
+    O[key] = val;
+  } else {
+    _hide(O, key, val);
+  }
+// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
+})(Function.prototype, TO_STRING, function toString() {
+  return typeof this == 'function' && this[SRC] || $toString.call(this);
+});
+});
+
+var _aFunction = function (it) {
+  if (typeof it != 'function') throw TypeError(it + ' is not a function!');
+  return it;
+};
+
+// optional / simple context binding
+
+var _ctx = function (fn, that, length) {
+  _aFunction(fn);
+  if (that === undefined) return fn;
+  switch (length) {
+    case 1: return function (a) {
+      return fn.call(that, a);
+    };
+    case 2: return function (a, b) {
+      return fn.call(that, a, b);
+    };
+    case 3: return function (a, b, c) {
+      return fn.call(that, a, b, c);
+    };
+  }
+  return function (/* ...args */) {
+    return fn.apply(that, arguments);
+  };
+};
+
+var PROTOTYPE = 'prototype';
+
+var $export = function (type, name, source) {
+  var IS_FORCED = type & $export.F;
+  var IS_GLOBAL = type & $export.G;
+  var IS_STATIC = type & $export.S;
+  var IS_PROTO = type & $export.P;
+  var IS_BIND = type & $export.B;
+  var target = IS_GLOBAL ? _global : IS_STATIC ? _global[name] || (_global[name] = {}) : (_global[name] || {})[PROTOTYPE];
+  var exports = IS_GLOBAL ? _core : _core[name] || (_core[name] = {});
+  var expProto = exports[PROTOTYPE] || (exports[PROTOTYPE] = {});
+  var key, own, out, exp;
+  if (IS_GLOBAL) source = name;
+  for (key in source) {
+    // contains in native
+    own = !IS_FORCED && target && target[key] !== undefined;
+    // export native or passed
+    out = (own ? target : source)[key];
+    // bind timers to global for call from export context
+    exp = IS_BIND && own ? _ctx(out, _global) : IS_PROTO && typeof out == 'function' ? _ctx(Function.call, out) : out;
+    // extend global
+    if (target) _redefine(target, key, out, type & $export.U);
+    // export
+    if (exports[key] != out) _hide(exports, key, exp);
+    if (IS_PROTO && expProto[key] != out) expProto[key] = out;
+  }
+};
+_global.core = _core;
+// type bitmap
+$export.F = 1;   // forced
+$export.G = 2;   // global
+$export.S = 4;   // static
+$export.P = 8;   // proto
+$export.B = 16;  // bind
+$export.W = 32;  // wrap
+$export.U = 64;  // safe
+$export.R = 128; // real proto method for `library`
+var _export = $export;
+
+var toString = {}.toString;
+
+var _cof = function (it) {
+  return toString.call(it).slice(8, -1);
+};
+
+// fallback for non-array-like ES3 and non-enumerable old V8 strings
+
+// eslint-disable-next-line no-prototype-builtins
+var _iobject = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
+  return _cof(it) == 'String' ? it.split('') : Object(it);
+};
+
+// 7.2.1 RequireObjectCoercible(argument)
+var _defined = function (it) {
+  if (it == undefined) throw TypeError("Can't call method on  " + it);
+  return it;
+};
+
+// 7.1.13 ToObject(argument)
+
+var _toObject = function (it) {
+  return Object(_defined(it));
+};
+
+// 7.1.4 ToInteger
+var ceil = Math.ceil;
+var floor = Math.floor;
+var _toInteger = function (it) {
+  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
+};
+
+// 7.1.15 ToLength
+
+var min = Math.min;
+var _toLength = function (it) {
+  return it > 0 ? min(_toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
+};
+
+// 7.2.2 IsArray(argument)
+
+var _isArray = Array.isArray || function isArray(arg) {
+  return _cof(arg) == 'Array';
+};
+
+var SHARED = '__core-js_shared__';
+var store = _global[SHARED] || (_global[SHARED] = {});
+var _shared = function (key) {
+  return store[key] || (store[key] = {});
+};
+
+var _wks = createCommonjsModule(function (module) {
+var store = _shared('wks');
+
+var Symbol = _global.Symbol;
+var USE_SYMBOL = typeof Symbol == 'function';
+
+var $exports = module.exports = function (name) {
+  return store[name] || (store[name] =
+    USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : _uid)('Symbol.' + name));
+};
+
+$exports.store = store;
+});
+
+var SPECIES = _wks('species');
+
+var _arraySpeciesConstructor = function (original) {
+  var C;
+  if (_isArray(original)) {
+    C = original.constructor;
+    // cross-realm fallback
+    if (typeof C == 'function' && (C === Array || _isArray(C.prototype))) C = undefined;
+    if (_isObject(C)) {
+      C = C[SPECIES];
+      if (C === null) C = undefined;
+    }
+  } return C === undefined ? Array : C;
+};
+
+// 9.4.2.3 ArraySpeciesCreate(originalArray, length)
+
+
+var _arraySpeciesCreate = function (original, length) {
+  return new (_arraySpeciesConstructor(original))(length);
+};
+
+// 0 -> Array#forEach
+// 1 -> Array#map
+// 2 -> Array#filter
+// 3 -> Array#some
+// 4 -> Array#every
+// 5 -> Array#find
+// 6 -> Array#findIndex
+
+
+
+
+
+var _arrayMethods = function (TYPE, $create) {
+  var IS_MAP = TYPE == 1;
+  var IS_FILTER = TYPE == 2;
+  var IS_SOME = TYPE == 3;
+  var IS_EVERY = TYPE == 4;
+  var IS_FIND_INDEX = TYPE == 6;
+  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
+  var create = $create || _arraySpeciesCreate;
+  return function ($this, callbackfn, that) {
+    var O = _toObject($this);
+    var self = _iobject(O);
+    var f = _ctx(callbackfn, that, 3);
+    var length = _toLength(self.length);
+    var index = 0;
+    var result = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
+    var val, res;
+    for (;length > index; index++) if (NO_HOLES || index in self) {
+      val = self[index];
+      res = f(val, index, O);
+      if (TYPE) {
+        if (IS_MAP) result[index] = res;   // map
+        else if (res) switch (TYPE) {
+          case 3: return true;             // some
+          case 5: return val;              // find
+          case 6: return index;            // findIndex
+          case 2: result.push(val);        // filter
+        } else if (IS_EVERY) return false; // every
+      }
+    }
+    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
+  };
+};
+
+// 22.1.3.31 Array.prototype[@@unscopables]
+var UNSCOPABLES = _wks('unscopables');
+var ArrayProto = Array.prototype;
+if (ArrayProto[UNSCOPABLES] == undefined) _hide(ArrayProto, UNSCOPABLES, {});
+var _addToUnscopables = function (key) {
+  ArrayProto[UNSCOPABLES][key] = true;
+};
+
+// 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
+
+var $find = _arrayMethods(5);
+var KEY = 'find';
+var forced = true;
+// Shouldn't skip holes
+if (KEY in []) Array(1)[KEY](function () { forced = false; });
+_export(_export.P + _export.F * forced, 'Array', {
+  find: function find(callbackfn /* , that = undefined */) {
+    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+_addToUnscopables(KEY);
+
+var find = _core.Array.find;
+
+// 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
+
+var $find$1 = _arrayMethods(6);
+var KEY$1 = 'findIndex';
+var forced$1 = true;
+// Shouldn't skip holes
+if (KEY$1 in []) Array(1)[KEY$1](function () { forced$1 = false; });
+_export(_export.P + _export.F * forced$1, 'Array', {
+  findIndex: function findIndex(callbackfn /* , that = undefined */) {
+    return $find$1(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+_addToUnscopables(KEY$1);
+
+var findIndex = _core.Array.findIndex;
+
+// to indexed object, toObject with fallback for non-array-like ES3 strings
+
+
+var _toIobject = function (it) {
+  return _iobject(_defined(it));
+};
+
+var max = Math.max;
+var min$1 = Math.min;
+var _toAbsoluteIndex = function (index, length) {
+  index = _toInteger(index);
+  return index < 0 ? max(index + length, 0) : min$1(index, length);
+};
+
+// false -> Array#indexOf
+// true  -> Array#includes
+
+
+
+var _arrayIncludes = function (IS_INCLUDES) {
+  return function ($this, el, fromIndex) {
+    var O = _toIobject($this);
+    var length = _toLength(O.length);
+    var index = _toAbsoluteIndex(fromIndex, length);
+    var value;
+    // Array#includes uses SameValueZero equality algorithm
+    // eslint-disable-next-line no-self-compare
+    if (IS_INCLUDES && el != el) while (length > index) {
+      value = O[index++];
+      // eslint-disable-next-line no-self-compare
+      if (value != value) return true;
+    // Array#indexOf ignores holes, Array#includes - not
+    } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
+      if (O[index] === el) return IS_INCLUDES || index || 0;
+    } return !IS_INCLUDES && -1;
+  };
+};
+
+var shared = _shared('keys');
+
+var _sharedKey = function (key) {
+  return shared[key] || (shared[key] = _uid(key));
+};
+
+var arrayIndexOf = _arrayIncludes(false);
+var IE_PROTO = _sharedKey('IE_PROTO');
+
+var _objectKeysInternal = function (object, names) {
+  var O = _toIobject(object);
+  var i = 0;
+  var result = [];
+  var key;
+  for (key in O) if (key != IE_PROTO) _has(O, key) && result.push(key);
+  // Don't enum bug & hidden keys
+  while (names.length > i) if (_has(O, key = names[i++])) {
+    ~arrayIndexOf(result, key) || result.push(key);
+  }
+  return result;
+};
+
+// IE 8- don't enum bug keys
+var _enumBugKeys = (
+  'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
+).split(',');
+
+// 19.1.2.14 / 15.2.3.14 Object.keys(O)
+
+
+
+var _objectKeys = Object.keys || function keys(O) {
+  return _objectKeysInternal(O, _enumBugKeys);
+};
+
+var f$1 = Object.getOwnPropertySymbols;
+
+var _objectGops = {
+	f: f$1
+};
+
+var f$2 = {}.propertyIsEnumerable;
+
+var _objectPie = {
+	f: f$2
+};
+
+// 19.1.2.1 Object.assign(target, source, ...)
+
+
+
+
+
+var $assign = Object.assign;
+
+// should work with symbols and should have deterministic property order (V8 bug)
+var _objectAssign = !$assign || _fails(function () {
+  var A = {};
+  var B = {};
+  // eslint-disable-next-line no-undef
+  var S = Symbol();
+  var K = 'abcdefghijklmnopqrst';
+  A[S] = 7;
+  K.split('').forEach(function (k) { B[k] = k; });
+  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
+}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
+  var T = _toObject(target);
+  var aLen = arguments.length;
+  var index = 1;
+  var getSymbols = _objectGops.f;
+  var isEnum = _objectPie.f;
+  while (aLen > index) {
+    var S = _iobject(arguments[index++]);
+    var keys = getSymbols ? _objectKeys(S).concat(getSymbols(S)) : _objectKeys(S);
+    var length = keys.length;
+    var j = 0;
+    var key;
+    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
+  } return T;
+} : $assign;
+
+// 19.1.3.1 Object.assign(target, source)
+
+
+_export(_export.S + _export.F, 'Object', { assign: _objectAssign });
+
+var assign = _core.Object.assign;
+
+// 7.2.8 IsRegExp(argument)
+
+
+var MATCH = _wks('match');
+var _isRegexp = function (it) {
+  var isRegExp;
+  return _isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : _cof(it) == 'RegExp');
+};
+
+// helper for String#{startsWith, endsWith, includes}
+
+
+
+var _stringContext = function (that, searchString, NAME) {
+  if (_isRegexp(searchString)) throw TypeError('String#' + NAME + " doesn't accept regex!");
+  return String(_defined(that));
+};
+
+var MATCH$1 = _wks('match');
+var _failsIsRegexp = function (KEY) {
+  var re = /./;
+  try {
+    '/./'[KEY](re);
+  } catch (e) {
+    try {
+      re[MATCH$1] = false;
+      return !'/./'[KEY](re);
+    } catch (f) { /* empty */ }
+  } return true;
+};
+
+var STARTS_WITH = 'startsWith';
+var $startsWith = ''[STARTS_WITH];
+
+_export(_export.P + _export.F * _failsIsRegexp(STARTS_WITH), 'String', {
+  startsWith: function startsWith(searchString /* , position = 0 */) {
+    var that = _stringContext(this, searchString, STARTS_WITH);
+    var index = _toLength(Math.min(arguments.length > 1 ? arguments[1] : undefined, that.length));
+    var search = String(searchString);
+    return $startsWith
+      ? $startsWith.call(that, search, index)
+      : that.slice(index, index + search.length) === search;
+  }
+});
+
+var startsWith = _core.String.startsWith;
+
+var _stringRepeat = function repeat(count) {
+  var str = String(_defined(this));
+  var res = '';
+  var n = _toInteger(count);
+  if (n < 0 || n == Infinity) throw RangeError("Count can't be negative");
+  for (;n > 0; (n >>>= 1) && (str += str)) if (n & 1) res += str;
+  return res;
+};
+
+_export(_export.P, 'String', {
+  // 21.1.3.13 String.prototype.repeat(count)
+  repeat: _stringRepeat
+});
+
+var repeat = _core.String.repeat;
+
+var _meta = createCommonjsModule(function (module) {
+var META = _uid('meta');
+
+
+var setDesc = _objectDp.f;
+var id = 0;
+var isExtensible = Object.isExtensible || function () {
+  return true;
+};
+var FREEZE = !_fails(function () {
+  return isExtensible(Object.preventExtensions({}));
+});
+var setMeta = function (it) {
+  setDesc(it, META, { value: {
+    i: 'O' + ++id, // object ID
+    w: {}          // weak collections IDs
+  } });
+};
+var fastKey = function (it, create) {
+  // return primitive with prefix
+  if (!_isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
+  if (!_has(it, META)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return 'F';
+    // not necessary to add metadata
+    if (!create) return 'E';
+    // add missing metadata
+    setMeta(it);
+  // return object ID
+  } return it[META].i;
+};
+var getWeak = function (it, create) {
+  if (!_has(it, META)) {
+    // can't set metadata to uncaught frozen object
+    if (!isExtensible(it)) return true;
+    // not necessary to add metadata
+    if (!create) return false;
+    // add missing metadata
+    setMeta(it);
+  // return hash weak collections IDs
+  } return it[META].w;
+};
+// add metadata on freeze-family methods calling
+var onFreeze = function (it) {
+  if (FREEZE && meta.NEED && isExtensible(it) && !_has(it, META)) setMeta(it);
+  return it;
+};
+var meta = module.exports = {
+  KEY: META,
+  NEED: false,
+  fastKey: fastKey,
+  getWeak: getWeak,
+  onFreeze: onFreeze
+};
+});
+var _meta_1 = _meta.KEY;
+var _meta_2 = _meta.NEED;
+var _meta_3 = _meta.fastKey;
+var _meta_4 = _meta.getWeak;
+var _meta_5 = _meta.onFreeze;
+
+var def = _objectDp.f;
+
+var TAG = _wks('toStringTag');
+
+var _setToStringTag = function (it, tag, stat) {
+  if (it && !_has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
+};
+
+var f$3 = _wks;
+
+var _wksExt = {
+	f: f$3
+};
+
+var _library = false;
+
+var defineProperty = _objectDp.f;
+var _wksDefine = function (name) {
+  var $Symbol = _core.Symbol || (_core.Symbol = _library ? {} : _global.Symbol || {});
+  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: _wksExt.f(name) });
+};
+
+// all enumerable object keys, includes symbols
+
+
+
+var _enumKeys = function (it) {
+  var result = _objectKeys(it);
+  var getSymbols = _objectGops.f;
+  if (getSymbols) {
+    var symbols = getSymbols(it);
+    var isEnum = _objectPie.f;
+    var i = 0;
+    var key;
+    while (symbols.length > i) if (isEnum.call(it, key = symbols[i++])) result.push(key);
+  } return result;
+};
+
+var _objectDps = _descriptors ? Object.defineProperties : function defineProperties(O, Properties) {
+  _anObject(O);
+  var keys = _objectKeys(Properties);
+  var length = keys.length;
+  var i = 0;
+  var P;
+  while (length > i) _objectDp.f(O, P = keys[i++], Properties[P]);
+  return O;
+};
+
+var document$1 = _global.document;
+var _html = document$1 && document$1.documentElement;
+
+// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
+
+
+
+var IE_PROTO$1 = _sharedKey('IE_PROTO');
+var Empty = function () { /* empty */ };
+var PROTOTYPE$1 = 'prototype';
+
+// Create object with fake `null` prototype: use iframe Object with cleared prototype
+var createDict = function () {
+  // Thrash, waste and sodomy: IE GC bug
+  var iframe = _domCreate('iframe');
+  var i = _enumBugKeys.length;
+  var lt = '<';
+  var gt = '>';
+  var iframeDocument;
+  iframe.style.display = 'none';
+  _html.appendChild(iframe);
+  iframe.src = 'javascript:'; // eslint-disable-line no-script-url
+  // createDict = iframe.contentWindow.Object;
+  // html.removeChild(iframe);
+  iframeDocument = iframe.contentWindow.document;
+  iframeDocument.open();
+  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
+  iframeDocument.close();
+  createDict = iframeDocument.F;
+  while (i--) delete createDict[PROTOTYPE$1][_enumBugKeys[i]];
+  return createDict();
+};
+
+var _objectCreate = Object.create || function create(O, Properties) {
+  var result;
+  if (O !== null) {
+    Empty[PROTOTYPE$1] = _anObject(O);
+    result = new Empty();
+    Empty[PROTOTYPE$1] = null;
+    // add "__proto__" for Object.getPrototypeOf polyfill
+    result[IE_PROTO$1] = O;
+  } else result = createDict();
+  return Properties === undefined ? result : _objectDps(result, Properties);
+};
+
+// 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
+
+var hiddenKeys = _enumBugKeys.concat('length', 'prototype');
+
+var f$4 = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
+  return _objectKeysInternal(O, hiddenKeys);
+};
+
+var _objectGopn = {
+	f: f$4
+};
+
+// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
+
+var gOPN = _objectGopn.f;
+var toString$1 = {}.toString;
+
+var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
+  ? Object.getOwnPropertyNames(window) : [];
+
+var getWindowNames = function (it) {
+  try {
+    return gOPN(it);
+  } catch (e) {
+    return windowNames.slice();
+  }
+};
+
+var f$5 = function getOwnPropertyNames(it) {
+  return windowNames && toString$1.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(_toIobject(it));
+};
+
+var _objectGopnExt = {
+	f: f$5
+};
+
+var gOPD = Object.getOwnPropertyDescriptor;
+
+var f$6 = _descriptors ? gOPD : function getOwnPropertyDescriptor(O, P) {
+  O = _toIobject(O);
+  P = _toPrimitive(P, true);
+  if (_ie8DomDefine) try {
+    return gOPD(O, P);
+  } catch (e) { /* empty */ }
+  if (_has(O, P)) return _propertyDesc(!_objectPie.f.call(O, P), O[P]);
+};
+
+var _objectGopd = {
+	f: f$6
+};
+
+// ECMAScript 6 symbols shim
+
+
+
+
+
+var META = _meta.KEY;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+var gOPD$1 = _objectGopd.f;
+var dP$1 = _objectDp.f;
+var gOPN$1 = _objectGopnExt.f;
+var $Symbol = _global.Symbol;
+var $JSON = _global.JSON;
+var _stringify = $JSON && $JSON.stringify;
+var PROTOTYPE$2 = 'prototype';
+var HIDDEN = _wks('_hidden');
+var TO_PRIMITIVE = _wks('toPrimitive');
+var isEnum = {}.propertyIsEnumerable;
+var SymbolRegistry = _shared('symbol-registry');
+var AllSymbols = _shared('symbols');
+var OPSymbols = _shared('op-symbols');
+var ObjectProto = Object[PROTOTYPE$2];
+var USE_NATIVE = typeof $Symbol == 'function';
+var QObject = _global.QObject;
+// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
+var setter = !QObject || !QObject[PROTOTYPE$2] || !QObject[PROTOTYPE$2].findChild;
+
+// fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
+var setSymbolDesc = _descriptors && _fails(function () {
+  return _objectCreate(dP$1({}, 'a', {
+    get: function () { return dP$1(this, 'a', { value: 7 }).a; }
+  })).a != 7;
+}) ? function (it, key, D) {
+  var protoDesc = gOPD$1(ObjectProto, key);
+  if (protoDesc) delete ObjectProto[key];
+  dP$1(it, key, D);
+  if (protoDesc && it !== ObjectProto) dP$1(ObjectProto, key, protoDesc);
+} : dP$1;
+
+var wrap = function (tag) {
+  var sym = AllSymbols[tag] = _objectCreate($Symbol[PROTOTYPE$2]);
+  sym._k = tag;
+  return sym;
+};
+
+var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function (it) {
+  return typeof it == 'symbol';
+} : function (it) {
+  return it instanceof $Symbol;
+};
+
+var $defineProperty = function defineProperty(it, key, D) {
+  if (it === ObjectProto) $defineProperty(OPSymbols, key, D);
+  _anObject(it);
+  key = _toPrimitive(key, true);
+  _anObject(D);
+  if (_has(AllSymbols, key)) {
+    if (!D.enumerable) {
+      if (!_has(it, HIDDEN)) dP$1(it, HIDDEN, _propertyDesc(1, {}));
+      it[HIDDEN][key] = true;
+    } else {
+      if (_has(it, HIDDEN) && it[HIDDEN][key]) it[HIDDEN][key] = false;
+      D = _objectCreate(D, { enumerable: _propertyDesc(0, false) });
+    } return setSymbolDesc(it, key, D);
+  } return dP$1(it, key, D);
+};
+var $defineProperties = function defineProperties(it, P) {
+  _anObject(it);
+  var keys = _enumKeys(P = _toIobject(P));
+  var i = 0;
+  var l = keys.length;
+  var key;
+  while (l > i) $defineProperty(it, key = keys[i++], P[key]);
+  return it;
+};
+var $create = function create(it, P) {
+  return P === undefined ? _objectCreate(it) : $defineProperties(_objectCreate(it), P);
+};
+var $propertyIsEnumerable = function propertyIsEnumerable(key) {
+  var E = isEnum.call(this, key = _toPrimitive(key, true));
+  if (this === ObjectProto && _has(AllSymbols, key) && !_has(OPSymbols, key)) return false;
+  return E || !_has(this, key) || !_has(AllSymbols, key) || _has(this, HIDDEN) && this[HIDDEN][key] ? E : true;
+};
+var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(it, key) {
+  it = _toIobject(it);
+  key = _toPrimitive(key, true);
+  if (it === ObjectProto && _has(AllSymbols, key) && !_has(OPSymbols, key)) return;
+  var D = gOPD$1(it, key);
+  if (D && _has(AllSymbols, key) && !(_has(it, HIDDEN) && it[HIDDEN][key])) D.enumerable = true;
+  return D;
+};
+var $getOwnPropertyNames = function getOwnPropertyNames(it) {
+  var names = gOPN$1(_toIobject(it));
+  var result = [];
+  var i = 0;
+  var key;
+  while (names.length > i) {
+    if (!_has(AllSymbols, key = names[i++]) && key != HIDDEN && key != META) result.push(key);
+  } return result;
+};
+var $getOwnPropertySymbols = function getOwnPropertySymbols(it) {
+  var IS_OP = it === ObjectProto;
+  var names = gOPN$1(IS_OP ? OPSymbols : _toIobject(it));
+  var result = [];
+  var i = 0;
+  var key;
+  while (names.length > i) {
+    if (_has(AllSymbols, key = names[i++]) && (IS_OP ? _has(ObjectProto, key) : true)) result.push(AllSymbols[key]);
+  } return result;
+};
+
+// 19.4.1.1 Symbol([description])
+if (!USE_NATIVE) {
+  $Symbol = function Symbol() {
+    if (this instanceof $Symbol) throw TypeError('Symbol is not a constructor!');
+    var tag = _uid(arguments.length > 0 ? arguments[0] : undefined);
+    var $set = function (value) {
+      if (this === ObjectProto) $set.call(OPSymbols, value);
+      if (_has(this, HIDDEN) && _has(this[HIDDEN], tag)) this[HIDDEN][tag] = false;
+      setSymbolDesc(this, tag, _propertyDesc(1, value));
+    };
+    if (_descriptors && setter) setSymbolDesc(ObjectProto, tag, { configurable: true, set: $set });
+    return wrap(tag);
+  };
+  _redefine($Symbol[PROTOTYPE$2], 'toString', function toString() {
+    return this._k;
+  });
+
+  _objectGopd.f = $getOwnPropertyDescriptor;
+  _objectDp.f = $defineProperty;
+  _objectGopn.f = _objectGopnExt.f = $getOwnPropertyNames;
+  _objectPie.f = $propertyIsEnumerable;
+  _objectGops.f = $getOwnPropertySymbols;
+
+  if (_descriptors && !_library) {
+    _redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
+  }
+
+  _wksExt.f = function (name) {
+    return wrap(_wks(name));
+  };
+}
+
+_export(_export.G + _export.W + _export.F * !USE_NATIVE, { Symbol: $Symbol });
+
+for (var es6Symbols = (
+  // 19.4.2.2, 19.4.2.3, 19.4.2.4, 19.4.2.6, 19.4.2.8, 19.4.2.9, 19.4.2.10, 19.4.2.11, 19.4.2.12, 19.4.2.13, 19.4.2.14
+  'hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables'
+).split(','), j = 0; es6Symbols.length > j;)_wks(es6Symbols[j++]);
+
+for (var wellKnownSymbols = _objectKeys(_wks.store), k = 0; wellKnownSymbols.length > k;) _wksDefine(wellKnownSymbols[k++]);
+
+_export(_export.S + _export.F * !USE_NATIVE, 'Symbol', {
+  // 19.4.2.1 Symbol.for(key)
+  'for': function (key) {
+    return _has(SymbolRegistry, key += '')
+      ? SymbolRegistry[key]
+      : SymbolRegistry[key] = $Symbol(key);
+  },
+  // 19.4.2.5 Symbol.keyFor(sym)
+  keyFor: function keyFor(sym) {
+    if (!isSymbol(sym)) throw TypeError(sym + ' is not a symbol!');
+    for (var key in SymbolRegistry) if (SymbolRegistry[key] === sym) return key;
+  },
+  useSetter: function () { setter = true; },
+  useSimple: function () { setter = false; }
+});
+
+_export(_export.S + _export.F * !USE_NATIVE, 'Object', {
+  // 19.1.2.2 Object.create(O [, Properties])
+  create: $create,
+  // 19.1.2.4 Object.defineProperty(O, P, Attributes)
+  defineProperty: $defineProperty,
+  // 19.1.2.3 Object.defineProperties(O, Properties)
+  defineProperties: $defineProperties,
+  // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
+  getOwnPropertyDescriptor: $getOwnPropertyDescriptor,
+  // 19.1.2.7 Object.getOwnPropertyNames(O)
+  getOwnPropertyNames: $getOwnPropertyNames,
+  // 19.1.2.8 Object.getOwnPropertySymbols(O)
+  getOwnPropertySymbols: $getOwnPropertySymbols
+});
+
+// 24.3.2 JSON.stringify(value [, replacer [, space]])
+$JSON && _export(_export.S + _export.F * (!USE_NATIVE || _fails(function () {
+  var S = $Symbol();
+  // MS Edge converts symbol values to JSON as {}
+  // WebKit converts symbol values to JSON as null
+  // V8 throws on boxed symbols
+  return _stringify([S]) != '[null]' || _stringify({ a: S }) != '{}' || _stringify(Object(S)) != '{}';
+})), 'JSON', {
+  stringify: function stringify(it) {
+    var args = [it];
+    var i = 1;
+    var replacer, $replacer;
+    while (arguments.length > i) args.push(arguments[i++]);
+    $replacer = replacer = args[1];
+    if (!_isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
+    if (!_isArray(replacer)) replacer = function (key, value) {
+      if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
+      if (!isSymbol(value)) return value;
+    };
+    args[1] = replacer;
+    return _stringify.apply($JSON, args);
+  }
+});
+
+// 19.4.3.4 Symbol.prototype[@@toPrimitive](hint)
+$Symbol[PROTOTYPE$2][TO_PRIMITIVE] || _hide($Symbol[PROTOTYPE$2], TO_PRIMITIVE, $Symbol[PROTOTYPE$2].valueOf);
+// 19.4.3.5 Symbol.prototype[@@toStringTag]
+_setToStringTag($Symbol, 'Symbol');
+// 20.2.1.9 Math[@@toStringTag]
+_setToStringTag(Math, 'Math', true);
+// 24.3.3 JSON[@@toStringTag]
+_setToStringTag(_global.JSON, 'JSON', true);
+
+// getting tag from 19.1.3.6 Object.prototype.toString()
+
+var TAG$1 = _wks('toStringTag');
+// ES3 wrong here
+var ARG = _cof(function () { return arguments; }()) == 'Arguments';
+
+// fallback for IE11 Script Access Denied error
+var tryGet = function (it, key) {
+  try {
+    return it[key];
+  } catch (e) { /* empty */ }
+};
+
+var _classof = function (it) {
+  var O, T, B;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (T = tryGet(O = Object(it), TAG$1)) == 'string' ? T
+    // builtinTag case
+    : ARG ? _cof(O)
+    // ES3 arguments fallback
+    : (B = _cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
+};
+
+// 19.1.3.6 Object.prototype.toString()
+
+var test = {};
+test[_wks('toStringTag')] = 'z';
+if (test + '' != '[object z]') {
+  _redefine(Object.prototype, 'toString', function toString() {
+    return '[object ' + _classof(this) + ']';
+  }, true);
+}
+
+_wksDefine('asyncIterator');
+
+_wksDefine('observable');
+
+var symbol = _core.Symbol;
+
+// true  -> String#at
+// false -> String#codePointAt
+var _stringAt = function (TO_STRING) {
+  return function (that, pos) {
+    var s = String(_defined(that));
+    var i = _toInteger(pos);
+    var l = s.length;
+    var a, b;
+    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+    a = s.charCodeAt(i);
+    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+      ? TO_STRING ? s.charAt(i) : a
+      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+  };
+};
+
+var _iterators = {};
+
+var IteratorPrototype = {};
+
+// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
+_hide(IteratorPrototype, _wks('iterator'), function () { return this; });
+
+var _iterCreate = function (Constructor, NAME, next) {
+  Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
+  _setToStringTag(Constructor, NAME + ' Iterator');
+};
+
+// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
+
+
+var IE_PROTO$2 = _sharedKey('IE_PROTO');
+var ObjectProto$1 = Object.prototype;
+
+var _objectGpo = Object.getPrototypeOf || function (O) {
+  O = _toObject(O);
+  if (_has(O, IE_PROTO$2)) return O[IE_PROTO$2];
+  if (typeof O.constructor == 'function' && O instanceof O.constructor) {
+    return O.constructor.prototype;
+  } return O instanceof Object ? ObjectProto$1 : null;
+};
+
+var ITERATOR = _wks('iterator');
+var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
+var FF_ITERATOR = '@@iterator';
+var KEYS = 'keys';
+var VALUES = 'values';
+
+var returnThis = function () { return this; };
+
+var _iterDefine = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
+  _iterCreate(Constructor, NAME, next);
+  var getMethod = function (kind) {
+    if (!BUGGY && kind in proto) return proto[kind];
+    switch (kind) {
+      case KEYS: return function keys() { return new Constructor(this, kind); };
+      case VALUES: return function values() { return new Constructor(this, kind); };
+    } return function entries() { return new Constructor(this, kind); };
+  };
+  var TAG = NAME + ' Iterator';
+  var DEF_VALUES = DEFAULT == VALUES;
+  var VALUES_BUG = false;
+  var proto = Base.prototype;
+  var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
+  var $default = $native || getMethod(DEFAULT);
+  var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
+  var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
+  var methods, key, IteratorPrototype;
+  // Fix native
+  if ($anyNative) {
+    IteratorPrototype = _objectGpo($anyNative.call(new Base()));
+    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
+      // Set @@toStringTag to native iterators
+      _setToStringTag(IteratorPrototype, TAG, true);
+      // fix for some old engines
+      if (!_library && typeof IteratorPrototype[ITERATOR] != 'function') _hide(IteratorPrototype, ITERATOR, returnThis);
+    }
+  }
+  // fix Array#{values, @@iterator}.name in V8 / FF
+  if (DEF_VALUES && $native && $native.name !== VALUES) {
+    VALUES_BUG = true;
+    $default = function values() { return $native.call(this); };
+  }
+  // Define iterator
+  if ((!_library || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
+    _hide(proto, ITERATOR, $default);
+  }
+  // Plug for library
+  _iterators[NAME] = $default;
+  _iterators[TAG] = returnThis;
+  if (DEFAULT) {
+    methods = {
+      values: DEF_VALUES ? $default : getMethod(VALUES),
+      keys: IS_SET ? $default : getMethod(KEYS),
+      entries: $entries
+    };
+    if (FORCED) for (key in methods) {
+      if (!(key in proto)) _redefine(proto, key, methods[key]);
+    } else _export(_export.P + _export.F * (BUGGY || VALUES_BUG), NAME, methods);
+  }
+  return methods;
+};
+
+var $at = _stringAt(true);
+
+// 21.1.3.27 String.prototype[@@iterator]()
+_iterDefine(String, 'String', function (iterated) {
+  this._t = String(iterated); // target
+  this._i = 0;                // next index
+// 21.1.5.2.1 %StringIteratorPrototype%.next()
+}, function () {
+  var O = this._t;
+  var index = this._i;
+  var point;
+  if (index >= O.length) return { value: undefined, done: true };
+  point = $at(O, index);
+  this._i += point.length;
+  return { value: point, done: false };
+});
+
+var _iterStep = function (done, value) {
+  return { value: value, done: !!done };
+};
+
+// 22.1.3.4 Array.prototype.entries()
+// 22.1.3.13 Array.prototype.keys()
+// 22.1.3.29 Array.prototype.values()
+// 22.1.3.30 Array.prototype[@@iterator]()
+var es6_array_iterator = _iterDefine(Array, 'Array', function (iterated, kind) {
+  this._t = _toIobject(iterated); // target
+  this._i = 0;                   // next index
+  this._k = kind;                // kind
+// 22.1.5.2.1 %ArrayIteratorPrototype%.next()
+}, function () {
+  var O = this._t;
+  var kind = this._k;
+  var index = this._i++;
+  if (!O || index >= O.length) {
+    this._t = undefined;
+    return _iterStep(1);
+  }
+  if (kind == 'keys') return _iterStep(0, index);
+  if (kind == 'values') return _iterStep(0, O[index]);
+  return _iterStep(0, [index, O[index]]);
+}, 'values');
+
+// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
+_iterators.Arguments = _iterators.Array;
+
+_addToUnscopables('keys');
+_addToUnscopables('values');
+_addToUnscopables('entries');
+
+var ITERATOR$1 = _wks('iterator');
+var TO_STRING_TAG = _wks('toStringTag');
+var ArrayValues = _iterators.Array;
+
+var DOMIterables = {
+  CSSRuleList: true, // TODO: Not spec compliant, should be false.
+  CSSStyleDeclaration: false,
+  CSSValueList: false,
+  ClientRectList: false,
+  DOMRectList: false,
+  DOMStringList: false,
+  DOMTokenList: true,
+  DataTransferItemList: false,
+  FileList: false,
+  HTMLAllCollection: false,
+  HTMLCollection: false,
+  HTMLFormElement: false,
+  HTMLSelectElement: false,
+  MediaList: true, // TODO: Not spec compliant, should be false.
+  MimeTypeArray: false,
+  NamedNodeMap: false,
+  NodeList: true,
+  PaintRequestList: false,
+  Plugin: false,
+  PluginArray: false,
+  SVGLengthList: false,
+  SVGNumberList: false,
+  SVGPathSegList: false,
+  SVGPointList: false,
+  SVGStringList: false,
+  SVGTransformList: false,
+  SourceBufferList: false,
+  StyleSheetList: true, // TODO: Not spec compliant, should be false.
+  TextTrackCueList: false,
+  TextTrackList: false,
+  TouchList: false
+};
+
+for (var collections = _objectKeys(DOMIterables), i = 0; i < collections.length; i++) {
+  var NAME = collections[i];
+  var explicit = DOMIterables[NAME];
+  var Collection = _global[NAME];
+  var proto = Collection && Collection.prototype;
+  var key;
+  if (proto) {
+    if (!proto[ITERATOR$1]) _hide(proto, ITERATOR$1, ArrayValues);
+    if (!proto[TO_STRING_TAG]) _hide(proto, TO_STRING_TAG, NAME);
+    _iterators[NAME] = ArrayValues;
+    if (explicit) for (key in es6_array_iterator) if (!proto[key]) _redefine(proto, key, es6_array_iterator[key], true);
+  }
+}
+
+var iterator = _wksExt.f('iterator');
+
+/**
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25105,7 +26946,8 @@ require('core-js/fn/symbol/iterator');
  * limitations under the License.
  */
 
-},{"core-js/fn/array/find":26,"core-js/fn/array/find-index":25,"core-js/fn/object/assign":27,"core-js/fn/string/repeat":28,"core-js/fn/string/starts-with":29,"core-js/fn/symbol":30,"core-js/fn/symbol/iterator":31,"promise-polyfill/lib/polyfill":113,"whatwg-fetch":21}],21:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"whatwg-fetch":23}],23:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -25573,7 +27415,7 @@ require('core-js/fn/symbol/iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -25583,7 +27425,6 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 var firebase = _interopDefault(require('@firebase/app'));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25633,7 +27474,6 @@ var defaultMaxUploadRetryTime = 10 * 60 * 100;
 var minSafeInteger = -9007199254740991;
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25821,7 +27661,6 @@ function internalError(message) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26016,7 +27855,6 @@ function endsWith(s, end) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26077,7 +27915,6 @@ function taskStateFromInternalTaskState(state) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26117,7 +27954,6 @@ function clone(obj) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26155,7 +27991,6 @@ function reject(error) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26205,7 +28040,6 @@ function isNativeBlobDefined() {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26231,7 +28065,6 @@ var ErrorCode;
 })(ErrorCode || (ErrorCode = {}));
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26359,7 +28192,6 @@ var NetworkXhrIo = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26387,7 +28219,6 @@ var XhrIoPool = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26423,7 +28254,6 @@ function jsonObjectOrNull(s) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26528,7 +28358,6 @@ var Location = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26591,7 +28420,6 @@ function lastComponent(path) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26628,7 +28456,6 @@ function makeQueryString(params) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26799,7 +28626,6 @@ function metadataValidator(p) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26991,7 +28817,6 @@ function sliceBlob(blob, start, end) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27110,7 +28935,6 @@ var FbsBlob = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27181,7 +29005,6 @@ var RequestInfo = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27520,7 +29343,6 @@ function continueResumableUpload(location, authWrapper, url, blob, chunkSize, ma
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27571,7 +29393,6 @@ var UploadTaskSnapshot = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27604,7 +29425,6 @@ function async(f) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28150,7 +29970,6 @@ var UploadTask = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28397,7 +30216,6 @@ var FailRequest = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28562,7 +30380,6 @@ var AuthWrapper = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28679,7 +30496,6 @@ function stop(id) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -28885,7 +30701,6 @@ function makeRequest(requestInfo, authToken, pool) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29023,7 +30838,6 @@ var ServiceInternals = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29062,7 +30876,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":16}],23:[function(require,module,exports){
+},{"@firebase/app":18}],25:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -29070,7 +30884,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 var tslib_1 = require('tslib');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29104,7 +30917,6 @@ var CONSTANTS = {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29142,7 +30954,6 @@ var assertionError = function (message) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29451,7 +31262,6 @@ var base64Decode = function (str) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29521,7 +31331,6 @@ function patchProperty(obj, prop, value) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29579,7 +31388,6 @@ var Deferred = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29720,7 +31528,6 @@ var ErrorFactory = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29754,7 +31561,6 @@ function stringify(data) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29874,7 +31680,6 @@ var isAdmin = function (token) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30007,7 +31812,6 @@ var every = function (obj, fn) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30063,7 +31867,6 @@ var querystringDecode = function (querystring) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30115,7 +31918,6 @@ var Hash = /** @class */ (function () {
 }());
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30595,7 +32397,6 @@ function noop() {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30699,7 +32500,6 @@ function validateContextObject(fnName, argumentNumber, context, optional) {
 }
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30788,7 +32588,6 @@ var stringLength = function (str) {
 };
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30855,7 +32654,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":119}],24:[function(require,module,exports){
+},{"tslib":39}],26:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -30976,1406 +32775,11 @@ e.qg=function(){for(var a;0<this.Td()&&(a=this.fa.ab(),!this.Sc(a));)this.Cb();!
 e.Sc=function(a){return"function"==typeof a.Ye?a.Ye():!0};e.contains=function(a){return this.fa.contains(a)||this.oa.contains(a)};e.C=function(){return this.fa.C()+this.oa.C()};e.rf=function(){return this.oa.C()};e.Td=function(){return this.fa.C()};e.X=function(){return this.fa.X()&&this.oa.X()};e.F=function(){hd.L.F.call(this);if(0<this.rf())throw Error("[goog.structs.Pool] Objects not released");delete this.oa;for(var a=this.fa;!a.X();)this.Bc(a.ab());delete this.fa};function jd(a,b){this.fe=a;this.gd=b}jd.prototype.getKey=function(){return this.fe};jd.prototype.clone=function(){return new jd(this.fe,this.gd)};function kd(a){this.Y=[];a&&this.Lf(a)}e=kd.prototype;e.ce=function(a,b){var c=this.Y;c.push(new jd(a,b));this.$f(c.length-1)};e.Lf=function(a){if(a instanceof kd){var b=a.W();a=a.H();if(0>=this.C()){for(var c=this.Y,d=0;d<b.length;d++)c.push(new jd(b[d],a[d]));return}}else b=Ca(a),a=Ba(a);for(d=0;d<b.length;d++)this.ce(b[d],a[d])};e.remove=function(){var a=this.Y,b=a.length,c=a[0];if(!(0>=b))return 1==b?ra(a):(a[0]=a.pop(),this.Zf()),c.gd};
 e.Zf=function(){for(var a=0,b=this.Y,c=b.length,d=b[a];a<c>>1;){var f=this.tf(a),g=this.zf(a);f=g<c&&b[g].getKey()<b[f].getKey()?g:f;if(b[f].getKey()>d.getKey())break;b[a]=b[f];a=f}b[a]=d};e.$f=function(a){for(var b=this.Y,c=b[a];0<a;){var d=this.wf(a);if(b[d].getKey()>c.getKey())b[a]=b[d],a=d;else break}b[a]=c};e.tf=function(a){return 2*a+1};e.zf=function(a){return 2*a+2};e.wf=function(a){return a-1>>1};e.H=function(){for(var a=this.Y,b=[],c=a.length,d=0;d<c;d++)b.push(a[d].gd);return b};
 e.W=function(){for(var a=this.Y,b=[],c=a.length,d=0;d<c;d++)b.push(a[d].getKey());return b};e.va=function(a){return oa(this.Y,function(b){return b.getKey()==a})};e.clone=function(){return new kd(this)};e.C=function(){return this.Y.length};e.X=function(){return 0==this.Y.length};e.clear=function(){ra(this.Y)};function ld(){kd.call(this)}x(ld,kd);ld.prototype.enqueue=function(a,b){this.ce(a,b)};ld.prototype.ab=function(){return this.remove()};function Y(a,b){this.Gd=void 0;this.cc=new ld;hd.call(this,a,b)}x(Y,hd);e=Y.prototype;e.Mb=function(a,b){if(!a)return(a=Y.L.Mb.call(this))&&this.Ac&&(this.Gd=h.setTimeout(u(this.Nb,this),this.Ac)),a;this.cc.enqueue(void 0!==b?b:100,a);this.Nb()};e.Nb=function(){for(var a=this.cc;0<a.C();){var b=this.Mb();if(b)a.ab().apply(this,[b]);else break}};e.nc=function(a){Y.L.nc.call(this,a);this.Nb()};e.Cb=function(){Y.L.Cb.call(this);this.Nb()};
-e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=null};function Z(a,b,c,d){this.Jf=a;this.Ab=!!d;Y.call(this,b,c)}x(Z,Y);Z.prototype.xc=function(){var a=new V,b=this.Jf;b&&b.forEach(function(b,d){a.headers.set(d,b)});this.Ab&&a.Je(!0);return a};Z.prototype.Sc=function(a){return!a.Ka&&!a.Ba()};/*
-
- Copyright 2017 Google Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-   http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-*/
-cd.prototype.createWebChannel=cd.prototype.cf;W.prototype.send=W.prototype.send;W.prototype.open=W.prototype.open;W.prototype.close=W.prototype.close;bc.NO_ERROR=0;bc.TIMEOUT=8;bc.HTTP_ERROR=6;cc.COMPLETE="complete";ec.EventType=Q;Q.OPEN="a";Q.CLOSE="b";Q.ERROR="c";Q.MESSAGE="d";H.prototype.listen=H.prototype.nb;Z.prototype.getObject=Z.prototype.Mb;Z.prototype.releaseObject=Z.prototype.og;V.prototype.listenOnce=V.prototype.Oc;V.prototype.getLastError=V.prototype.Hc;V.prototype.getLastErrorCode=V.prototype.Ud;
+e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=null};function Z(a,b,c,d){this.Jf=a;this.Ab=!!d;Y.call(this,b,c)}x(Z,Y);Z.prototype.xc=function(){var a=new V,b=this.Jf;b&&b.forEach(function(b,d){a.headers.set(d,b)});this.Ab&&a.Je(!0);return a};Z.prototype.Sc=function(a){return!a.Ka&&!a.Ba()};cd.prototype.createWebChannel=cd.prototype.cf;W.prototype.send=W.prototype.send;W.prototype.open=W.prototype.open;W.prototype.close=W.prototype.close;bc.NO_ERROR=0;bc.TIMEOUT=8;bc.HTTP_ERROR=6;cc.COMPLETE="complete";ec.EventType=Q;Q.OPEN="a";Q.CLOSE="b";Q.ERROR="c";Q.MESSAGE="d";H.prototype.listen=H.prototype.nb;Z.prototype.getObject=Z.prototype.Mb;Z.prototype.releaseObject=Z.prototype.og;V.prototype.listenOnce=V.prototype.Oc;V.prototype.getLastError=V.prototype.Hc;V.prototype.getLastErrorCode=V.prototype.Ud;
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],25:[function(require,module,exports){
-require('../../modules/es6.array.find-index');
-module.exports = require('../../modules/_core').Array.findIndex;
-
-},{"../../modules/_core":41,"../../modules/es6.array.find-index":96}],26:[function(require,module,exports){
-require('../../modules/es6.array.find');
-module.exports = require('../../modules/_core').Array.find;
-
-},{"../../modules/_core":41,"../../modules/es6.array.find":97}],27:[function(require,module,exports){
-require('../../modules/es6.object.assign');
-module.exports = require('../../modules/_core').Object.assign;
-
-},{"../../modules/_core":41,"../../modules/es6.object.assign":99}],28:[function(require,module,exports){
-require('../../modules/es6.string.repeat');
-module.exports = require('../../modules/_core').String.repeat;
-
-},{"../../modules/_core":41,"../../modules/es6.string.repeat":102}],29:[function(require,module,exports){
-require('../../modules/es6.string.starts-with');
-module.exports = require('../../modules/_core').String.startsWith;
-
-},{"../../modules/_core":41,"../../modules/es6.string.starts-with":103}],30:[function(require,module,exports){
-require('../../modules/es6.symbol');
-require('../../modules/es6.object.to-string');
-require('../../modules/es7.symbol.async-iterator');
-require('../../modules/es7.symbol.observable');
-module.exports = require('../../modules/_core').Symbol;
-
-},{"../../modules/_core":41,"../../modules/es6.object.to-string":100,"../../modules/es6.symbol":104,"../../modules/es7.symbol.async-iterator":105,"../../modules/es7.symbol.observable":106}],31:[function(require,module,exports){
-require('../../modules/es6.string.iterator');
-require('../../modules/web.dom.iterable');
-module.exports = require('../../modules/_wks-ext').f('iterator');
-
-},{"../../modules/_wks-ext":94,"../../modules/es6.string.iterator":101,"../../modules/web.dom.iterable":107}],32:[function(require,module,exports){
-module.exports = function (it) {
-  if (typeof it != 'function') throw TypeError(it + ' is not a function!');
-  return it;
-};
-
-},{}],33:[function(require,module,exports){
-// 22.1.3.31 Array.prototype[@@unscopables]
-var UNSCOPABLES = require('./_wks')('unscopables');
-var ArrayProto = Array.prototype;
-if (ArrayProto[UNSCOPABLES] == undefined) require('./_hide')(ArrayProto, UNSCOPABLES, {});
-module.exports = function (key) {
-  ArrayProto[UNSCOPABLES][key] = true;
-};
-
-},{"./_hide":53,"./_wks":95}],34:[function(require,module,exports){
-var isObject = require('./_is-object');
-module.exports = function (it) {
-  if (!isObject(it)) throw TypeError(it + ' is not an object!');
-  return it;
-};
-
-},{"./_is-object":58}],35:[function(require,module,exports){
-// false -> Array#indexOf
-// true  -> Array#includes
-var toIObject = require('./_to-iobject');
-var toLength = require('./_to-length');
-var toAbsoluteIndex = require('./_to-absolute-index');
-module.exports = function (IS_INCLUDES) {
-  return function ($this, el, fromIndex) {
-    var O = toIObject($this);
-    var length = toLength(O.length);
-    var index = toAbsoluteIndex(fromIndex, length);
-    var value;
-    // Array#includes uses SameValueZero equality algorithm
-    // eslint-disable-next-line no-self-compare
-    if (IS_INCLUDES && el != el) while (length > index) {
-      value = O[index++];
-      // eslint-disable-next-line no-self-compare
-      if (value != value) return true;
-    // Array#indexOf ignores holes, Array#includes - not
-    } else for (;length > index; index++) if (IS_INCLUDES || index in O) {
-      if (O[index] === el) return IS_INCLUDES || index || 0;
-    } return !IS_INCLUDES && -1;
-  };
-};
-
-},{"./_to-absolute-index":86,"./_to-iobject":88,"./_to-length":89}],36:[function(require,module,exports){
-// 0 -> Array#forEach
-// 1 -> Array#map
-// 2 -> Array#filter
-// 3 -> Array#some
-// 4 -> Array#every
-// 5 -> Array#find
-// 6 -> Array#findIndex
-var ctx = require('./_ctx');
-var IObject = require('./_iobject');
-var toObject = require('./_to-object');
-var toLength = require('./_to-length');
-var asc = require('./_array-species-create');
-module.exports = function (TYPE, $create) {
-  var IS_MAP = TYPE == 1;
-  var IS_FILTER = TYPE == 2;
-  var IS_SOME = TYPE == 3;
-  var IS_EVERY = TYPE == 4;
-  var IS_FIND_INDEX = TYPE == 6;
-  var NO_HOLES = TYPE == 5 || IS_FIND_INDEX;
-  var create = $create || asc;
-  return function ($this, callbackfn, that) {
-    var O = toObject($this);
-    var self = IObject(O);
-    var f = ctx(callbackfn, that, 3);
-    var length = toLength(self.length);
-    var index = 0;
-    var result = IS_MAP ? create($this, length) : IS_FILTER ? create($this, 0) : undefined;
-    var val, res;
-    for (;length > index; index++) if (NO_HOLES || index in self) {
-      val = self[index];
-      res = f(val, index, O);
-      if (TYPE) {
-        if (IS_MAP) result[index] = res;   // map
-        else if (res) switch (TYPE) {
-          case 3: return true;             // some
-          case 5: return val;              // find
-          case 6: return index;            // findIndex
-          case 2: result.push(val);        // filter
-        } else if (IS_EVERY) return false; // every
-      }
-    }
-    return IS_FIND_INDEX ? -1 : IS_SOME || IS_EVERY ? IS_EVERY : result;
-  };
-};
-
-},{"./_array-species-create":38,"./_ctx":42,"./_iobject":56,"./_to-length":89,"./_to-object":90}],37:[function(require,module,exports){
-var isObject = require('./_is-object');
-var isArray = require('./_is-array');
-var SPECIES = require('./_wks')('species');
-
-module.exports = function (original) {
-  var C;
-  if (isArray(original)) {
-    C = original.constructor;
-    // cross-realm fallback
-    if (typeof C == 'function' && (C === Array || isArray(C.prototype))) C = undefined;
-    if (isObject(C)) {
-      C = C[SPECIES];
-      if (C === null) C = undefined;
-    }
-  } return C === undefined ? Array : C;
-};
-
-},{"./_is-array":57,"./_is-object":58,"./_wks":95}],38:[function(require,module,exports){
-// 9.4.2.3 ArraySpeciesCreate(originalArray, length)
-var speciesConstructor = require('./_array-species-constructor');
-
-module.exports = function (original, length) {
-  return new (speciesConstructor(original))(length);
-};
-
-},{"./_array-species-constructor":37}],39:[function(require,module,exports){
-// getting tag from 19.1.3.6 Object.prototype.toString()
-var cof = require('./_cof');
-var TAG = require('./_wks')('toStringTag');
-// ES3 wrong here
-var ARG = cof(function () { return arguments; }()) == 'Arguments';
-
-// fallback for IE11 Script Access Denied error
-var tryGet = function (it, key) {
-  try {
-    return it[key];
-  } catch (e) { /* empty */ }
-};
-
-module.exports = function (it) {
-  var O, T, B;
-  return it === undefined ? 'Undefined' : it === null ? 'Null'
-    // @@toStringTag case
-    : typeof (T = tryGet(O = Object(it), TAG)) == 'string' ? T
-    // builtinTag case
-    : ARG ? cof(O)
-    // ES3 arguments fallback
-    : (B = cof(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : B;
-};
-
-},{"./_cof":40,"./_wks":95}],40:[function(require,module,exports){
-var toString = {}.toString;
-
-module.exports = function (it) {
-  return toString.call(it).slice(8, -1);
-};
-
-},{}],41:[function(require,module,exports){
-var core = module.exports = { version: '2.5.5' };
-if (typeof __e == 'number') __e = core; // eslint-disable-line no-undef
-
-},{}],42:[function(require,module,exports){
-// optional / simple context binding
-var aFunction = require('./_a-function');
-module.exports = function (fn, that, length) {
-  aFunction(fn);
-  if (that === undefined) return fn;
-  switch (length) {
-    case 1: return function (a) {
-      return fn.call(that, a);
-    };
-    case 2: return function (a, b) {
-      return fn.call(that, a, b);
-    };
-    case 3: return function (a, b, c) {
-      return fn.call(that, a, b, c);
-    };
-  }
-  return function (/* ...args */) {
-    return fn.apply(that, arguments);
-  };
-};
-
-},{"./_a-function":32}],43:[function(require,module,exports){
-// 7.2.1 RequireObjectCoercible(argument)
-module.exports = function (it) {
-  if (it == undefined) throw TypeError("Can't call method on  " + it);
-  return it;
-};
-
-},{}],44:[function(require,module,exports){
-// Thank's IE8 for his funny defineProperty
-module.exports = !require('./_fails')(function () {
-  return Object.defineProperty({}, 'a', { get: function () { return 7; } }).a != 7;
-});
-
-},{"./_fails":50}],45:[function(require,module,exports){
-var isObject = require('./_is-object');
-var document = require('./_global').document;
-// typeof document.createElement is 'object' in old IE
-var is = isObject(document) && isObject(document.createElement);
-module.exports = function (it) {
-  return is ? document.createElement(it) : {};
-};
-
-},{"./_global":51,"./_is-object":58}],46:[function(require,module,exports){
-// IE 8- don't enum bug keys
-module.exports = (
-  'constructor,hasOwnProperty,isPrototypeOf,propertyIsEnumerable,toLocaleString,toString,valueOf'
-).split(',');
-
-},{}],47:[function(require,module,exports){
-// all enumerable object keys, includes symbols
-var getKeys = require('./_object-keys');
-var gOPS = require('./_object-gops');
-var pIE = require('./_object-pie');
-module.exports = function (it) {
-  var result = getKeys(it);
-  var getSymbols = gOPS.f;
-  if (getSymbols) {
-    var symbols = getSymbols(it);
-    var isEnum = pIE.f;
-    var i = 0;
-    var key;
-    while (symbols.length > i) if (isEnum.call(it, key = symbols[i++])) result.push(key);
-  } return result;
-};
-
-},{"./_object-gops":73,"./_object-keys":76,"./_object-pie":77}],48:[function(require,module,exports){
-var global = require('./_global');
-var core = require('./_core');
-var hide = require('./_hide');
-var redefine = require('./_redefine');
-var ctx = require('./_ctx');
-var PROTOTYPE = 'prototype';
-
-var $export = function (type, name, source) {
-  var IS_FORCED = type & $export.F;
-  var IS_GLOBAL = type & $export.G;
-  var IS_STATIC = type & $export.S;
-  var IS_PROTO = type & $export.P;
-  var IS_BIND = type & $export.B;
-  var target = IS_GLOBAL ? global : IS_STATIC ? global[name] || (global[name] = {}) : (global[name] || {})[PROTOTYPE];
-  var exports = IS_GLOBAL ? core : core[name] || (core[name] = {});
-  var expProto = exports[PROTOTYPE] || (exports[PROTOTYPE] = {});
-  var key, own, out, exp;
-  if (IS_GLOBAL) source = name;
-  for (key in source) {
-    // contains in native
-    own = !IS_FORCED && target && target[key] !== undefined;
-    // export native or passed
-    out = (own ? target : source)[key];
-    // bind timers to global for call from export context
-    exp = IS_BIND && own ? ctx(out, global) : IS_PROTO && typeof out == 'function' ? ctx(Function.call, out) : out;
-    // extend global
-    if (target) redefine(target, key, out, type & $export.U);
-    // export
-    if (exports[key] != out) hide(exports, key, exp);
-    if (IS_PROTO && expProto[key] != out) expProto[key] = out;
-  }
-};
-global.core = core;
-// type bitmap
-$export.F = 1;   // forced
-$export.G = 2;   // global
-$export.S = 4;   // static
-$export.P = 8;   // proto
-$export.B = 16;  // bind
-$export.W = 32;  // wrap
-$export.U = 64;  // safe
-$export.R = 128; // real proto method for `library`
-module.exports = $export;
-
-},{"./_core":41,"./_ctx":42,"./_global":51,"./_hide":53,"./_redefine":79}],49:[function(require,module,exports){
-var MATCH = require('./_wks')('match');
-module.exports = function (KEY) {
-  var re = /./;
-  try {
-    '/./'[KEY](re);
-  } catch (e) {
-    try {
-      re[MATCH] = false;
-      return !'/./'[KEY](re);
-    } catch (f) { /* empty */ }
-  } return true;
-};
-
-},{"./_wks":95}],50:[function(require,module,exports){
-module.exports = function (exec) {
-  try {
-    return !!exec();
-  } catch (e) {
-    return true;
-  }
-};
-
-},{}],51:[function(require,module,exports){
-// https://github.com/zloirock/core-js/issues/86#issuecomment-115759028
-var global = module.exports = typeof window != 'undefined' && window.Math == Math
-  ? window : typeof self != 'undefined' && self.Math == Math ? self
-  // eslint-disable-next-line no-new-func
-  : Function('return this')();
-if (typeof __g == 'number') __g = global; // eslint-disable-line no-undef
-
-},{}],52:[function(require,module,exports){
-var hasOwnProperty = {}.hasOwnProperty;
-module.exports = function (it, key) {
-  return hasOwnProperty.call(it, key);
-};
-
-},{}],53:[function(require,module,exports){
-var dP = require('./_object-dp');
-var createDesc = require('./_property-desc');
-module.exports = require('./_descriptors') ? function (object, key, value) {
-  return dP.f(object, key, createDesc(1, value));
-} : function (object, key, value) {
-  object[key] = value;
-  return object;
-};
-
-},{"./_descriptors":44,"./_object-dp":68,"./_property-desc":78}],54:[function(require,module,exports){
-var document = require('./_global').document;
-module.exports = document && document.documentElement;
-
-},{"./_global":51}],55:[function(require,module,exports){
-module.exports = !require('./_descriptors') && !require('./_fails')(function () {
-  return Object.defineProperty(require('./_dom-create')('div'), 'a', { get: function () { return 7; } }).a != 7;
-});
-
-},{"./_descriptors":44,"./_dom-create":45,"./_fails":50}],56:[function(require,module,exports){
-// fallback for non-array-like ES3 and non-enumerable old V8 strings
-var cof = require('./_cof');
-// eslint-disable-next-line no-prototype-builtins
-module.exports = Object('z').propertyIsEnumerable(0) ? Object : function (it) {
-  return cof(it) == 'String' ? it.split('') : Object(it);
-};
-
-},{"./_cof":40}],57:[function(require,module,exports){
-// 7.2.2 IsArray(argument)
-var cof = require('./_cof');
-module.exports = Array.isArray || function isArray(arg) {
-  return cof(arg) == 'Array';
-};
-
-},{"./_cof":40}],58:[function(require,module,exports){
-module.exports = function (it) {
-  return typeof it === 'object' ? it !== null : typeof it === 'function';
-};
-
-},{}],59:[function(require,module,exports){
-// 7.2.8 IsRegExp(argument)
-var isObject = require('./_is-object');
-var cof = require('./_cof');
-var MATCH = require('./_wks')('match');
-module.exports = function (it) {
-  var isRegExp;
-  return isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : cof(it) == 'RegExp');
-};
-
-},{"./_cof":40,"./_is-object":58,"./_wks":95}],60:[function(require,module,exports){
-'use strict';
-var create = require('./_object-create');
-var descriptor = require('./_property-desc');
-var setToStringTag = require('./_set-to-string-tag');
-var IteratorPrototype = {};
-
-// 25.1.2.1.1 %IteratorPrototype%[@@iterator]()
-require('./_hide')(IteratorPrototype, require('./_wks')('iterator'), function () { return this; });
-
-module.exports = function (Constructor, NAME, next) {
-  Constructor.prototype = create(IteratorPrototype, { next: descriptor(1, next) });
-  setToStringTag(Constructor, NAME + ' Iterator');
-};
-
-},{"./_hide":53,"./_object-create":67,"./_property-desc":78,"./_set-to-string-tag":80,"./_wks":95}],61:[function(require,module,exports){
-'use strict';
-var LIBRARY = require('./_library');
-var $export = require('./_export');
-var redefine = require('./_redefine');
-var hide = require('./_hide');
-var Iterators = require('./_iterators');
-var $iterCreate = require('./_iter-create');
-var setToStringTag = require('./_set-to-string-tag');
-var getPrototypeOf = require('./_object-gpo');
-var ITERATOR = require('./_wks')('iterator');
-var BUGGY = !([].keys && 'next' in [].keys()); // Safari has buggy iterators w/o `next`
-var FF_ITERATOR = '@@iterator';
-var KEYS = 'keys';
-var VALUES = 'values';
-
-var returnThis = function () { return this; };
-
-module.exports = function (Base, NAME, Constructor, next, DEFAULT, IS_SET, FORCED) {
-  $iterCreate(Constructor, NAME, next);
-  var getMethod = function (kind) {
-    if (!BUGGY && kind in proto) return proto[kind];
-    switch (kind) {
-      case KEYS: return function keys() { return new Constructor(this, kind); };
-      case VALUES: return function values() { return new Constructor(this, kind); };
-    } return function entries() { return new Constructor(this, kind); };
-  };
-  var TAG = NAME + ' Iterator';
-  var DEF_VALUES = DEFAULT == VALUES;
-  var VALUES_BUG = false;
-  var proto = Base.prototype;
-  var $native = proto[ITERATOR] || proto[FF_ITERATOR] || DEFAULT && proto[DEFAULT];
-  var $default = $native || getMethod(DEFAULT);
-  var $entries = DEFAULT ? !DEF_VALUES ? $default : getMethod('entries') : undefined;
-  var $anyNative = NAME == 'Array' ? proto.entries || $native : $native;
-  var methods, key, IteratorPrototype;
-  // Fix native
-  if ($anyNative) {
-    IteratorPrototype = getPrototypeOf($anyNative.call(new Base()));
-    if (IteratorPrototype !== Object.prototype && IteratorPrototype.next) {
-      // Set @@toStringTag to native iterators
-      setToStringTag(IteratorPrototype, TAG, true);
-      // fix for some old engines
-      if (!LIBRARY && typeof IteratorPrototype[ITERATOR] != 'function') hide(IteratorPrototype, ITERATOR, returnThis);
-    }
-  }
-  // fix Array#{values, @@iterator}.name in V8 / FF
-  if (DEF_VALUES && $native && $native.name !== VALUES) {
-    VALUES_BUG = true;
-    $default = function values() { return $native.call(this); };
-  }
-  // Define iterator
-  if ((!LIBRARY || FORCED) && (BUGGY || VALUES_BUG || !proto[ITERATOR])) {
-    hide(proto, ITERATOR, $default);
-  }
-  // Plug for library
-  Iterators[NAME] = $default;
-  Iterators[TAG] = returnThis;
-  if (DEFAULT) {
-    methods = {
-      values: DEF_VALUES ? $default : getMethod(VALUES),
-      keys: IS_SET ? $default : getMethod(KEYS),
-      entries: $entries
-    };
-    if (FORCED) for (key in methods) {
-      if (!(key in proto)) redefine(proto, key, methods[key]);
-    } else $export($export.P + $export.F * (BUGGY || VALUES_BUG), NAME, methods);
-  }
-  return methods;
-};
-
-},{"./_export":48,"./_hide":53,"./_iter-create":60,"./_iterators":63,"./_library":64,"./_object-gpo":74,"./_redefine":79,"./_set-to-string-tag":80,"./_wks":95}],62:[function(require,module,exports){
-module.exports = function (done, value) {
-  return { value: value, done: !!done };
-};
-
-},{}],63:[function(require,module,exports){
-module.exports = {};
-
-},{}],64:[function(require,module,exports){
-module.exports = false;
-
-},{}],65:[function(require,module,exports){
-var META = require('./_uid')('meta');
-var isObject = require('./_is-object');
-var has = require('./_has');
-var setDesc = require('./_object-dp').f;
-var id = 0;
-var isExtensible = Object.isExtensible || function () {
-  return true;
-};
-var FREEZE = !require('./_fails')(function () {
-  return isExtensible(Object.preventExtensions({}));
-});
-var setMeta = function (it) {
-  setDesc(it, META, { value: {
-    i: 'O' + ++id, // object ID
-    w: {}          // weak collections IDs
-  } });
-};
-var fastKey = function (it, create) {
-  // return primitive with prefix
-  if (!isObject(it)) return typeof it == 'symbol' ? it : (typeof it == 'string' ? 'S' : 'P') + it;
-  if (!has(it, META)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return 'F';
-    // not necessary to add metadata
-    if (!create) return 'E';
-    // add missing metadata
-    setMeta(it);
-  // return object ID
-  } return it[META].i;
-};
-var getWeak = function (it, create) {
-  if (!has(it, META)) {
-    // can't set metadata to uncaught frozen object
-    if (!isExtensible(it)) return true;
-    // not necessary to add metadata
-    if (!create) return false;
-    // add missing metadata
-    setMeta(it);
-  // return hash weak collections IDs
-  } return it[META].w;
-};
-// add metadata on freeze-family methods calling
-var onFreeze = function (it) {
-  if (FREEZE && meta.NEED && isExtensible(it) && !has(it, META)) setMeta(it);
-  return it;
-};
-var meta = module.exports = {
-  KEY: META,
-  NEED: false,
-  fastKey: fastKey,
-  getWeak: getWeak,
-  onFreeze: onFreeze
-};
-
-},{"./_fails":50,"./_has":52,"./_is-object":58,"./_object-dp":68,"./_uid":92}],66:[function(require,module,exports){
-'use strict';
-// 19.1.2.1 Object.assign(target, source, ...)
-var getKeys = require('./_object-keys');
-var gOPS = require('./_object-gops');
-var pIE = require('./_object-pie');
-var toObject = require('./_to-object');
-var IObject = require('./_iobject');
-var $assign = Object.assign;
-
-// should work with symbols and should have deterministic property order (V8 bug)
-module.exports = !$assign || require('./_fails')(function () {
-  var A = {};
-  var B = {};
-  // eslint-disable-next-line no-undef
-  var S = Symbol();
-  var K = 'abcdefghijklmnopqrst';
-  A[S] = 7;
-  K.split('').forEach(function (k) { B[k] = k; });
-  return $assign({}, A)[S] != 7 || Object.keys($assign({}, B)).join('') != K;
-}) ? function assign(target, source) { // eslint-disable-line no-unused-vars
-  var T = toObject(target);
-  var aLen = arguments.length;
-  var index = 1;
-  var getSymbols = gOPS.f;
-  var isEnum = pIE.f;
-  while (aLen > index) {
-    var S = IObject(arguments[index++]);
-    var keys = getSymbols ? getKeys(S).concat(getSymbols(S)) : getKeys(S);
-    var length = keys.length;
-    var j = 0;
-    var key;
-    while (length > j) if (isEnum.call(S, key = keys[j++])) T[key] = S[key];
-  } return T;
-} : $assign;
-
-},{"./_fails":50,"./_iobject":56,"./_object-gops":73,"./_object-keys":76,"./_object-pie":77,"./_to-object":90}],67:[function(require,module,exports){
-// 19.1.2.2 / 15.2.3.5 Object.create(O [, Properties])
-var anObject = require('./_an-object');
-var dPs = require('./_object-dps');
-var enumBugKeys = require('./_enum-bug-keys');
-var IE_PROTO = require('./_shared-key')('IE_PROTO');
-var Empty = function () { /* empty */ };
-var PROTOTYPE = 'prototype';
-
-// Create object with fake `null` prototype: use iframe Object with cleared prototype
-var createDict = function () {
-  // Thrash, waste and sodomy: IE GC bug
-  var iframe = require('./_dom-create')('iframe');
-  var i = enumBugKeys.length;
-  var lt = '<';
-  var gt = '>';
-  var iframeDocument;
-  iframe.style.display = 'none';
-  require('./_html').appendChild(iframe);
-  iframe.src = 'javascript:'; // eslint-disable-line no-script-url
-  // createDict = iframe.contentWindow.Object;
-  // html.removeChild(iframe);
-  iframeDocument = iframe.contentWindow.document;
-  iframeDocument.open();
-  iframeDocument.write(lt + 'script' + gt + 'document.F=Object' + lt + '/script' + gt);
-  iframeDocument.close();
-  createDict = iframeDocument.F;
-  while (i--) delete createDict[PROTOTYPE][enumBugKeys[i]];
-  return createDict();
-};
-
-module.exports = Object.create || function create(O, Properties) {
-  var result;
-  if (O !== null) {
-    Empty[PROTOTYPE] = anObject(O);
-    result = new Empty();
-    Empty[PROTOTYPE] = null;
-    // add "__proto__" for Object.getPrototypeOf polyfill
-    result[IE_PROTO] = O;
-  } else result = createDict();
-  return Properties === undefined ? result : dPs(result, Properties);
-};
-
-},{"./_an-object":34,"./_dom-create":45,"./_enum-bug-keys":46,"./_html":54,"./_object-dps":69,"./_shared-key":81}],68:[function(require,module,exports){
-var anObject = require('./_an-object');
-var IE8_DOM_DEFINE = require('./_ie8-dom-define');
-var toPrimitive = require('./_to-primitive');
-var dP = Object.defineProperty;
-
-exports.f = require('./_descriptors') ? Object.defineProperty : function defineProperty(O, P, Attributes) {
-  anObject(O);
-  P = toPrimitive(P, true);
-  anObject(Attributes);
-  if (IE8_DOM_DEFINE) try {
-    return dP(O, P, Attributes);
-  } catch (e) { /* empty */ }
-  if ('get' in Attributes || 'set' in Attributes) throw TypeError('Accessors not supported!');
-  if ('value' in Attributes) O[P] = Attributes.value;
-  return O;
-};
-
-},{"./_an-object":34,"./_descriptors":44,"./_ie8-dom-define":55,"./_to-primitive":91}],69:[function(require,module,exports){
-var dP = require('./_object-dp');
-var anObject = require('./_an-object');
-var getKeys = require('./_object-keys');
-
-module.exports = require('./_descriptors') ? Object.defineProperties : function defineProperties(O, Properties) {
-  anObject(O);
-  var keys = getKeys(Properties);
-  var length = keys.length;
-  var i = 0;
-  var P;
-  while (length > i) dP.f(O, P = keys[i++], Properties[P]);
-  return O;
-};
-
-},{"./_an-object":34,"./_descriptors":44,"./_object-dp":68,"./_object-keys":76}],70:[function(require,module,exports){
-var pIE = require('./_object-pie');
-var createDesc = require('./_property-desc');
-var toIObject = require('./_to-iobject');
-var toPrimitive = require('./_to-primitive');
-var has = require('./_has');
-var IE8_DOM_DEFINE = require('./_ie8-dom-define');
-var gOPD = Object.getOwnPropertyDescriptor;
-
-exports.f = require('./_descriptors') ? gOPD : function getOwnPropertyDescriptor(O, P) {
-  O = toIObject(O);
-  P = toPrimitive(P, true);
-  if (IE8_DOM_DEFINE) try {
-    return gOPD(O, P);
-  } catch (e) { /* empty */ }
-  if (has(O, P)) return createDesc(!pIE.f.call(O, P), O[P]);
-};
-
-},{"./_descriptors":44,"./_has":52,"./_ie8-dom-define":55,"./_object-pie":77,"./_property-desc":78,"./_to-iobject":88,"./_to-primitive":91}],71:[function(require,module,exports){
-// fallback for IE11 buggy Object.getOwnPropertyNames with iframe and window
-var toIObject = require('./_to-iobject');
-var gOPN = require('./_object-gopn').f;
-var toString = {}.toString;
-
-var windowNames = typeof window == 'object' && window && Object.getOwnPropertyNames
-  ? Object.getOwnPropertyNames(window) : [];
-
-var getWindowNames = function (it) {
-  try {
-    return gOPN(it);
-  } catch (e) {
-    return windowNames.slice();
-  }
-};
-
-module.exports.f = function getOwnPropertyNames(it) {
-  return windowNames && toString.call(it) == '[object Window]' ? getWindowNames(it) : gOPN(toIObject(it));
-};
-
-},{"./_object-gopn":72,"./_to-iobject":88}],72:[function(require,module,exports){
-// 19.1.2.7 / 15.2.3.4 Object.getOwnPropertyNames(O)
-var $keys = require('./_object-keys-internal');
-var hiddenKeys = require('./_enum-bug-keys').concat('length', 'prototype');
-
-exports.f = Object.getOwnPropertyNames || function getOwnPropertyNames(O) {
-  return $keys(O, hiddenKeys);
-};
-
-},{"./_enum-bug-keys":46,"./_object-keys-internal":75}],73:[function(require,module,exports){
-exports.f = Object.getOwnPropertySymbols;
-
-},{}],74:[function(require,module,exports){
-// 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
-var has = require('./_has');
-var toObject = require('./_to-object');
-var IE_PROTO = require('./_shared-key')('IE_PROTO');
-var ObjectProto = Object.prototype;
-
-module.exports = Object.getPrototypeOf || function (O) {
-  O = toObject(O);
-  if (has(O, IE_PROTO)) return O[IE_PROTO];
-  if (typeof O.constructor == 'function' && O instanceof O.constructor) {
-    return O.constructor.prototype;
-  } return O instanceof Object ? ObjectProto : null;
-};
-
-},{"./_has":52,"./_shared-key":81,"./_to-object":90}],75:[function(require,module,exports){
-var has = require('./_has');
-var toIObject = require('./_to-iobject');
-var arrayIndexOf = require('./_array-includes')(false);
-var IE_PROTO = require('./_shared-key')('IE_PROTO');
-
-module.exports = function (object, names) {
-  var O = toIObject(object);
-  var i = 0;
-  var result = [];
-  var key;
-  for (key in O) if (key != IE_PROTO) has(O, key) && result.push(key);
-  // Don't enum bug & hidden keys
-  while (names.length > i) if (has(O, key = names[i++])) {
-    ~arrayIndexOf(result, key) || result.push(key);
-  }
-  return result;
-};
-
-},{"./_array-includes":35,"./_has":52,"./_shared-key":81,"./_to-iobject":88}],76:[function(require,module,exports){
-// 19.1.2.14 / 15.2.3.14 Object.keys(O)
-var $keys = require('./_object-keys-internal');
-var enumBugKeys = require('./_enum-bug-keys');
-
-module.exports = Object.keys || function keys(O) {
-  return $keys(O, enumBugKeys);
-};
-
-},{"./_enum-bug-keys":46,"./_object-keys-internal":75}],77:[function(require,module,exports){
-exports.f = {}.propertyIsEnumerable;
-
-},{}],78:[function(require,module,exports){
-module.exports = function (bitmap, value) {
-  return {
-    enumerable: !(bitmap & 1),
-    configurable: !(bitmap & 2),
-    writable: !(bitmap & 4),
-    value: value
-  };
-};
-
-},{}],79:[function(require,module,exports){
-var global = require('./_global');
-var hide = require('./_hide');
-var has = require('./_has');
-var SRC = require('./_uid')('src');
-var TO_STRING = 'toString';
-var $toString = Function[TO_STRING];
-var TPL = ('' + $toString).split(TO_STRING);
-
-require('./_core').inspectSource = function (it) {
-  return $toString.call(it);
-};
-
-(module.exports = function (O, key, val, safe) {
-  var isFunction = typeof val == 'function';
-  if (isFunction) has(val, 'name') || hide(val, 'name', key);
-  if (O[key] === val) return;
-  if (isFunction) has(val, SRC) || hide(val, SRC, O[key] ? '' + O[key] : TPL.join(String(key)));
-  if (O === global) {
-    O[key] = val;
-  } else if (!safe) {
-    delete O[key];
-    hide(O, key, val);
-  } else if (O[key]) {
-    O[key] = val;
-  } else {
-    hide(O, key, val);
-  }
-// add fake Function#toString for correct work wrapped methods / constructors with methods like LoDash isNative
-})(Function.prototype, TO_STRING, function toString() {
-  return typeof this == 'function' && this[SRC] || $toString.call(this);
-});
-
-},{"./_core":41,"./_global":51,"./_has":52,"./_hide":53,"./_uid":92}],80:[function(require,module,exports){
-var def = require('./_object-dp').f;
-var has = require('./_has');
-var TAG = require('./_wks')('toStringTag');
-
-module.exports = function (it, tag, stat) {
-  if (it && !has(it = stat ? it : it.prototype, TAG)) def(it, TAG, { configurable: true, value: tag });
-};
-
-},{"./_has":52,"./_object-dp":68,"./_wks":95}],81:[function(require,module,exports){
-var shared = require('./_shared')('keys');
-var uid = require('./_uid');
-module.exports = function (key) {
-  return shared[key] || (shared[key] = uid(key));
-};
-
-},{"./_shared":82,"./_uid":92}],82:[function(require,module,exports){
-var global = require('./_global');
-var SHARED = '__core-js_shared__';
-var store = global[SHARED] || (global[SHARED] = {});
-module.exports = function (key) {
-  return store[key] || (store[key] = {});
-};
-
-},{"./_global":51}],83:[function(require,module,exports){
-var toInteger = require('./_to-integer');
-var defined = require('./_defined');
-// true  -> String#at
-// false -> String#codePointAt
-module.exports = function (TO_STRING) {
-  return function (that, pos) {
-    var s = String(defined(that));
-    var i = toInteger(pos);
-    var l = s.length;
-    var a, b;
-    if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-    a = s.charCodeAt(i);
-    return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-      ? TO_STRING ? s.charAt(i) : a
-      : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-  };
-};
-
-},{"./_defined":43,"./_to-integer":87}],84:[function(require,module,exports){
-// helper for String#{startsWith, endsWith, includes}
-var isRegExp = require('./_is-regexp');
-var defined = require('./_defined');
-
-module.exports = function (that, searchString, NAME) {
-  if (isRegExp(searchString)) throw TypeError('String#' + NAME + " doesn't accept regex!");
-  return String(defined(that));
-};
-
-},{"./_defined":43,"./_is-regexp":59}],85:[function(require,module,exports){
-'use strict';
-var toInteger = require('./_to-integer');
-var defined = require('./_defined');
-
-module.exports = function repeat(count) {
-  var str = String(defined(this));
-  var res = '';
-  var n = toInteger(count);
-  if (n < 0 || n == Infinity) throw RangeError("Count can't be negative");
-  for (;n > 0; (n >>>= 1) && (str += str)) if (n & 1) res += str;
-  return res;
-};
-
-},{"./_defined":43,"./_to-integer":87}],86:[function(require,module,exports){
-var toInteger = require('./_to-integer');
-var max = Math.max;
-var min = Math.min;
-module.exports = function (index, length) {
-  index = toInteger(index);
-  return index < 0 ? max(index + length, 0) : min(index, length);
-};
-
-},{"./_to-integer":87}],87:[function(require,module,exports){
-// 7.1.4 ToInteger
-var ceil = Math.ceil;
-var floor = Math.floor;
-module.exports = function (it) {
-  return isNaN(it = +it) ? 0 : (it > 0 ? floor : ceil)(it);
-};
-
-},{}],88:[function(require,module,exports){
-// to indexed object, toObject with fallback for non-array-like ES3 strings
-var IObject = require('./_iobject');
-var defined = require('./_defined');
-module.exports = function (it) {
-  return IObject(defined(it));
-};
-
-},{"./_defined":43,"./_iobject":56}],89:[function(require,module,exports){
-// 7.1.15 ToLength
-var toInteger = require('./_to-integer');
-var min = Math.min;
-module.exports = function (it) {
-  return it > 0 ? min(toInteger(it), 0x1fffffffffffff) : 0; // pow(2, 53) - 1 == 9007199254740991
-};
-
-},{"./_to-integer":87}],90:[function(require,module,exports){
-// 7.1.13 ToObject(argument)
-var defined = require('./_defined');
-module.exports = function (it) {
-  return Object(defined(it));
-};
-
-},{"./_defined":43}],91:[function(require,module,exports){
-// 7.1.1 ToPrimitive(input [, PreferredType])
-var isObject = require('./_is-object');
-// instead of the ES6 spec version, we didn't implement @@toPrimitive case
-// and the second argument - flag - preferred type is a string
-module.exports = function (it, S) {
-  if (!isObject(it)) return it;
-  var fn, val;
-  if (S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it))) return val;
-  if (typeof (fn = it.valueOf) == 'function' && !isObject(val = fn.call(it))) return val;
-  if (!S && typeof (fn = it.toString) == 'function' && !isObject(val = fn.call(it))) return val;
-  throw TypeError("Can't convert object to primitive value");
-};
-
-},{"./_is-object":58}],92:[function(require,module,exports){
-var id = 0;
-var px = Math.random();
-module.exports = function (key) {
-  return 'Symbol('.concat(key === undefined ? '' : key, ')_', (++id + px).toString(36));
-};
-
-},{}],93:[function(require,module,exports){
-var global = require('./_global');
-var core = require('./_core');
-var LIBRARY = require('./_library');
-var wksExt = require('./_wks-ext');
-var defineProperty = require('./_object-dp').f;
-module.exports = function (name) {
-  var $Symbol = core.Symbol || (core.Symbol = LIBRARY ? {} : global.Symbol || {});
-  if (name.charAt(0) != '_' && !(name in $Symbol)) defineProperty($Symbol, name, { value: wksExt.f(name) });
-};
-
-},{"./_core":41,"./_global":51,"./_library":64,"./_object-dp":68,"./_wks-ext":94}],94:[function(require,module,exports){
-exports.f = require('./_wks');
-
-},{"./_wks":95}],95:[function(require,module,exports){
-var store = require('./_shared')('wks');
-var uid = require('./_uid');
-var Symbol = require('./_global').Symbol;
-var USE_SYMBOL = typeof Symbol == 'function';
-
-var $exports = module.exports = function (name) {
-  return store[name] || (store[name] =
-    USE_SYMBOL && Symbol[name] || (USE_SYMBOL ? Symbol : uid)('Symbol.' + name));
-};
-
-$exports.store = store;
-
-},{"./_global":51,"./_shared":82,"./_uid":92}],96:[function(require,module,exports){
-'use strict';
-// 22.1.3.9 Array.prototype.findIndex(predicate, thisArg = undefined)
-var $export = require('./_export');
-var $find = require('./_array-methods')(6);
-var KEY = 'findIndex';
-var forced = true;
-// Shouldn't skip holes
-if (KEY in []) Array(1)[KEY](function () { forced = false; });
-$export($export.P + $export.F * forced, 'Array', {
-  findIndex: function findIndex(callbackfn /* , that = undefined */) {
-    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-require('./_add-to-unscopables')(KEY);
-
-},{"./_add-to-unscopables":33,"./_array-methods":36,"./_export":48}],97:[function(require,module,exports){
-'use strict';
-// 22.1.3.8 Array.prototype.find(predicate, thisArg = undefined)
-var $export = require('./_export');
-var $find = require('./_array-methods')(5);
-var KEY = 'find';
-var forced = true;
-// Shouldn't skip holes
-if (KEY in []) Array(1)[KEY](function () { forced = false; });
-$export($export.P + $export.F * forced, 'Array', {
-  find: function find(callbackfn /* , that = undefined */) {
-    return $find(this, callbackfn, arguments.length > 1 ? arguments[1] : undefined);
-  }
-});
-require('./_add-to-unscopables')(KEY);
-
-},{"./_add-to-unscopables":33,"./_array-methods":36,"./_export":48}],98:[function(require,module,exports){
-'use strict';
-var addToUnscopables = require('./_add-to-unscopables');
-var step = require('./_iter-step');
-var Iterators = require('./_iterators');
-var toIObject = require('./_to-iobject');
-
-// 22.1.3.4 Array.prototype.entries()
-// 22.1.3.13 Array.prototype.keys()
-// 22.1.3.29 Array.prototype.values()
-// 22.1.3.30 Array.prototype[@@iterator]()
-module.exports = require('./_iter-define')(Array, 'Array', function (iterated, kind) {
-  this._t = toIObject(iterated); // target
-  this._i = 0;                   // next index
-  this._k = kind;                // kind
-// 22.1.5.2.1 %ArrayIteratorPrototype%.next()
-}, function () {
-  var O = this._t;
-  var kind = this._k;
-  var index = this._i++;
-  if (!O || index >= O.length) {
-    this._t = undefined;
-    return step(1);
-  }
-  if (kind == 'keys') return step(0, index);
-  if (kind == 'values') return step(0, O[index]);
-  return step(0, [index, O[index]]);
-}, 'values');
-
-// argumentsList[@@iterator] is %ArrayProto_values% (9.4.4.6, 9.4.4.7)
-Iterators.Arguments = Iterators.Array;
-
-addToUnscopables('keys');
-addToUnscopables('values');
-addToUnscopables('entries');
-
-},{"./_add-to-unscopables":33,"./_iter-define":61,"./_iter-step":62,"./_iterators":63,"./_to-iobject":88}],99:[function(require,module,exports){
-// 19.1.3.1 Object.assign(target, source)
-var $export = require('./_export');
-
-$export($export.S + $export.F, 'Object', { assign: require('./_object-assign') });
-
-},{"./_export":48,"./_object-assign":66}],100:[function(require,module,exports){
-'use strict';
-// 19.1.3.6 Object.prototype.toString()
-var classof = require('./_classof');
-var test = {};
-test[require('./_wks')('toStringTag')] = 'z';
-if (test + '' != '[object z]') {
-  require('./_redefine')(Object.prototype, 'toString', function toString() {
-    return '[object ' + classof(this) + ']';
-  }, true);
-}
-
-},{"./_classof":39,"./_redefine":79,"./_wks":95}],101:[function(require,module,exports){
-'use strict';
-var $at = require('./_string-at')(true);
-
-// 21.1.3.27 String.prototype[@@iterator]()
-require('./_iter-define')(String, 'String', function (iterated) {
-  this._t = String(iterated); // target
-  this._i = 0;                // next index
-// 21.1.5.2.1 %StringIteratorPrototype%.next()
-}, function () {
-  var O = this._t;
-  var index = this._i;
-  var point;
-  if (index >= O.length) return { value: undefined, done: true };
-  point = $at(O, index);
-  this._i += point.length;
-  return { value: point, done: false };
-});
-
-},{"./_iter-define":61,"./_string-at":83}],102:[function(require,module,exports){
-var $export = require('./_export');
-
-$export($export.P, 'String', {
-  // 21.1.3.13 String.prototype.repeat(count)
-  repeat: require('./_string-repeat')
-});
-
-},{"./_export":48,"./_string-repeat":85}],103:[function(require,module,exports){
-// 21.1.3.18 String.prototype.startsWith(searchString [, position ])
-'use strict';
-var $export = require('./_export');
-var toLength = require('./_to-length');
-var context = require('./_string-context');
-var STARTS_WITH = 'startsWith';
-var $startsWith = ''[STARTS_WITH];
-
-$export($export.P + $export.F * require('./_fails-is-regexp')(STARTS_WITH), 'String', {
-  startsWith: function startsWith(searchString /* , position = 0 */) {
-    var that = context(this, searchString, STARTS_WITH);
-    var index = toLength(Math.min(arguments.length > 1 ? arguments[1] : undefined, that.length));
-    var search = String(searchString);
-    return $startsWith
-      ? $startsWith.call(that, search, index)
-      : that.slice(index, index + search.length) === search;
-  }
-});
-
-},{"./_export":48,"./_fails-is-regexp":49,"./_string-context":84,"./_to-length":89}],104:[function(require,module,exports){
-'use strict';
-// ECMAScript 6 symbols shim
-var global = require('./_global');
-var has = require('./_has');
-var DESCRIPTORS = require('./_descriptors');
-var $export = require('./_export');
-var redefine = require('./_redefine');
-var META = require('./_meta').KEY;
-var $fails = require('./_fails');
-var shared = require('./_shared');
-var setToStringTag = require('./_set-to-string-tag');
-var uid = require('./_uid');
-var wks = require('./_wks');
-var wksExt = require('./_wks-ext');
-var wksDefine = require('./_wks-define');
-var enumKeys = require('./_enum-keys');
-var isArray = require('./_is-array');
-var anObject = require('./_an-object');
-var isObject = require('./_is-object');
-var toIObject = require('./_to-iobject');
-var toPrimitive = require('./_to-primitive');
-var createDesc = require('./_property-desc');
-var _create = require('./_object-create');
-var gOPNExt = require('./_object-gopn-ext');
-var $GOPD = require('./_object-gopd');
-var $DP = require('./_object-dp');
-var $keys = require('./_object-keys');
-var gOPD = $GOPD.f;
-var dP = $DP.f;
-var gOPN = gOPNExt.f;
-var $Symbol = global.Symbol;
-var $JSON = global.JSON;
-var _stringify = $JSON && $JSON.stringify;
-var PROTOTYPE = 'prototype';
-var HIDDEN = wks('_hidden');
-var TO_PRIMITIVE = wks('toPrimitive');
-var isEnum = {}.propertyIsEnumerable;
-var SymbolRegistry = shared('symbol-registry');
-var AllSymbols = shared('symbols');
-var OPSymbols = shared('op-symbols');
-var ObjectProto = Object[PROTOTYPE];
-var USE_NATIVE = typeof $Symbol == 'function';
-var QObject = global.QObject;
-// Don't use setters in Qt Script, https://github.com/zloirock/core-js/issues/173
-var setter = !QObject || !QObject[PROTOTYPE] || !QObject[PROTOTYPE].findChild;
-
-// fallback for old Android, https://code.google.com/p/v8/issues/detail?id=687
-var setSymbolDesc = DESCRIPTORS && $fails(function () {
-  return _create(dP({}, 'a', {
-    get: function () { return dP(this, 'a', { value: 7 }).a; }
-  })).a != 7;
-}) ? function (it, key, D) {
-  var protoDesc = gOPD(ObjectProto, key);
-  if (protoDesc) delete ObjectProto[key];
-  dP(it, key, D);
-  if (protoDesc && it !== ObjectProto) dP(ObjectProto, key, protoDesc);
-} : dP;
-
-var wrap = function (tag) {
-  var sym = AllSymbols[tag] = _create($Symbol[PROTOTYPE]);
-  sym._k = tag;
-  return sym;
-};
-
-var isSymbol = USE_NATIVE && typeof $Symbol.iterator == 'symbol' ? function (it) {
-  return typeof it == 'symbol';
-} : function (it) {
-  return it instanceof $Symbol;
-};
-
-var $defineProperty = function defineProperty(it, key, D) {
-  if (it === ObjectProto) $defineProperty(OPSymbols, key, D);
-  anObject(it);
-  key = toPrimitive(key, true);
-  anObject(D);
-  if (has(AllSymbols, key)) {
-    if (!D.enumerable) {
-      if (!has(it, HIDDEN)) dP(it, HIDDEN, createDesc(1, {}));
-      it[HIDDEN][key] = true;
-    } else {
-      if (has(it, HIDDEN) && it[HIDDEN][key]) it[HIDDEN][key] = false;
-      D = _create(D, { enumerable: createDesc(0, false) });
-    } return setSymbolDesc(it, key, D);
-  } return dP(it, key, D);
-};
-var $defineProperties = function defineProperties(it, P) {
-  anObject(it);
-  var keys = enumKeys(P = toIObject(P));
-  var i = 0;
-  var l = keys.length;
-  var key;
-  while (l > i) $defineProperty(it, key = keys[i++], P[key]);
-  return it;
-};
-var $create = function create(it, P) {
-  return P === undefined ? _create(it) : $defineProperties(_create(it), P);
-};
-var $propertyIsEnumerable = function propertyIsEnumerable(key) {
-  var E = isEnum.call(this, key = toPrimitive(key, true));
-  if (this === ObjectProto && has(AllSymbols, key) && !has(OPSymbols, key)) return false;
-  return E || !has(this, key) || !has(AllSymbols, key) || has(this, HIDDEN) && this[HIDDEN][key] ? E : true;
-};
-var $getOwnPropertyDescriptor = function getOwnPropertyDescriptor(it, key) {
-  it = toIObject(it);
-  key = toPrimitive(key, true);
-  if (it === ObjectProto && has(AllSymbols, key) && !has(OPSymbols, key)) return;
-  var D = gOPD(it, key);
-  if (D && has(AllSymbols, key) && !(has(it, HIDDEN) && it[HIDDEN][key])) D.enumerable = true;
-  return D;
-};
-var $getOwnPropertyNames = function getOwnPropertyNames(it) {
-  var names = gOPN(toIObject(it));
-  var result = [];
-  var i = 0;
-  var key;
-  while (names.length > i) {
-    if (!has(AllSymbols, key = names[i++]) && key != HIDDEN && key != META) result.push(key);
-  } return result;
-};
-var $getOwnPropertySymbols = function getOwnPropertySymbols(it) {
-  var IS_OP = it === ObjectProto;
-  var names = gOPN(IS_OP ? OPSymbols : toIObject(it));
-  var result = [];
-  var i = 0;
-  var key;
-  while (names.length > i) {
-    if (has(AllSymbols, key = names[i++]) && (IS_OP ? has(ObjectProto, key) : true)) result.push(AllSymbols[key]);
-  } return result;
-};
-
-// 19.4.1.1 Symbol([description])
-if (!USE_NATIVE) {
-  $Symbol = function Symbol() {
-    if (this instanceof $Symbol) throw TypeError('Symbol is not a constructor!');
-    var tag = uid(arguments.length > 0 ? arguments[0] : undefined);
-    var $set = function (value) {
-      if (this === ObjectProto) $set.call(OPSymbols, value);
-      if (has(this, HIDDEN) && has(this[HIDDEN], tag)) this[HIDDEN][tag] = false;
-      setSymbolDesc(this, tag, createDesc(1, value));
-    };
-    if (DESCRIPTORS && setter) setSymbolDesc(ObjectProto, tag, { configurable: true, set: $set });
-    return wrap(tag);
-  };
-  redefine($Symbol[PROTOTYPE], 'toString', function toString() {
-    return this._k;
-  });
-
-  $GOPD.f = $getOwnPropertyDescriptor;
-  $DP.f = $defineProperty;
-  require('./_object-gopn').f = gOPNExt.f = $getOwnPropertyNames;
-  require('./_object-pie').f = $propertyIsEnumerable;
-  require('./_object-gops').f = $getOwnPropertySymbols;
-
-  if (DESCRIPTORS && !require('./_library')) {
-    redefine(ObjectProto, 'propertyIsEnumerable', $propertyIsEnumerable, true);
-  }
-
-  wksExt.f = function (name) {
-    return wrap(wks(name));
-  };
-}
-
-$export($export.G + $export.W + $export.F * !USE_NATIVE, { Symbol: $Symbol });
-
-for (var es6Symbols = (
-  // 19.4.2.2, 19.4.2.3, 19.4.2.4, 19.4.2.6, 19.4.2.8, 19.4.2.9, 19.4.2.10, 19.4.2.11, 19.4.2.12, 19.4.2.13, 19.4.2.14
-  'hasInstance,isConcatSpreadable,iterator,match,replace,search,species,split,toPrimitive,toStringTag,unscopables'
-).split(','), j = 0; es6Symbols.length > j;)wks(es6Symbols[j++]);
-
-for (var wellKnownSymbols = $keys(wks.store), k = 0; wellKnownSymbols.length > k;) wksDefine(wellKnownSymbols[k++]);
-
-$export($export.S + $export.F * !USE_NATIVE, 'Symbol', {
-  // 19.4.2.1 Symbol.for(key)
-  'for': function (key) {
-    return has(SymbolRegistry, key += '')
-      ? SymbolRegistry[key]
-      : SymbolRegistry[key] = $Symbol(key);
-  },
-  // 19.4.2.5 Symbol.keyFor(sym)
-  keyFor: function keyFor(sym) {
-    if (!isSymbol(sym)) throw TypeError(sym + ' is not a symbol!');
-    for (var key in SymbolRegistry) if (SymbolRegistry[key] === sym) return key;
-  },
-  useSetter: function () { setter = true; },
-  useSimple: function () { setter = false; }
-});
-
-$export($export.S + $export.F * !USE_NATIVE, 'Object', {
-  // 19.1.2.2 Object.create(O [, Properties])
-  create: $create,
-  // 19.1.2.4 Object.defineProperty(O, P, Attributes)
-  defineProperty: $defineProperty,
-  // 19.1.2.3 Object.defineProperties(O, Properties)
-  defineProperties: $defineProperties,
-  // 19.1.2.6 Object.getOwnPropertyDescriptor(O, P)
-  getOwnPropertyDescriptor: $getOwnPropertyDescriptor,
-  // 19.1.2.7 Object.getOwnPropertyNames(O)
-  getOwnPropertyNames: $getOwnPropertyNames,
-  // 19.1.2.8 Object.getOwnPropertySymbols(O)
-  getOwnPropertySymbols: $getOwnPropertySymbols
-});
-
-// 24.3.2 JSON.stringify(value [, replacer [, space]])
-$JSON && $export($export.S + $export.F * (!USE_NATIVE || $fails(function () {
-  var S = $Symbol();
-  // MS Edge converts symbol values to JSON as {}
-  // WebKit converts symbol values to JSON as null
-  // V8 throws on boxed symbols
-  return _stringify([S]) != '[null]' || _stringify({ a: S }) != '{}' || _stringify(Object(S)) != '{}';
-})), 'JSON', {
-  stringify: function stringify(it) {
-    var args = [it];
-    var i = 1;
-    var replacer, $replacer;
-    while (arguments.length > i) args.push(arguments[i++]);
-    $replacer = replacer = args[1];
-    if (!isObject(replacer) && it === undefined || isSymbol(it)) return; // IE8 returns string on undefined
-    if (!isArray(replacer)) replacer = function (key, value) {
-      if (typeof $replacer == 'function') value = $replacer.call(this, key, value);
-      if (!isSymbol(value)) return value;
-    };
-    args[1] = replacer;
-    return _stringify.apply($JSON, args);
-  }
-});
-
-// 19.4.3.4 Symbol.prototype[@@toPrimitive](hint)
-$Symbol[PROTOTYPE][TO_PRIMITIVE] || require('./_hide')($Symbol[PROTOTYPE], TO_PRIMITIVE, $Symbol[PROTOTYPE].valueOf);
-// 19.4.3.5 Symbol.prototype[@@toStringTag]
-setToStringTag($Symbol, 'Symbol');
-// 20.2.1.9 Math[@@toStringTag]
-setToStringTag(Math, 'Math', true);
-// 24.3.3 JSON[@@toStringTag]
-setToStringTag(global.JSON, 'JSON', true);
-
-},{"./_an-object":34,"./_descriptors":44,"./_enum-keys":47,"./_export":48,"./_fails":50,"./_global":51,"./_has":52,"./_hide":53,"./_is-array":57,"./_is-object":58,"./_library":64,"./_meta":65,"./_object-create":67,"./_object-dp":68,"./_object-gopd":70,"./_object-gopn":72,"./_object-gopn-ext":71,"./_object-gops":73,"./_object-keys":76,"./_object-pie":77,"./_property-desc":78,"./_redefine":79,"./_set-to-string-tag":80,"./_shared":82,"./_to-iobject":88,"./_to-primitive":91,"./_uid":92,"./_wks":95,"./_wks-define":93,"./_wks-ext":94}],105:[function(require,module,exports){
-require('./_wks-define')('asyncIterator');
-
-},{"./_wks-define":93}],106:[function(require,module,exports){
-require('./_wks-define')('observable');
-
-},{"./_wks-define":93}],107:[function(require,module,exports){
-var $iterators = require('./es6.array.iterator');
-var getKeys = require('./_object-keys');
-var redefine = require('./_redefine');
-var global = require('./_global');
-var hide = require('./_hide');
-var Iterators = require('./_iterators');
-var wks = require('./_wks');
-var ITERATOR = wks('iterator');
-var TO_STRING_TAG = wks('toStringTag');
-var ArrayValues = Iterators.Array;
-
-var DOMIterables = {
-  CSSRuleList: true, // TODO: Not spec compliant, should be false.
-  CSSStyleDeclaration: false,
-  CSSValueList: false,
-  ClientRectList: false,
-  DOMRectList: false,
-  DOMStringList: false,
-  DOMTokenList: true,
-  DataTransferItemList: false,
-  FileList: false,
-  HTMLAllCollection: false,
-  HTMLCollection: false,
-  HTMLFormElement: false,
-  HTMLSelectElement: false,
-  MediaList: true, // TODO: Not spec compliant, should be false.
-  MimeTypeArray: false,
-  NamedNodeMap: false,
-  NodeList: true,
-  PaintRequestList: false,
-  Plugin: false,
-  PluginArray: false,
-  SVGLengthList: false,
-  SVGNumberList: false,
-  SVGPathSegList: false,
-  SVGPointList: false,
-  SVGStringList: false,
-  SVGTransformList: false,
-  SourceBufferList: false,
-  StyleSheetList: true, // TODO: Not spec compliant, should be false.
-  TextTrackCueList: false,
-  TextTrackList: false,
-  TouchList: false
-};
-
-for (var collections = getKeys(DOMIterables), i = 0; i < collections.length; i++) {
-  var NAME = collections[i];
-  var explicit = DOMIterables[NAME];
-  var Collection = global[NAME];
-  var proto = Collection && Collection.prototype;
-  var key;
-  if (proto) {
-    if (!proto[ITERATOR]) hide(proto, ITERATOR, ArrayValues);
-    if (!proto[TO_STRING_TAG]) hide(proto, TO_STRING_TAG, NAME);
-    Iterators[NAME] = ArrayValues;
-    if (explicit) for (key in $iterators) if (!proto[key]) redefine(proto, key, $iterators[key], true);
-  }
-}
-
-},{"./_global":51,"./_hide":53,"./_iterators":63,"./_object-keys":76,"./_redefine":79,"./_wks":95,"./es6.array.iterator":98}],108:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -32384,7 +32788,6 @@ require('@firebase/polyfill');
 var firebase = _interopDefault(require('@firebase/app'));
 
 /**
- * @license
  * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32402,13 +32805,12 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":16,"@firebase/polyfill":20}],109:[function(require,module,exports){
+},{"@firebase/app":30,"@firebase/polyfill":22}],28:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32424,13 +32826,12 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":17}],110:[function(require,module,exports){
+},{"@firebase/auth":19}],29:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32446,13 +32847,414 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":18}],111:[function(require,module,exports){
+},{"@firebase/firestore":20}],30:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+var util = require('@firebase/util');
+
+/**
+ * Copyright 2017 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var contains = function (obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+};
+var DEFAULT_ENTRY_NAME = '[DEFAULT]';
+// An array to capture listeners before the true auth functions
+// exist
+var tokenListeners = [];
+/**
+ * Global context object for a collection of services using
+ * a shared authentication state.
+ */
+var FirebaseAppImpl = /** @class */ (function () {
+    function FirebaseAppImpl(options, config, firebase_) {
+        this.firebase_ = firebase_;
+        this.isDeleted_ = false;
+        this.services_ = {};
+        this.name_ = config.name;
+        this._automaticDataCollectionEnabled =
+            config.automaticDataCollectionEnabled || false;
+        this.options_ = util.deepCopy(options);
+        this.INTERNAL = {
+            getUid: function () { return null; },
+            getToken: function () { return Promise.resolve(null); },
+            addAuthTokenListener: function (callback) {
+                tokenListeners.push(callback);
+                // Make sure callback is called, asynchronously, in the absence of the auth module
+                setTimeout(function () { return callback(null); }, 0);
+            },
+            removeAuthTokenListener: function (callback) {
+                tokenListeners = tokenListeners.filter(function (listener) { return listener !== callback; });
+            }
+        };
+    }
+    Object.defineProperty(FirebaseAppImpl.prototype, "automaticDataCollectionEnabled", {
+        get: function () {
+            this.checkDestroyed_();
+            return this._automaticDataCollectionEnabled;
+        },
+        set: function (val) {
+            this.checkDestroyed_();
+            this._automaticDataCollectionEnabled = val;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FirebaseAppImpl.prototype, "name", {
+        get: function () {
+            this.checkDestroyed_();
+            return this.name_;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(FirebaseAppImpl.prototype, "options", {
+        get: function () {
+            this.checkDestroyed_();
+            return this.options_;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    FirebaseAppImpl.prototype.delete = function () {
+        var _this = this;
+        return new Promise(function (resolve) {
+            _this.checkDestroyed_();
+            resolve();
+        })
+            .then(function () {
+            _this.firebase_.INTERNAL.removeApp(_this.name_);
+            var services = [];
+            Object.keys(_this.services_).forEach(function (serviceKey) {
+                Object.keys(_this.services_[serviceKey]).forEach(function (instanceKey) {
+                    services.push(_this.services_[serviceKey][instanceKey]);
+                });
+            });
+            return Promise.all(services.map(function (service) {
+                return service.INTERNAL.delete();
+            }));
+        })
+            .then(function () {
+            _this.isDeleted_ = true;
+            _this.services_ = {};
+        });
+    };
+    /**
+     * Return a service instance associated with this app (creating it
+     * on demand), identified by the passed instanceIdentifier.
+     *
+     * NOTE: Currently storage is the only one that is leveraging this
+     * functionality. They invoke it by calling:
+     *
+     * ```javascript
+     * firebase.app().storage('STORAGE BUCKET ID')
+     * ```
+     *
+     * The service name is passed to this already
+     * @internal
+     */
+    FirebaseAppImpl.prototype._getService = function (name, instanceIdentifier) {
+        if (instanceIdentifier === void 0) { instanceIdentifier = DEFAULT_ENTRY_NAME; }
+        this.checkDestroyed_();
+        if (!this.services_[name]) {
+            this.services_[name] = {};
+        }
+        if (!this.services_[name][instanceIdentifier]) {
+            /**
+             * If a custom instance has been defined (i.e. not '[DEFAULT]')
+             * then we will pass that instance on, otherwise we pass `null`
+             */
+            var instanceSpecifier = instanceIdentifier !== DEFAULT_ENTRY_NAME
+                ? instanceIdentifier
+                : undefined;
+            var service = this.firebase_.INTERNAL.factories[name](this, this.extendApp.bind(this), instanceSpecifier);
+            this.services_[name][instanceIdentifier] = service;
+        }
+        return this.services_[name][instanceIdentifier];
+    };
+    /**
+     * Callback function used to extend an App instance at the time
+     * of service instance creation.
+     */
+    FirebaseAppImpl.prototype.extendApp = function (props) {
+        var _this = this;
+        // Copy the object onto the FirebaseAppImpl prototype
+        util.deepExtend(this, props);
+        /**
+         * If the app has overwritten the addAuthTokenListener stub, forward
+         * the active token listeners on to the true fxn.
+         *
+         * TODO: This function is required due to our current module
+         * structure. Once we are able to rely strictly upon a single module
+         * implementation, this code should be refactored and Auth should
+         * provide these stubs and the upgrade logic
+         */
+        if (props.INTERNAL && props.INTERNAL.addAuthTokenListener) {
+            tokenListeners.forEach(function (listener) {
+                _this.INTERNAL.addAuthTokenListener(listener);
+            });
+            tokenListeners = [];
+        }
+    };
+    /**
+     * This function will throw an Error if the App has already been deleted -
+     * use before performing API actions on the App.
+     */
+    FirebaseAppImpl.prototype.checkDestroyed_ = function () {
+        if (this.isDeleted_) {
+            error('app-deleted', { name: this.name_ });
+        }
+    };
+    return FirebaseAppImpl;
+}());
+// Prevent dead-code elimination of these methods w/o invalid property
+// copying.
+(FirebaseAppImpl.prototype.name && FirebaseAppImpl.prototype.options) ||
+    FirebaseAppImpl.prototype.delete ||
+    console.log('dc');
+/**
+ * Return a firebase namespace object.
+ *
+ * In production, this will be called exactly once and the result
+ * assigned to the 'firebase' global.  It may be called multiple times
+ * in unit tests.
+ */
+function createFirebaseNamespace() {
+    var apps_ = {};
+    var factories = {};
+    var appHooks = {};
+    // A namespace is a plain JavaScript Object.
+    var namespace = {
+        // Hack to prevent Babel from modifying the object returned
+        // as the firebase namespace.
+        __esModule: true,
+        initializeApp: initializeApp,
+        app: app,
+        apps: null,
+        Promise: Promise,
+        SDK_VERSION: '5.5.9',
+        INTERNAL: {
+            registerService: registerService,
+            createFirebaseNamespace: createFirebaseNamespace,
+            extendNamespace: extendNamespace,
+            createSubscribe: util.createSubscribe,
+            ErrorFactory: util.ErrorFactory,
+            removeApp: removeApp,
+            factories: factories,
+            useAsService: useAsService,
+            Promise: Promise,
+            deepExtend: util.deepExtend
+        }
+    };
+    // Inject a circular default export to allow Babel users who were previously
+    // using:
+    //
+    //   import firebase from 'firebase';
+    //   which becomes: var firebase = require('firebase').default;
+    //
+    // instead of
+    //
+    //   import * as firebase from 'firebase';
+    //   which becomes: var firebase = require('firebase');
+    util.patchProperty(namespace, 'default', namespace);
+    // firebase.apps is a read-only getter.
+    Object.defineProperty(namespace, 'apps', {
+        get: getApps
+    });
+    /**
+     * Called by App.delete() - but before any services associated with the App
+     * are deleted.
+     */
+    function removeApp(name) {
+        var app = apps_[name];
+        callAppHooks(app, 'delete');
+        delete apps_[name];
+    }
+    /**
+     * Get the App object for a given name (or DEFAULT).
+     */
+    function app(name) {
+        name = name || DEFAULT_ENTRY_NAME;
+        if (!contains(apps_, name)) {
+            error('no-app', { name: name });
+        }
+        return apps_[name];
+    }
+    util.patchProperty(app, 'App', FirebaseAppImpl);
+    function initializeApp(options, rawConfig) {
+        if (rawConfig === void 0) { rawConfig = {}; }
+        if (typeof rawConfig !== 'object' || rawConfig === null) {
+            var name_1 = rawConfig;
+            rawConfig = { name: name_1 };
+        }
+        var config = rawConfig;
+        if (config.name === undefined) {
+            config.name = DEFAULT_ENTRY_NAME;
+        }
+        var name = config.name;
+        if (typeof name !== 'string' || !name) {
+            error('bad-app-name', { name: name + '' });
+        }
+        if (contains(apps_, name)) {
+            error('duplicate-app', { name: name });
+        }
+        var app = new FirebaseAppImpl(options, config, namespace);
+        apps_[name] = app;
+        callAppHooks(app, 'create');
+        return app;
+    }
+    /*
+     * Return an array of all the non-deleted FirebaseApps.
+     */
+    function getApps() {
+        // Make a copy so caller cannot mutate the apps list.
+        return Object.keys(apps_).map(function (name) { return apps_[name]; });
+    }
+    /*
+     * Register a Firebase Service.
+     *
+     * firebase.INTERNAL.registerService()
+     *
+     * TODO: Implement serviceProperties.
+     */
+    function registerService(name, createService, serviceProperties, appHook, allowMultipleInstances) {
+        // Cannot re-register a service that already exists
+        if (factories[name]) {
+            error('duplicate-service', { name: name });
+        }
+        // Capture the service factory for later service instantiation
+        factories[name] = createService;
+        // Capture the appHook, if passed
+        if (appHook) {
+            appHooks[name] = appHook;
+            // Run the **new** app hook on all existing apps
+            getApps().forEach(function (app) {
+                appHook('create', app);
+            });
+        }
+        // The Service namespace is an accessor function ...
+        var serviceNamespace = function (appArg) {
+            if (appArg === void 0) { appArg = app(); }
+            if (typeof appArg[name] !== 'function') {
+                // Invalid argument.
+                // This happens in the following case: firebase.storage('gs:/')
+                error('invalid-app-argument', { name: name });
+            }
+            // Forward service instance lookup to the FirebaseApp.
+            return appArg[name]();
+        };
+        // ... and a container for service-level properties.
+        if (serviceProperties !== undefined) {
+            util.deepExtend(serviceNamespace, serviceProperties);
+        }
+        // Monkey-patch the serviceNamespace onto the firebase namespace
+        namespace[name] = serviceNamespace;
+        // Patch the FirebaseAppImpl prototype
+        FirebaseAppImpl.prototype[name] = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var serviceFxn = this._getService.bind(this, name);
+            return serviceFxn.apply(this, allowMultipleInstances ? args : []);
+        };
+        return serviceNamespace;
+    }
+    /**
+     * Patch the top-level firebase namespace with additional properties.
+     *
+     * firebase.INTERNAL.extendNamespace()
+     */
+    function extendNamespace(props) {
+        util.deepExtend(namespace, props);
+    }
+    function callAppHooks(app, eventName) {
+        Object.keys(factories).forEach(function (serviceName) {
+            // Ignore virtual services
+            var factoryName = useAsService(app, serviceName);
+            if (factoryName === null) {
+                return;
+            }
+            if (appHooks[factoryName]) {
+                appHooks[factoryName](eventName, app);
+            }
+        });
+    }
+    // Map the requested service to a registered service name
+    // (used to map auth to serverAuth service when needed).
+    function useAsService(app, name) {
+        if (name === 'serverAuth') {
+            return null;
+        }
+        var useService = name;
+        var options = app.options;
+        return useService;
+    }
+    return namespace;
+}
+function error(code, args) {
+    throw appErrors.create(code, args);
+}
+// TypeScript does not support non-string indexes!
+// let errors: {[code: AppError: string} = {
+var errors = {
+    'no-app': "No Firebase App '{$name}' has been created - " +
+        'call Firebase App.initializeApp()',
+    'bad-app-name': "Illegal App name: '{$name}",
+    'duplicate-app': "Firebase App named '{$name}' already exists",
+    'app-deleted': "Firebase App named '{$name}' already deleted",
+    'duplicate-service': "Firebase service named '{$name}' already registered",
+    'sa-not-supported': 'Initializing the Firebase SDK with a service ' +
+        'account is only allowed in a Node.js environment. On client ' +
+        'devices, you should instead initialize the SDK with an api key and ' +
+        'auth domain',
+    'invalid-app-argument': 'firebase.{$name}() takes either no argument or a ' +
+        'Firebase App instance.'
+};
+var appErrors = new util.ErrorFactory('app', 'Firebase', errors);
+
+/**
+ * Copyright 2017 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+var firebase = createFirebaseNamespace();
+
+exports.firebase = firebase;
+exports.default = firebase;
+
+},{"@firebase/util":31}],31:[function(require,module,exports){
+arguments[4][25][0].apply(exports,arguments)
+},{"dup":25,"tslib":39}],32:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
 
 /**
- * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -32468,7 +33270,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":22}],112:[function(require,module,exports){
+},{"@firebase/storage":24}],33:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -32560,271 +33362,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],113:[function(require,module,exports){
-(function (global,setImmediate){
-'use strict';
-
-// Store setTimeout reference so promise-polyfill will be unaffected by
-// other code modifying setTimeout (like sinon.useFakeTimers())
-var setTimeoutFunc = setTimeout;
-
-function noop() {}
-
-// Polyfill for Function.prototype.bind
-function bind(fn, thisArg) {
-  return function() {
-    fn.apply(thisArg, arguments);
-  };
-}
-
-function Promise(fn) {
-  if (!(this instanceof Promise))
-    throw new TypeError('Promises must be constructed via new');
-  if (typeof fn !== 'function') throw new TypeError('not a function');
-  this._state = 0;
-  this._handled = false;
-  this._value = undefined;
-  this._deferreds = [];
-
-  doResolve(fn, this);
-}
-
-function handle(self, deferred) {
-  while (self._state === 3) {
-    self = self._value;
-  }
-  if (self._state === 0) {
-    self._deferreds.push(deferred);
-    return;
-  }
-  self._handled = true;
-  Promise._immediateFn(function() {
-    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
-    if (cb === null) {
-      (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
-      return;
-    }
-    var ret;
-    try {
-      ret = cb(self._value);
-    } catch (e) {
-      reject(deferred.promise, e);
-      return;
-    }
-    resolve(deferred.promise, ret);
-  });
-}
-
-function resolve(self, newValue) {
-  try {
-    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-    if (newValue === self)
-      throw new TypeError('A promise cannot be resolved with itself.');
-    if (
-      newValue &&
-      (typeof newValue === 'object' || typeof newValue === 'function')
-    ) {
-      var then = newValue.then;
-      if (newValue instanceof Promise) {
-        self._state = 3;
-        self._value = newValue;
-        finale(self);
-        return;
-      } else if (typeof then === 'function') {
-        doResolve(bind(then, newValue), self);
-        return;
-      }
-    }
-    self._state = 1;
-    self._value = newValue;
-    finale(self);
-  } catch (e) {
-    reject(self, e);
-  }
-}
-
-function reject(self, newValue) {
-  self._state = 2;
-  self._value = newValue;
-  finale(self);
-}
-
-function finale(self) {
-  if (self._state === 2 && self._deferreds.length === 0) {
-    Promise._immediateFn(function() {
-      if (!self._handled) {
-        Promise._unhandledRejectionFn(self._value);
-      }
-    });
-  }
-
-  for (var i = 0, len = self._deferreds.length; i < len; i++) {
-    handle(self, self._deferreds[i]);
-  }
-  self._deferreds = null;
-}
-
-function Handler(onFulfilled, onRejected, promise) {
-  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
-  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
-  this.promise = promise;
-}
-
-/**
- * Take a potentially misbehaving resolver function and make sure
- * onFulfilled and onRejected are only called once.
- *
- * Makes no guarantees about asynchrony.
- */
-function doResolve(fn, self) {
-  var done = false;
-  try {
-    fn(
-      function(value) {
-        if (done) return;
-        done = true;
-        resolve(self, value);
-      },
-      function(reason) {
-        if (done) return;
-        done = true;
-        reject(self, reason);
-      }
-    );
-  } catch (ex) {
-    if (done) return;
-    done = true;
-    reject(self, ex);
-  }
-}
-
-Promise.prototype['catch'] = function(onRejected) {
-  return this.then(null, onRejected);
-};
-
-Promise.prototype.then = function(onFulfilled, onRejected) {
-  var prom = new this.constructor(noop);
-
-  handle(this, new Handler(onFulfilled, onRejected, prom));
-  return prom;
-};
-
-Promise.prototype['finally'] = function(callback) {
-  var constructor = this.constructor;
-  return this.then(
-    function(value) {
-      return constructor.resolve(callback()).then(function() {
-        return value;
-      });
-    },
-    function(reason) {
-      return constructor.resolve(callback()).then(function() {
-        return constructor.reject(reason);
-      });
-    }
-  );
-};
-
-Promise.all = function(arr) {
-  return new Promise(function(resolve, reject) {
-    if (!arr || typeof arr.length === 'undefined')
-      throw new TypeError('Promise.all accepts an array');
-    var args = Array.prototype.slice.call(arr);
-    if (args.length === 0) return resolve([]);
-    var remaining = args.length;
-
-    function res(i, val) {
-      try {
-        if (val && (typeof val === 'object' || typeof val === 'function')) {
-          var then = val.then;
-          if (typeof then === 'function') {
-            then.call(
-              val,
-              function(val) {
-                res(i, val);
-              },
-              reject
-            );
-            return;
-          }
-        }
-        args[i] = val;
-        if (--remaining === 0) {
-          resolve(args);
-        }
-      } catch (ex) {
-        reject(ex);
-      }
-    }
-
-    for (var i = 0; i < args.length; i++) {
-      res(i, args[i]);
-    }
-  });
-};
-
-Promise.resolve = function(value) {
-  if (value && typeof value === 'object' && value.constructor === Promise) {
-    return value;
-  }
-
-  return new Promise(function(resolve) {
-    resolve(value);
-  });
-};
-
-Promise.reject = function(value) {
-  return new Promise(function(resolve, reject) {
-    reject(value);
-  });
-};
-
-Promise.race = function(values) {
-  return new Promise(function(resolve, reject) {
-    for (var i = 0, len = values.length; i < len; i++) {
-      values[i].then(resolve, reject);
-    }
-  });
-};
-
-// Use polyfill for setImmediate for performance gains
-Promise._immediateFn =
-  (typeof setImmediate === 'function' &&
-    function(fn) {
-      setImmediate(fn);
-    }) ||
-  function(fn) {
-    setTimeoutFunc(fn, 0);
-  };
-
-Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
-  if (typeof console !== 'undefined' && console) {
-    console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
-  }
-};
-
-var globalNS = (function() {
-  // the only reliable means to get the global object is
-  // `Function('return this')()`
-  // However, this causes CSP violations in Chrome apps.
-  if (typeof self !== 'undefined') {
-    return self;
-  }
-  if (typeof window !== 'undefined') {
-    return window;
-  }
-  if (typeof global !== 'undefined') {
-    return global;
-  }
-  throw new Error('unable to locate global object');
-})();
-
-if (!globalNS.Promise) {
-  globalNS.Promise = Promise;
-}
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
-},{"timers":122}],114:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -32840,7 +33378,6 @@ var printWarning = function() {};
 if (process.env.NODE_ENV !== 'production') {
   var ReactPropTypesSecret = require('./lib/ReactPropTypesSecret');
   var loggedTypeFailures = {};
-  var has = Function.call.bind(Object.prototype.hasOwnProperty);
 
   printWarning = function(text) {
     var message = 'Warning: ' + text;
@@ -32870,7 +33407,7 @@ if (process.env.NODE_ENV !== 'production') {
 function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
   if (process.env.NODE_ENV !== 'production') {
     for (var typeSpecName in typeSpecs) {
-      if (has(typeSpecs, typeSpecName)) {
+      if (typeSpecs.hasOwnProperty(typeSpecName)) {
         var error;
         // Prop type validation may throw. In case they do, we don't want to
         // fail the render phase where it didn't fail before. So we log it.
@@ -32898,7 +33435,8 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
             'You may have forgotten to pass an argument to the type checker ' +
             'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
             'shape all require an argument).'
-          );
+          )
+
         }
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
@@ -32916,21 +33454,10 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
   }
 }
 
-/**
- * Resets warning cache when testing.
- *
- * @private
- */
-checkPropTypes.resetWarningCache = function() {
-  if (process.env.NODE_ENV !== 'production') {
-    loggedTypeFailures = {};
-  }
-}
-
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":115,"_process":121}],115:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":35,"_process":1}],35:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -32944,9 +33471,9 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],116:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (process){
-/** @license React v16.8.2
+/** @license React v16.6.1
  * react.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -32968,7 +33495,7 @@ var checkPropTypes = require('prop-types/checkPropTypes');
 
 // TODO: this is special because it gets imported during build.
 
-var ReactVersion = '16.8.2';
+var ReactVersion = '16.6.1';
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -33001,6 +33528,43 @@ function getIteratorFn(maybeIterable) {
   }
   return null;
 }
+
+var enableHooks = false;
+// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
+
+
+// In some cases, StrictMode should also double-render lifecycles.
+// This can be confusing for tests though,
+// And it can be bad for performance in production.
+// This feature flag can be used to control the behavior:
+
+
+// To preserve the "Pause on caught exceptions" behavior of the debugger, we
+// replay the begin phase of a failed component inside invokeGuardedCallback.
+
+
+// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
+
+
+// Gather advanced timing metrics for Profiler subtrees.
+
+
+// Trace which interactions trigger each commit.
+
+
+// Only used in www builds.
+
+
+// Only used in www builds.
+
+
+// React Fire: prevent the value and checked attributes from syncing
+// with their related DOM properties
+
+
+// These APIs will no longer be "unstable" in the upcoming 16.7 release,
+// Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
+var enableStableConcurrentModeAPIs = false;
 
 /**
  * Use invariant() to assert state which your program assumes to be true.
@@ -33358,17 +33922,6 @@ function createRef() {
 }
 
 /**
- * Keeps track of the current dispatcher.
- */
-var ReactCurrentDispatcher = {
-  /**
-   * @internal
-   * @type {ReactComponent}
-   */
-  current: null
-};
-
-/**
  * Keeps track of the current owner.
  *
  * The current owner is the component who should own any components that are
@@ -33379,7 +33932,8 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: null
+  current: null,
+  currentDispatcher: null
 };
 
 var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
@@ -33510,7 +34064,6 @@ function setCurrentlyValidatingElement(element) {
 }
 
 var ReactSharedInternals = {
-  ReactCurrentDispatcher: ReactCurrentDispatcher,
   ReactCurrentOwner: ReactCurrentOwner,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign: _assign
@@ -34204,9 +34757,6 @@ function createContext(defaultValue, calculateChangedBits) {
     // Secondary renderers store their context values on separate fields.
     _currentValue: defaultValue,
     _currentValue2: defaultValue,
-    // Used to track how many concurrent renderers this context currently
-    // supports within in a single renderer. Such as parallel server rendering.
-    _threadCount: 0,
     // These are circular
     Provider: null,
     Consumer: null
@@ -34259,14 +34809,6 @@ function createContext(defaultValue, calculateChangedBits) {
           context._currentValue2 = _currentValue2;
         }
       },
-      _threadCount: {
-        get: function () {
-          return context._threadCount;
-        },
-        set: function (_threadCount) {
-          context._threadCount = _threadCount;
-        }
-      },
       Consumer: {
         get: function () {
           if (!hasWarnedAboutUsingNestedContextConsumers) {
@@ -34290,51 +34832,13 @@ function createContext(defaultValue, calculateChangedBits) {
 }
 
 function lazy(ctor) {
-  var lazyType = {
+  return {
     $$typeof: REACT_LAZY_TYPE,
     _ctor: ctor,
     // React uses these fields to store the result.
     _status: -1,
     _result: null
   };
-
-  {
-    // In production, this would just set it on the object.
-    var defaultProps = void 0;
-    var propTypes = void 0;
-    Object.defineProperties(lazyType, {
-      defaultProps: {
-        configurable: true,
-        get: function () {
-          return defaultProps;
-        },
-        set: function (newDefaultProps) {
-          warning$1(false, 'React.lazy(...): It is not supported to assign `defaultProps` to ' + 'a lazy component import. Either specify them where the component ' + 'is defined, or create a wrapping component around it.');
-          defaultProps = newDefaultProps;
-          // Match production behavior more closely:
-          Object.defineProperty(lazyType, 'defaultProps', {
-            enumerable: true
-          });
-        }
-      },
-      propTypes: {
-        configurable: true,
-        get: function () {
-          return propTypes;
-        },
-        set: function (newPropTypes) {
-          warning$1(false, 'React.lazy(...): It is not supported to assign `propTypes` to ' + 'a lazy component import. Either specify them where the component ' + 'is defined, or create a wrapping component around it.');
-          propTypes = newPropTypes;
-          // Match production behavior more closely:
-          Object.defineProperty(lazyType, 'propTypes', {
-            enumerable: true
-          });
-        }
-      }
-    });
-  }
-
-  return lazyType;
 }
 
 function forwardRef(render) {
@@ -34380,16 +34884,14 @@ function memo(type, compare) {
 }
 
 function resolveDispatcher() {
-  var dispatcher = ReactCurrentDispatcher.current;
-  !(dispatcher !== null) ? invariant(false, 'Hooks can only be called inside the body of a function component. (https://fb.me/react-invalid-hook-call)') : void 0;
+  var dispatcher = ReactCurrentOwner.currentDispatcher;
+  !(dispatcher !== null) ? invariant(false, 'Hooks can only be called inside the body of a function component.') : void 0;
   return dispatcher;
 }
 
-function useContext(Context, unstable_observedBits) {
+function useContext(Context, observedBits) {
   var dispatcher = resolveDispatcher();
   {
-    !(unstable_observedBits === undefined) ? warning$1(false, 'useContext() second argument is reserved for future ' + 'use in React. Passing it is not supported. ' + 'You passed: %s.%s', unstable_observedBits, typeof unstable_observedBits === 'number' && Array.isArray(arguments[2]) ? '\n\nDid you call array.map(useContext)? ' + 'Calling Hooks inside a loop is not supported. ' + 'Learn more at https://fb.me/rules-of-hooks' : '') : void 0;
-
     // TODO: add a more generic warning for invalid values.
     if (Context._context !== undefined) {
       var realContext = Context._context;
@@ -34402,7 +34904,7 @@ function useContext(Context, unstable_observedBits) {
       }
     }
   }
-  return dispatcher.useContext(Context, unstable_observedBits);
+  return dispatcher.useContext(Context, observedBits);
 }
 
 function useState(initialState) {
@@ -34410,9 +34912,9 @@ function useState(initialState) {
   return dispatcher.useState(initialState);
 }
 
-function useReducer(reducer, initialArg, init) {
+function useReducer(reducer, initialState, initialAction) {
   var dispatcher = resolveDispatcher();
-  return dispatcher.useReducer(reducer, initialArg, init);
+  return dispatcher.useReducer(reducer, initialState, initialAction);
 }
 
 function useRef(initialValue) {
@@ -34423,6 +34925,11 @@ function useRef(initialValue) {
 function useEffect(create, inputs) {
   var dispatcher = resolveDispatcher();
   return dispatcher.useEffect(create, inputs);
+}
+
+function useMutationEffect(create, inputs) {
+  var dispatcher = resolveDispatcher();
+  return dispatcher.useMutationEffect(create, inputs);
 }
 
 function useLayoutEffect(create, inputs) {
@@ -34440,16 +34947,9 @@ function useMemo(create, inputs) {
   return dispatcher.useMemo(create, inputs);
 }
 
-function useImperativeHandle(ref, create, inputs) {
+function useImperativeMethods(ref, create, inputs) {
   var dispatcher = resolveDispatcher();
-  return dispatcher.useImperativeHandle(ref, create, inputs);
-}
-
-function useDebugValue(value, formatterFn) {
-  {
-    var dispatcher = resolveDispatcher();
-    return dispatcher.useDebugValue(value, formatterFn);
-  }
+  return dispatcher.useImperativeMethods(ref, create, inputs);
 }
 
 /**
@@ -34538,7 +35038,7 @@ function validateExplicitKey(element, parentType) {
 
   setCurrentlyValidatingElement(element);
   {
-    warning$1(false, 'Each child in a list should have a unique "key" prop.' + '%s%s See https://fb.me/react-warning-keys for more information.', currentComponentErrorInfo, childOwner);
+    warning$1(false, 'Each child in an array or iterator should have a unique "key" prop.' + '%s%s See https://fb.me/react-warning-keys for more information.', currentComponentErrorInfo, childOwner);
   }
   setCurrentlyValidatingElement(null);
 }
@@ -34594,17 +35094,16 @@ function validateChildKeys(node, parentType) {
  */
 function validatePropTypes(element) {
   var type = element.type;
-  if (type === null || type === undefined || typeof type === 'string') {
-    return;
-  }
-  var name = getComponentName(type);
-  var propTypes = void 0;
+  var name = void 0,
+      propTypes = void 0;
   if (typeof type === 'function') {
+    // Class or function component
+    name = type.displayName || type.name;
     propTypes = type.propTypes;
-  } else if (typeof type === 'object' && (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-  // Note: Memo only checks outer props here.
-  // Inner props are checked in the reconciler.
-  type.$$typeof === REACT_MEMO_TYPE)) {
+  } else if (typeof type === 'object' && type !== null && type.$$typeof === REACT_FORWARD_REF_TYPE) {
+    // ForwardRef
+    var functionName = type.render.displayName || type.render.name || '';
+    name = type.displayName || (functionName !== '' ? 'ForwardRef(' + functionName + ')' : 'ForwardRef');
     propTypes = type.propTypes;
   } else {
     return;
@@ -34735,45 +35234,6 @@ function cloneElementWithValidation(element, props, children) {
   return newElement;
 }
 
-// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-
-
-// In some cases, StrictMode should also double-render lifecycles.
-// This can be confusing for tests though,
-// And it can be bad for performance in production.
-// This feature flag can be used to control the behavior:
-
-
-// To preserve the "Pause on caught exceptions" behavior of the debugger, we
-// replay the begin phase of a failed component inside invokeGuardedCallback.
-
-
-// Warn about deprecated, async-unsafe lifecycles; relates to RFC #6:
-
-
-// Gather advanced timing metrics for Profiler subtrees.
-
-
-// Trace which interactions trigger each commit.
-
-
-// Only used in www builds.
- // TODO: true? Here it might just be false.
-
-// Only used in www builds.
-
-
-// Only used in www builds.
-
-
-// React Fire: prevent the value and checked attributes from syncing
-// with their related DOM properties
-
-
-// These APIs will no longer be "unstable" in the upcoming 16.7 release,
-// Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-var enableStableConcurrentModeAPIs = false;
-
 var React = {
   Children: {
     map: mapChildren,
@@ -34792,17 +35252,6 @@ var React = {
   lazy: lazy,
   memo: memo,
 
-  useCallback: useCallback,
-  useContext: useContext,
-  useEffect: useEffect,
-  useImperativeHandle: useImperativeHandle,
-  useDebugValue: useDebugValue,
-  useLayoutEffect: useLayoutEffect,
-  useMemo: useMemo,
-  useReducer: useReducer,
-  useRef: useRef,
-  useState: useState,
-
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   Suspense: REACT_SUSPENSE_TYPE,
@@ -34814,22 +35263,28 @@ var React = {
 
   version: ReactVersion,
 
-  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
-  unstable_Profiler: REACT_PROFILER_TYPE,
-
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals
 };
-
-// Note: some APIs are added with feature flags.
-// Make sure that stable builds for open source
-// don't modify the React object to avoid deopts.
-// Also let's not expose their names in stable builds.
 
 if (enableStableConcurrentModeAPIs) {
   React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
   React.Profiler = REACT_PROFILER_TYPE;
-  React.unstable_ConcurrentMode = undefined;
-  React.unstable_Profiler = undefined;
+} else {
+  React.unstable_ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
+  React.unstable_Profiler = REACT_PROFILER_TYPE;
+}
+
+if (enableHooks) {
+  React.useCallback = useCallback;
+  React.useContext = useContext;
+  React.useEffect = useEffect;
+  React.useImperativeMethods = useImperativeMethods;
+  React.useLayoutEffect = useLayoutEffect;
+  React.useMemo = useMemo;
+  React.useMutationEffect = useMutationEffect;
+  React.useReducer = useReducer;
+  React.useRef = useRef;
+  React.useState = useState;
 }
 
 
@@ -34849,8 +35304,8 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":121,"object-assign":112,"prop-types/checkPropTypes":114}],117:[function(require,module,exports){
-/** @license React v16.8.2
+},{"_process":1,"object-assign":33,"prop-types/checkPropTypes":34}],37:[function(require,module,exports){
+/** @license React v16.6.1
  * react.production.min.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -34859,24 +35314,23 @@ module.exports = react;
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';var k=require("object-assign"),n="function"===typeof Symbol&&Symbol.for,p=n?Symbol.for("react.element"):60103,q=n?Symbol.for("react.portal"):60106,r=n?Symbol.for("react.fragment"):60107,t=n?Symbol.for("react.strict_mode"):60108,u=n?Symbol.for("react.profiler"):60114,v=n?Symbol.for("react.provider"):60109,w=n?Symbol.for("react.context"):60110,x=n?Symbol.for("react.concurrent_mode"):60111,y=n?Symbol.for("react.forward_ref"):60112,z=n?Symbol.for("react.suspense"):60113,aa=n?Symbol.for("react.memo"):
-60115,ba=n?Symbol.for("react.lazy"):60116,A="function"===typeof Symbol&&Symbol.iterator;function ca(a,b,d,c,e,g,h,f){if(!a){a=void 0;if(void 0===b)a=Error("Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.");else{var l=[d,c,e,g,h,f],m=0;a=Error(b.replace(/%s/g,function(){return l[m++]}));a.name="Invariant Violation"}a.framesToPop=1;throw a;}}
-function B(a){for(var b=arguments.length-1,d="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=0;c<b;c++)d+="&args[]="+encodeURIComponent(arguments[c+1]);ca(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",d)}var C={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},D={};
-function E(a,b,d){this.props=a;this.context=b;this.refs=D;this.updater=d||C}E.prototype.isReactComponent={};E.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?B("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};E.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};function F(){}F.prototype=E.prototype;function G(a,b,d){this.props=a;this.context=b;this.refs=D;this.updater=d||C}var H=G.prototype=new F;
-H.constructor=G;k(H,E.prototype);H.isPureReactComponent=!0;var I={current:null},J={current:null},K=Object.prototype.hasOwnProperty,L={key:!0,ref:!0,__self:!0,__source:!0};
-function M(a,b,d){var c=void 0,e={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(g=""+b.key),b)K.call(b,c)&&!L.hasOwnProperty(c)&&(e[c]=b[c]);var f=arguments.length-2;if(1===f)e.children=d;else if(1<f){for(var l=Array(f),m=0;m<f;m++)l[m]=arguments[m+2];e.children=l}if(a&&a.defaultProps)for(c in f=a.defaultProps,f)void 0===e[c]&&(e[c]=f[c]);return{$$typeof:p,type:a,key:g,ref:h,props:e,_owner:J.current}}
-function da(a,b){return{$$typeof:p,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}}function N(a){return"object"===typeof a&&null!==a&&a.$$typeof===p}function escape(a){var b={"=":"=0",":":"=2"};return"$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var O=/\/+/g,P=[];function Q(a,b,d,c){if(P.length){var e=P.pop();e.result=a;e.keyPrefix=b;e.func=d;e.context=c;e.count=0;return e}return{result:a,keyPrefix:b,func:d,context:c,count:0}}
-function R(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>P.length&&P.push(a)}
-function S(a,b,d,c){var e=typeof a;if("undefined"===e||"boolean"===e)a=null;var g=!1;if(null===a)g=!0;else switch(e){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case p:case q:g=!0}}if(g)return d(c,a,""===b?"."+T(a,0):b),1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){e=a[h];var f=b+T(e,h);g+=S(e,f,d,c)}else if(null===a||"object"!==typeof a?f=null:(f=A&&a[A]||a["@@iterator"],f="function"===typeof f?f:null),"function"===typeof f)for(a=f.call(a),h=
-0;!(e=a.next()).done;)e=e.value,f=b+T(e,h++),g+=S(e,f,d,c);else"object"===e&&(d=""+a,B("31","[object Object]"===d?"object with keys {"+Object.keys(a).join(", ")+"}":d,""));return g}function U(a,b,d){return null==a?0:S(a,"",b,d)}function T(a,b){return"object"===typeof a&&null!==a&&null!=a.key?escape(a.key):b.toString(36)}function ea(a,b){a.func.call(a.context,b,a.count++)}
-function fa(a,b,d){var c=a.result,e=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?V(a,c,d,function(a){return a}):null!=a&&(N(a)&&(a=da(a,e+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(O,"$&/")+"/")+d)),c.push(a))}function V(a,b,d,c,e){var g="";null!=d&&(g=(""+d).replace(O,"$&/")+"/");b=Q(b,g,c,e);U(a,fa,b);R(b)}function W(){var a=I.current;null===a?B("307"):void 0;return a}
-var X={Children:{map:function(a,b,d){if(null==a)return a;var c=[];V(a,c,null,b,d);return c},forEach:function(a,b,d){if(null==a)return a;b=Q(null,null,b,d);U(a,ea,b);R(b)},count:function(a){return U(a,function(){return null},null)},toArray:function(a){var b=[];V(a,b,null,function(a){return a});return b},only:function(a){N(a)?void 0:B("143");return a}},createRef:function(){return{current:null}},Component:E,PureComponent:G,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:w,_calculateChangedBits:b,
-_currentValue:a,_currentValue2:a,_threadCount:0,Provider:null,Consumer:null};a.Provider={$$typeof:v,_context:a};return a.Consumer=a},forwardRef:function(a){return{$$typeof:y,render:a}},lazy:function(a){return{$$typeof:ba,_ctor:a,_status:-1,_result:null}},memo:function(a,b){return{$$typeof:aa,type:a,compare:void 0===b?null:b}},useCallback:function(a,b){return W().useCallback(a,b)},useContext:function(a,b){return W().useContext(a,b)},useEffect:function(a,b){return W().useEffect(a,b)},useImperativeHandle:function(a,
-b,d){return W().useImperativeHandle(a,b,d)},useDebugValue:function(){},useLayoutEffect:function(a,b){return W().useLayoutEffect(a,b)},useMemo:function(a,b){return W().useMemo(a,b)},useReducer:function(a,b,d){return W().useReducer(a,b,d)},useRef:function(a){return W().useRef(a)},useState:function(a){return W().useState(a)},Fragment:r,StrictMode:t,Suspense:z,createElement:M,cloneElement:function(a,b,d){null===a||void 0===a?B("267",a):void 0;var c=void 0,e=k({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=
-b){void 0!==b.ref&&(h=b.ref,f=J.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)K.call(b,c)&&!L.hasOwnProperty(c)&&(e[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)e.children=d;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];e.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:e,_owner:f}},createFactory:function(a){var b=M.bind(null,a);b.type=a;return b},isValidElement:N,version:"16.8.2",
-unstable_ConcurrentMode:x,unstable_Profiler:u,__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentDispatcher:I,ReactCurrentOwner:J,assign:k}},Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
+'use strict';var k=require("object-assign"),n="function"===typeof Symbol&&Symbol.for,p=n?Symbol.for("react.element"):60103,q=n?Symbol.for("react.portal"):60106,r=n?Symbol.for("react.fragment"):60107,t=n?Symbol.for("react.strict_mode"):60108,u=n?Symbol.for("react.profiler"):60114,v=n?Symbol.for("react.provider"):60109,w=n?Symbol.for("react.context"):60110,x=n?Symbol.for("react.concurrent_mode"):60111,y=n?Symbol.for("react.forward_ref"):60112,z=n?Symbol.for("react.suspense"):60113,A=n?Symbol.for("react.memo"):
+60115,B=n?Symbol.for("react.lazy"):60116,C="function"===typeof Symbol&&Symbol.iterator;function aa(a,b,e,c,d,g,h,f){if(!a){a=void 0;if(void 0===b)a=Error("Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.");else{var l=[e,c,d,g,h,f],m=0;a=Error(b.replace(/%s/g,function(){return l[m++]}));a.name="Invariant Violation"}a.framesToPop=1;throw a;}}
+function D(a){for(var b=arguments.length-1,e="https://reactjs.org/docs/error-decoder.html?invariant="+a,c=0;c<b;c++)e+="&args[]="+encodeURIComponent(arguments[c+1]);aa(!1,"Minified React error #"+a+"; visit %s for the full message or use the non-minified dev environment for full errors and additional helpful warnings. ",e)}var E={isMounted:function(){return!1},enqueueForceUpdate:function(){},enqueueReplaceState:function(){},enqueueSetState:function(){}},F={};
+function G(a,b,e){this.props=a;this.context=b;this.refs=F;this.updater=e||E}G.prototype.isReactComponent={};G.prototype.setState=function(a,b){"object"!==typeof a&&"function"!==typeof a&&null!=a?D("85"):void 0;this.updater.enqueueSetState(this,a,b,"setState")};G.prototype.forceUpdate=function(a){this.updater.enqueueForceUpdate(this,a,"forceUpdate")};function H(){}H.prototype=G.prototype;function I(a,b,e){this.props=a;this.context=b;this.refs=F;this.updater=e||E}var J=I.prototype=new H;
+J.constructor=I;k(J,G.prototype);J.isPureReactComponent=!0;var K={current:null,currentDispatcher:null},L=Object.prototype.hasOwnProperty,M={key:!0,ref:!0,__self:!0,__source:!0};
+function N(a,b,e){var c=void 0,d={},g=null,h=null;if(null!=b)for(c in void 0!==b.ref&&(h=b.ref),void 0!==b.key&&(g=""+b.key),b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=b[c]);var f=arguments.length-2;if(1===f)d.children=e;else if(1<f){for(var l=Array(f),m=0;m<f;m++)l[m]=arguments[m+2];d.children=l}if(a&&a.defaultProps)for(c in f=a.defaultProps,f)void 0===d[c]&&(d[c]=f[c]);return{$$typeof:p,type:a,key:g,ref:h,props:d,_owner:K.current}}
+function ba(a,b){return{$$typeof:p,type:a.type,key:b,ref:a.ref,props:a.props,_owner:a._owner}}function O(a){return"object"===typeof a&&null!==a&&a.$$typeof===p}function escape(a){var b={"=":"=0",":":"=2"};return"$"+(""+a).replace(/[=:]/g,function(a){return b[a]})}var P=/\/+/g,Q=[];function R(a,b,e,c){if(Q.length){var d=Q.pop();d.result=a;d.keyPrefix=b;d.func=e;d.context=c;d.count=0;return d}return{result:a,keyPrefix:b,func:e,context:c,count:0}}
+function S(a){a.result=null;a.keyPrefix=null;a.func=null;a.context=null;a.count=0;10>Q.length&&Q.push(a)}
+function T(a,b,e,c){var d=typeof a;if("undefined"===d||"boolean"===d)a=null;var g=!1;if(null===a)g=!0;else switch(d){case "string":case "number":g=!0;break;case "object":switch(a.$$typeof){case p:case q:g=!0}}if(g)return e(c,a,""===b?"."+U(a,0):b),1;g=0;b=""===b?".":b+":";if(Array.isArray(a))for(var h=0;h<a.length;h++){d=a[h];var f=b+U(d,h);g+=T(d,f,e,c)}else if(null===a||"object"!==typeof a?f=null:(f=C&&a[C]||a["@@iterator"],f="function"===typeof f?f:null),"function"===typeof f)for(a=f.call(a),h=
+0;!(d=a.next()).done;)d=d.value,f=b+U(d,h++),g+=T(d,f,e,c);else"object"===d&&(e=""+a,D("31","[object Object]"===e?"object with keys {"+Object.keys(a).join(", ")+"}":e,""));return g}function V(a,b,e){return null==a?0:T(a,"",b,e)}function U(a,b){return"object"===typeof a&&null!==a&&null!=a.key?escape(a.key):b.toString(36)}function ca(a,b){a.func.call(a.context,b,a.count++)}
+function da(a,b,e){var c=a.result,d=a.keyPrefix;a=a.func.call(a.context,b,a.count++);Array.isArray(a)?W(a,c,e,function(a){return a}):null!=a&&(O(a)&&(a=ba(a,d+(!a.key||b&&b.key===a.key?"":(""+a.key).replace(P,"$&/")+"/")+e)),c.push(a))}function W(a,b,e,c,d){var g="";null!=e&&(g=(""+e).replace(P,"$&/")+"/");b=R(b,g,c,d);V(a,da,b);S(b)}
+var X={Children:{map:function(a,b,e){if(null==a)return a;var c=[];W(a,c,null,b,e);return c},forEach:function(a,b,e){if(null==a)return a;b=R(null,null,b,e);V(a,ca,b);S(b)},count:function(a){return V(a,function(){return null},null)},toArray:function(a){var b=[];W(a,b,null,function(a){return a});return b},only:function(a){O(a)?void 0:D("143");return a}},createRef:function(){return{current:null}},Component:G,PureComponent:I,createContext:function(a,b){void 0===b&&(b=null);a={$$typeof:w,_calculateChangedBits:b,
+_currentValue:a,_currentValue2:a,Provider:null,Consumer:null};a.Provider={$$typeof:v,_context:a};return a.Consumer=a},forwardRef:function(a){return{$$typeof:y,render:a}},lazy:function(a){return{$$typeof:B,_ctor:a,_status:-1,_result:null}},memo:function(a,b){return{$$typeof:A,type:a,compare:void 0===b?null:b}},Fragment:r,StrictMode:t,Suspense:z,createElement:N,cloneElement:function(a,b,e){null===a||void 0===a?D("267",a):void 0;var c=void 0,d=k({},a.props),g=a.key,h=a.ref,f=a._owner;if(null!=b){void 0!==
+b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.1",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,
+assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":112}],118:[function(require,module,exports){
+},{"object-assign":33}],38:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34887,7 +35341,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":116,"./cjs/react.production.min.js":117,"_process":121}],119:[function(require,module,exports){
+},{"./cjs/react.development.js":36,"./cjs/react.production.min.js":37,"_process":1}],39:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -35132,446 +35586,4 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],120:[function(require,module,exports){
-'use strict';
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-var _componentFolder = require('../../component/folder');
-
-var _componentFolder2 = _interopRequireDefault(_componentFolder);
-
-var _componentFirebase = require("../../component/firebase");
-
-var _componentImg_compressor = require("../../component/img_compressor");
-
-var _libQuery_parser = require("../../lib/query_parser");
-
-var _libQuery_parser2 = _interopRequireDefault(_libQuery_parser);
-
-var _libSpa_router = require("../../lib/spa_router");
-
-// @plaong Use session storage ( like a iOS user defaults )
-// 2019-2-18 Had better use indexedDB!!
-
-window.addEventListener('popstate', function (e) {
-  (0, _libSpa_router.backBefore)(true);
-});
-
-var isFollow;
-
-init();
-
-function init() {
-  var targetAId = (0, _libQuery_parser2['default'])().aId;
-  var aId = localStorage.getItem("accountId");
-  var queryToFollow = _componentFirebase.db.collection("account").doc(aId).collection("followees").doc(targetAId);
-
-  _componentFirebase.db.collection("account").doc(targetAId).get().then(function (snap) {
-    var d = snap.data();
-    document.getElementById("account_profile_img").src = d.img;
-    document.getElementById("account_name").innerHTML = d.name;
-    document.getElementById("account_intro").innerHTML = d.intro;
-    document.getElementById("follow__number").innerHTML = d.followee;
-    document.getElementById("follower__number").innerHTML = d.follower;
-  });
-
-  if (aId === targetAId) {
-    $("#button_follow").css("display", "none");
-    $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
-    $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
-    $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
-  }
-
-  queryToFollow.get().then(function (snap) {
-    if (snap.exists) {
-      isFollow = true;
-      document.getElementById("button_follow").innerHTML = "フォロー中";
-    } else {
-      isFollow = false;
-      document.getElementById("button_follow").innerHTML = "フォロー";
-    }
-  });
-
-  // @platong  アカウントのURLフォルダを表示
-  _componentFirebase.db.collection("account").doc(targetAId).collection("myfreefolders").get().then(function (snap) {
-    var d = undefined;
-    var list = [];
-    var for_saved_list = [];
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-      for (var _iterator = snap.docs[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-        var i = _step.value;
-
-        d = i.data();
-        d.id = i.id;
-        d.kind = "freefolder";
-        list.push(d);
-      }
-    } catch (err) {
-      _didIteratorError = true;
-      _iteratorError = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion && _iterator['return']) {
-          _iterator['return']();
-        }
-      } finally {
-        if (_didIteratorError) {
-          throw _iteratorError;
-        }
-      }
-    }
-
-    ReactDOM.render(_react2['default'].createElement(
-      'div',
-      { className: 'container__wrapper' },
-      _react2['default'].createElement(_componentFolder2['default'], { list: list })
-    ), document.getElementById("container"));
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-      for (var _iterator2 = list[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-        var _d = _step2.value;
-
-        $("#" + _d.id).css("background-image", "url(" + _d.img + ")");
-      }
-    } catch (err) {
-      _didIteratorError2 = true;
-      _iteratorError2 = err;
-    } finally {
-      try {
-        if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-          _iterator2['return']();
-        }
-      } finally {
-        if (_didIteratorError2) {
-          throw _iteratorError2;
-        }
-      }
-    }
-  });
-}
-
-// @platong Follow button
-$("#button_follow").on("click", function () {
-  var targetAId = location.search.substring(1).split('=')[1];
-  var aId = localStorage.getItem("accountId");
-  var queryToFollow = _componentFirebase.db.collection("account").doc(aId).collection("followees").doc(targetAId);
-
-  if (isFollow) {
-    queryToFollow['delete']().then(function () {
-      return _componentFirebase.db.collection("account").doc(aId).get();
-    }).then(function (snap) {
-      var data = snap.data();
-      data.followee = data.followee - 1;
-      return _componentFirebase.db.collection("account").doc(aId).set(data);
-    }).then(function () {
-      document.getElementById("button_follow").innerHTML = "フォロー";
-      isFollow = false;
-    })['catch'](function (error) {
-      console.error("Error adding document: ", error);
-    });
-  } else {
-    _componentFirebase.db.collection("account").doc(targetAId).get().then(function (snap) {
-      var d = snap.data();
-      queryToFollow.set({
-        name: d.name,
-        profile_img: d.img
-      }).then(function () {
-        return _componentFirebase.db.collection("account").doc(aId).get();
-      }).then(function (snap) {
-        var data = snap.data();
-        data.followee = data.followee + 1;
-        return _componentFirebase.db.collection("account").doc(aId).set(data);
-      }).then(function () {
-        document.getElementById("button_follow").innerHTML = "フォロー中";
-        isFollow = true;
-      })['catch'](function (error) {
-        console.error("Error adding document: ", error);
-      });
-    });
-  }
-});
-
-var fileChanged = function fileChanged() {
-  (0, _componentImg_compressor.imgCompressor)(document.getElementById("changer__ap__profile-img"), $("#preview"), 192, true);
-};
-
-document.getElementById("changer__ap__profile-img").addEventListener("change", fileChanged, false);
-
-},{"../../component/firebase":2,"../../component/folder":3,"../../component/img_compressor":4,"../../lib/query_parser":14,"../../lib/spa_router":15,"react":118}],121:[function(require,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-process.prependListener = noop;
-process.prependOnceListener = noop;
-
-process.listeners = function (name) { return [] }
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}],122:[function(require,module,exports){
-(function (setImmediate,clearImmediate){
-var nextTick = require('process/browser.js').nextTick;
-var apply = Function.prototype.apply;
-var slice = Array.prototype.slice;
-var immediateIds = {};
-var nextImmediateId = 0;
-
-// DOM APIs, for completeness
-
-exports.setTimeout = function() {
-  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
-};
-exports.setInterval = function() {
-  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
-};
-exports.clearTimeout =
-exports.clearInterval = function(timeout) { timeout.close(); };
-
-function Timeout(id, clearFn) {
-  this._id = id;
-  this._clearFn = clearFn;
-}
-Timeout.prototype.unref = Timeout.prototype.ref = function() {};
-Timeout.prototype.close = function() {
-  this._clearFn.call(window, this._id);
-};
-
-// Does not start the time, just sets up the members needed.
-exports.enroll = function(item, msecs) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = msecs;
-};
-
-exports.unenroll = function(item) {
-  clearTimeout(item._idleTimeoutId);
-  item._idleTimeout = -1;
-};
-
-exports._unrefActive = exports.active = function(item) {
-  clearTimeout(item._idleTimeoutId);
-
-  var msecs = item._idleTimeout;
-  if (msecs >= 0) {
-    item._idleTimeoutId = setTimeout(function onTimeout() {
-      if (item._onTimeout)
-        item._onTimeout();
-    }, msecs);
-  }
-};
-
-// That's not how node.js implements it but the exposed api is the same.
-exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
-  var id = nextImmediateId++;
-  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
-
-  immediateIds[id] = true;
-
-  nextTick(function onNextTick() {
-    if (immediateIds[id]) {
-      // fn.call() is faster so we optimize for the common use-case
-      // @see http://jsperf.com/call-apply-segu
-      if (args) {
-        fn.apply(null, args);
-      } else {
-        fn.call(null);
-      }
-      // Prevent ids from leaking
-      exports.clearImmediate(id);
-    }
-  });
-
-  return id;
-};
-
-exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
-  delete immediateIds[id];
-};
-}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
-},{"process/browser.js":121,"timers":122}]},{},[120]);
+},{}]},{},[13]);
