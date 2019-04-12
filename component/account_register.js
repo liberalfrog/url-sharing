@@ -67,7 +67,7 @@ export default class AccountRegister extends React.Component{
         })
 	  }).then(() => {
         console.log("All process is done");
-        location.href = "/feed";
+        location.href = "/home";
       }).catch(err => {
         console.error("Error: Register account: ", err);
       });
