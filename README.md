@@ -19,13 +19,26 @@ URLを第三者と共有するサービス
 
 
 # Installation
-1. リポジトリを複製します。
 
-git clone https://github.com/dev-platong/url-sharing.git/
+1. リポジトリをクローンします。
+
+```
+git clone https://github.com/liberalfrog/url-sharing.git
+```
 
 2. ディレクトリ内に移動して、ノードパッケージをインストールします。
 
+```
 npm install
+```
+
+** Warnings: 以下のようにsaveオプションをつけて実行してはいけません。**
+
+```
+npm install --save
+```
+
+
 
 ## Node version
 v8.1.0
@@ -33,8 +46,9 @@ v8.1.0
 
 ## Core team
 
-- [Nagai Kazuki（永井　一輝）](https://github.com/dev-platong)
+- [Teyoung Hong](https://github.com/Teyoung-Hong)
 - [Ito Taiga （伊藤　泰賀）](https://github.com/taiga246)
 - [Miyazaki katsura （宮崎　嘉桂）](https://github.com/devTKM)
+- [Nagai Kazuki（永井　一輝）](https://github.com/dev-platong)
 
-  We also belong to [Real OZ Project](https://github.com/realozproject).
+  We also belong to [LFrog](https://github.com/liberalfrog).
