@@ -188,7 +188,7 @@ function vSegueURLPost2URL(unwind){
   //* unwind is always false
   let id = queryParser().id
   let urlList 
-  if(sessionStorage.url_list === null){
+  if(!sessionStorage.url_list){
     urlList = []
   }else{
     urlList = sessionStorage.url_list.split("-@-").map(x => { return JSON.parse(x)})
