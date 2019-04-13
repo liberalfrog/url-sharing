@@ -2125,30 +2125,6 @@ var URLs = (function (_React$Component2) {
 })(_react2["default"].Component);
 
 exports["default"] = URLs;
-
-jQuery(function ($) {
-  $('.textOverflowURL').each(function () {
-    var $target = $(this);
-
-    var html = $target.html();
-
-    var $clone = $target.clone();
-    $clone.css({
-      display: 'none',
-      position: 'absolute',
-      overflow: 'visible'
-    }).width($target.width()).height('auto');
-
-    $target.after($clone);
-    while (html.length > 0 && $clone.height() > $target.height()) {
-      html = html.substr(0, html.length - 1);
-      $clone.html(html + '...');
-    }
-
-    $target.html($clone.html());
-    $clone.remove();
-  });
-});
 module.exports = exports["default"];
 
 },{"./firebase":3,"react":38}],10:[function(require,module,exports){
