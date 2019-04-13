@@ -356,23 +356,29 @@ var URLPost = (function (_React$Component3) {
     this.state = {
       id: props.id,
       ownerAId: props.ownerAId,
-      count: 0
+      urlInputs: [{ title: "" }]
     };
-    this.singleURLSubmit.bind(this);
+    this.urlConverter = this.urlConverter.bind(this);
+    this.singleURLSubmit = this.singleURLSubmit.bind(this);
   }
 
   _createClass(URLPost, [{
     key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
+    value: function urlConverter(event, index) {
+      var _this = this;
+
+      var url = event.target.value;
       $.ajax({
         url: "/api_v1/url_to_title",
         type: 'GET',
         data: { "url": url }
       }).done(function (data) {
-        var selector2 = 'input[name="title' + num + '"]';
-        $(selector2).val(data.title);
+        var urlInputs = _this.state.urlInputs;
+        urlInputs[index] = {
+          title: data.title,
+          url: url
+        };
+        _this.setState({ urlInputs: urlInputs });
       }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
     }
   }, {
@@ -382,15 +388,17 @@ var URLPost = (function (_React$Component3) {
     }
   }, {
     key: "singleURLSubmit",
-    value: function singleURLSubmit(i) {
+    value: function singleURLSubmit(urlData) {
       var aId = localStorage.accountId;
       var t_id = this.state.id;
       var user = _firebase.auth.currentUser;
       var ownerAId = this.state.ownerAId;
 
-      var url = $('input[name="url' + i + '"]').val();
-      var title = $('input[name="title' + i + '"]').val();
-      if (url === "" || title === "") return;
+      var url = urlData.url;
+      var title = urlData.title;
+      if (!url || !title) {
+        return;
+      }
       var data = {
         title: title,
         content: "",
@@ -428,8 +436,6 @@ var URLPost = (function (_React$Component3) {
             });
           }
         }).then(function (docRef) {
-          var url = $('input[name="url' + i + '"]').val();
-          var title = $('input[name="title' + i + '"]').val();
           var user = _firebase.auth.currentUser;
           return {
             id: docRef.id,
@@ -449,27 +455,29 @@ var URLPost = (function (_React$Component3) {
   }, {
     key: "urlputSubmit",
     value: function urlputSubmit() {
-      var promises = [];
-      for (var i = 0; i <= this.state.count; i++) {
-        promises.push(this.singleURLSubmit(i));
-      }
-      this.state.count = 0;
+      var _this2 = this;
+
+      var promises = this.state.urlInputs.map(function (x) {
+        return _this2.singleURLSubmit(x);
+      });
       Promise.all(promises).then(function (resultLists) {
-        sessionStorage.urlpost_uploadURLList = resultLists.map(function (x) {
+        sessionStorage.urlpost_uploadURLList = resultLists.filter(function (x) {
+          return x !== undefined;
+        }).map(function (x) {
           return JSON.stringify(x);
         }).join("-@-");
         sessionStorage.urlpost_isUpload = "true";
         (0, _vector_segue.vSegueURLPost2URL)(false);
+      })["catch"](function (e) {
+        console.error(e);
       });
     }
   }, {
     key: "morePost",
     value: function morePost() {
-      ++this.state.count;
-      var element = document.createElement("div");
-      element.setAttribute("id", "url_input" + this.state.count);
-      document.getElementById("url_input").appendChild(element);
-      ReactDOM.render(React.createElement(URLInput, { num: this.state.count }), document.getElementById("url_input" + this.state.count));
+      var urlInputs = this.state.urlInputs;
+      urlInputs.push({ title: "" });
+      this.setState({ urlInputs: urlInputs });
     }
   }, {
     key: "postCancel",
@@ -480,6 +488,8 @@ var URLPost = (function (_React$Component3) {
   }, {
     key: "render",
     value: function render() {
+      var _this3 = this;
+
       return [React.createElement("div", { className: "window-overlay", onClick: this.postCancel.bind(this), key: "urlPostOverlay" }), React.createElement(
         "div",
         { className: "post__container", key: "urlPostcontainer" },
@@ -494,12 +504,9 @@ var URLPost = (function (_React$Component3) {
           React.createElement(
             "div",
             { id: "url_input" },
-            React.createElement(
-              "div",
-              { id: "url_input0" },
-              React.createElement("input", { name: "url0", type: "text", onInput: this.urlConverter.bind(this, 0), placeholder: "URLを入力", required: true }),
-              React.createElement("input", { name: "title0", type: "text", placeholder: "タイトル（自動入力）", onInput: this.getChanged, required: true })
-            )
+            this.state.urlInputs.map(function (x, i) {
+              return React.createElement(URLInput, { key: i, title: x.title, index: i, urlConverter: _this3.urlConverter });
+            })
           ),
           React.createElement("input", { type: "button", onClick: this.urlputSubmit.bind(this), value: "登録", className: "post__submit submit_is_disactive", id: "url_submit" })
         ),
@@ -518,34 +525,21 @@ var URLInput = (function (_React$Component4) {
     _classCallCheck(this, URLInput);
 
     _get(Object.getPrototypeOf(URLInput.prototype), "constructor", this).call(this, props);
-    this.state = {
-      urlName: "url" + this.props.num,
-      titleName: "title" + this.props.num
-    };
   }
 
   _createClass(URLInput, [{
-    key: "urlConverter",
-    value: function urlConverter(num) {
-      var selector1 = 'input[name="url' + num + '"]';
-      var url = $(selector1).val();
-      $.ajax({
-        url: "/api_v1/url_to_title",
-        type: 'GET',
-        data: { "url": url }
-      }).done(function (data) {
-        var selector = 'input[name="title' + num + '"]';
-        $(selector).val(data.title);
-      }).fail(console.error("Error something bug is occured. Please contact us to inform this."));
-    }
-  }, {
     key: "render",
     value: function render() {
+      var _this4 = this;
+
       return React.createElement(
         "div",
         null,
-        React.createElement("input", { name: this.state.urlName, type: "text", onInput: this.urlConverter.bind(this, this.props.num), placeholder: "URLを入力", required: true }),
-        React.createElement("input", { name: this.state.titleName, type: "text", placeholder: "タイトル（自動入力）", required: true })
+        React.createElement("input", { type: "text",
+          onInput: function (e) {
+            return _this4.props.urlConverter(e, _this4.props.index);
+          }, placeholder: "URLを入力", required: true }),
+        React.createElement("input", { type: "text", value: this.props.title, placeholder: "タイトル（自動入力）", required: true })
       );
     }
   }]);
