@@ -112,34 +112,40 @@ class URLPost extends React.Component{
     this.state = { 
       id: props.id,
       ownerAId: props.ownerAId,
-      count: 0
+      urlInputs: [{title: ""}]
     }
-    this.singleURLSubmit.bind(this)
+    this.urlConverter = this.urlConverter.bind(this)
+    this.singleURLSubmit = this.singleURLSubmit.bind(this)
   }
-  urlConverter(num){
-    let selector1 = 'input[name="url' + num + '"]'
-    let url = $(selector1).val()
+  urlConverter(event, index){
+    let url = event.target.value
     $.ajax({
       url:"/api_v1/url_to_title",
       type:'GET',
       data:{ "url": url }
     })
     .done(data => {
-      let selector2 = 'input[name="title' + num + '"]'
-      $(selector2).val(data.title)
+      let urlInputs = this.state.urlInputs
+      urlInputs[index] = {
+        title: data.title,
+        url: url
+      }
+      this.setState({urlInputs: urlInputs})
     })
     .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
   getChanged(){ urlSubmitActiveSwitch(); }
-  singleURLSubmit(i){
+  singleURLSubmit(urlData){
     let aId = localStorage.accountId
     let t_id = this.state.id
     let user = auth.currentUser;
     let ownerAId = this.state.ownerAId
 
-    let url = $('input[name="url' + i + '"]').val()
-    let title = $('input[name="title' + i + '"]').val()
-    if(url === "" || title === "") return
+    let url = urlData.url
+    let title = urlData.title
+    if(!url || !title){
+      return
+    }
     let data = {
       title: title,
       content: "",
@@ -150,9 +156,10 @@ class URLPost extends React.Component{
       dateTime: new Date()
     }
     if(ownerAId === aId){
-      return db.collection("account").doc(aId).collection("myfreefolders").doc(t_id).collection("urls").add(data).then(docRef => {
-		data.id = docRef.id
-		return data
+      return db.collection("account").doc(aId).collection("myfreefolders")
+             .doc(t_id).collection("urls").add(data).then(docRef => {
+	data.id = docRef.id
+	return data
       }).catch(error => {
         console.error("Error adding URL: ", error);
       });
@@ -178,11 +185,9 @@ class URLPost extends React.Component{
           })
         }
       }).then(docRef => {
-        let url = $('input[name="url' + i + '"]').val()
-        let title = $('input[name="title' + i + '"]').val()
         let user = auth.currentUser
         return {
-	      id: docRef.id,
+	  id: docRef.id,
           title: title,
           content: "",
           href: url,
@@ -197,27 +202,23 @@ class URLPost extends React.Component{
       }
   }
   urlputSubmit(){
-    let promises = []
-    for(let i=0; i<=this.state.count; i++){
-      promises.push(this.singleURLSubmit(i))
-    }
-    this.state.count = 0
+    let promises = this.state.urlInputs.map(x => { return this.singleURLSubmit(x) })
     Promise.all(promises).then(resultLists => {
-      sessionStorage.urlpost_uploadURLList = resultLists.map(x => {return JSON.stringify(x)}).join("-@-")
+      sessionStorage.urlpost_uploadURLList = resultLists.filter(x => x !== undefined).map(x => {return JSON.stringify(x)}).join("-@-")
       sessionStorage.urlpost_isUpload = "true"
       vSegueURLPost2URL(false)
+    }).catch(e => {
+      console.error(e)
     })
   }
   morePost(){
-    ++this.state.count
-    let element = document.createElement("div")
-    element.setAttribute("id", "url_input" + this.state.count)
-    document.getElementById("url_input").appendChild(element)
-    ReactDOM.render(<URLInput num={this.state.count} />, document.getElementById("url_input" + this.state.count))
+    let urlInputs = this.state.urlInputs
+    urlInputs.push({title:""})
+    this.setState({urlInputs: urlInputs})
   }
   postCancel(){
-	sessionStorage.urlpost_isUpload = ""
-	vSegueURLPost2URL(false)
+    sessionStorage.urlpost_isUpload = ""
+    vSegueURLPost2URL(false)
   }
   render(){
     return ([
@@ -226,10 +227,10 @@ class URLPost extends React.Component{
         <h1 className="view-title">URLを登録</h1>
         <form name="urlput_form">
           <div id="url_input">
-            <div id="url_input0">
-              <input name="url0" type="text" onInput={this.urlConverter.bind(this, 0)} placeholder="URLを入力" required/>
-              <input name="title0" type="text" placeholder="タイトル（自動入力）" onInput={this.getChanged} required/>
-            </div>
+            { this.state.urlInputs.map((x, i) => {
+                return <URLInput key={i} title={x.title} index={i} urlConverter={this.urlConverter} />
+              })
+            }
           </div>
           <input type="button" onClick={this.urlputSubmit.bind(this)} value="登録" className="post__submit submit_is_disactive" id="url_submit"/>
         </form>
@@ -243,30 +244,13 @@ class URLPost extends React.Component{
 class URLInput extends React.Component{
   constructor(props){
     super(props)
-    this.state = {
-      urlName: "url" + this.props.num,
-      titleName: "title" + this.props.num
-    }
-  }
-  urlConverter(num){
-    let selector1 = 'input[name="url' + num + '"]'
-    let url = $(selector1).val()
-    $.ajax({
-      url:"/api_v1/url_to_title",
-      type:'GET',
-      data:{ "url": url }
-    })
-    .done(data => {
-      let selector = 'input[name="title' + num + '"]'
-      $(selector).val(data.title)
-    })
-    .fail( console.error("Error something bug is occured. Please contact us to inform this.") )
   }
   render(){
     return(
       <div>
-        <input name={this.state.urlName} type="text" onInput={this.urlConverter.bind(this, this.props.num)} placeholder="URLを入力" required/>
-        <input name={this.state.titleName} type="text" placeholder="タイトル（自動入力）" required/>
+        <input type="text" 
+         onInput={(e) => this.props.urlConverter(e, this.props.index)} placeholder="URLを入力" required/>
+        <input type="text" value={this.props.title} placeholder="タイトル（自動入力）" required/>
       </div>
     )
   }
