@@ -416,6 +416,10 @@ button{
     border-radius: 0.5% 0.5% 1% 1%;
   }
 
+  #url_input{
+    margin: 4% 0;
+  }
+
   .post-folder__preview{
     position: relative;
   }
