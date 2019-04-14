@@ -33,11 +33,8 @@ class ViewFolderEdit extends React.Component {
 	  id: sessionStorage.folderedit_id,
 	  aId: sessionStorage.folderedit_aId,
 	  content: (
-        <div className="add_view">
-          <div className="add_panel" onClick={this.deleteFolder.bind(this)}>
-            <h3>フォルダの削除</h3>
-            <p>このフォルダを削除します</p>
-          </div>
+        <div className="delete_view">
+          <input type="button" value="削除" className="post__delete submit_is_disactive" onClick={this.deleteFolder.bind(this)}/>
         </div>
       )
 	}
