@@ -240,6 +240,20 @@ class URLPost extends React.Component{
   }
 }
 
+class URLInput extends React.Component{
+  constructor(props){
+    super(props)
+  }
+  render(){
+    return(
+      <div>
+        <input type="text" 
+         onInput={(e) => this.props.urlConverter(e, this.props.index)} placeholder="URLを入力" required/>
+        <input type="text" value={this.props.title} placeholder="タイトル（自動入力）" required/>
+      </div>
+    )
+  }
+}
 
 
 
