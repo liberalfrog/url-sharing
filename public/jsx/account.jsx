@@ -29,14 +29,62 @@ function init(){
     document.getElementById("account_intro").innerHTML= d.intro;
     document.getElementById("follow__number").innerHTML= d.followee;
     document.getElementById("follower__number").innerHTML= d.follower;
+    document.getElementById("account_twitter").getAttribute('href') = d.twitter;
+    document.getElementById("account_facebook").getAttribute('href') = d.facebook;
+    document.getElementById("account_instagrm").getAttribute('href') = d.instagram;
+    document.getElementById("account_github").getAttribute('href') = d.github;
+    document.getElementById("account_others").getAttribute('href') = d.others;
   });
 
   if(aId === targetAId){
     $("#button_follow").css("display","none");
+    document.getElmentById("buttonDeatil").innerHTML = "編集する"
+    // TKM buttonDetail's id changes buttonedit.
     $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
     $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
     $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
   }
+
+// @TKM 編集ボタンのクリック時処理
+  $("#button_edit").on("click", function(){
+// @TKM 初期値valueに既存データ設置
+    $("edit_box", "bb").css("display" : "block")
+  });
+
+// @TKM save button
+  $(".edi__save").on("click", function(){
+    let aId = localStorage.getItem("accountId")
+    let bId = $(this).attr("id");
+    let type = bId.substr(3);
+    let iId = "edit_" + type;
+    let value = document.getElementById(iId).value
+  $.ajax({
+	  async: true,
+	  url: "/api_v1/changeProfile", 
+	  type: "POST", 
+	  data: {
+		  aId: aId, 
+		  type: type, 
+		  value: value
+	  }
+        }).done(function(){
+	  let aT = "account_" + type
+	  if(type === "name" || "intro")
+	    $(aT).innerHTML = value
+	  else
+	    $(aT).getAttribute('href') = value
+	}).fail(function(){
+	  alert(type + "'s change is failed.")
+	});
+    $("edit_box", "bb").css("display" : "none")
+  });
+
+// @TKM cancel button
+  $("#edit_cancel").on("click", function(){
+    $("edit_box", "bb").css("display" : "none")
+  })
+
+
 
   queryToFollow.get().then(snap => {
     if(snap.exists){
@@ -50,8 +98,8 @@ function init(){
 
   // @platong  アカウントのURLフォルダを表示
   db.collection("account").doc(targetAId).collection("myfreefolders").get().then(snap => {
-    let d;
-    let list = []
+    let d;\
+    let list = []\
     let for_saved_list = []
     for(let i of snap.docs){
       d = i.data()
@@ -65,7 +113,6 @@ function init(){
     }
   });
 }
-
 
 // @platong Follow button
 $("#button_follow").on("click", function(){

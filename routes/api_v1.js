@@ -4,6 +4,19 @@ const cheerio = require('cheerio');
 const fs = require('fs');
 var router = express.Router();
 
+//@TKM To change profile 
+router.post('/changeProfile', function(req, res){
+  let {aId, type, value} = req.body
+  if(!aId){
+    res.status(403).send("I'm sorry that We can't find your ID.")
+  }
+  return db.collection("account").doc(aId).get().then(snap=>{
+    snap.$(type) = value
+    return snap.set();
+  });
+});
+
+
 router.get('/url_to_title', function(req, res, next) {
   if(!req.query.url)
     return
