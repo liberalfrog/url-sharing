@@ -241,20 +241,6 @@ class URLPost extends React.Component{
 }
 
 
-class URLInput extends React.Component{
-  constructor(props){
-    super(props)
-  }
-  render(){
-    return(
-      <div>
-        <input type="text" 
-         onInput={(e) => this.props.urlConverter(e, this.props.index)} placeholder="URLを入力" required/>
-        <input type="text" value={this.props.title} placeholder="タイトル（自動入力）" required/>
-      </div>
-    )
-  }
-}
 
 
 class URLFolderPost extends React.Component{
@@ -292,7 +278,7 @@ class URLFolderPost extends React.Component{
     return ([
       <div className="window-overlay" onClick={this.postCancel} key="urlFolderPostOverlay"></div>,
       <div className="post__container"key="urlFolderPostContainer">
-        <h1 className="view-title">URLを入れるフォルダを作成</h1>
+        <h2 className="view-title">フォルダを作成</h2>
         <form action="" name="urlset_form">
           <div className="post-folder__preview">
             <canvas id="ap_preview" className="post-folder__folder" width="0" height="0"></canvas>
@@ -301,14 +287,14 @@ class URLFolderPost extends React.Component{
             <input id="ap_panel_title" className="post-folder__title" name="title" type="text" onInput={buttonActiveSwitch} placeholder="タイトルを入力" required/>
           </div>
           <div className="post-folder__sub">
-            <input type="checkbox" name="paid" id="post-folder__sell"/><label htmlFor="paid">販売する</label>
+           このフォルダの金額 <input type="text" name="paid" id="post-folder__sell"/><label htmlFor="paid"> 円</label>
           </div>
           <div className="sell__section">
             <input type="text" name="price" /><label htmlFor="price">円</label>
           </div>
           <input type="button" onClick={this.submit} value="作成" className="post__submit submit_is_disactive" id="ap_submit" />
         </form>
-      </div>,
+      </div>
     ]);
   }
 }
