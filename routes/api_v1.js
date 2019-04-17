@@ -3,6 +3,107 @@ const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const fs = require('fs');
 var router = express.Router();
+var admin = require("firebase-admin");
+require('firebase/app');
+require('firebase/firestore');
+const db = admin.firestore();
+
+//@TKM To change profile 
+router.post('/changeProfileName', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({ name: value });
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileIntro', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({intro:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileTwitter', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({twitter:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileFacebook', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({facebook:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileGithub', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({github:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileInstagram', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({instagram:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileOthers', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({others:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileImg', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    //db.collection("accnunt").doc(aId).update({img:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
 
 router.get('/url_to_title', function(req, res, next) {
   if(!req.query.url)

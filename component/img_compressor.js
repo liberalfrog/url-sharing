@@ -31,17 +31,17 @@ function blobToFile(theBlob, fileName){
 function updateProfileImg(downloadURL){
   let aId = localStorage.accountId
   let user = auth.currentUser
-  return db.collection("account").doc(aId).update({
-    img: downloadURL,
-  }).then(docRef => {
-    user.updateProfile({ photoURL: downloadURL }).then(() => {
-      console.log("All process is done");
-      location.reload()
-    }).catch(err => {
-      console.error("Error: upload profile image: ", err);
-    }); 
-  }).catch(err => {
-    console.error("Error adding document: ", err);
+  $.ajax({
+	  async: true, 
+	  url:"./api_v1/changeProfileImg", 
+	  data: {
+	    aId: aId, 
+	    value: downloadURL
+	  }
+  }).done(function(data){
+    document.getElementById("account_profile_img").src = data
+  }).fail(err => {
+    alert("Error adding document: ", err);
   });
 }
 
