@@ -47,7 +47,7 @@ v8.1.0
 ## Core team
 
 - [Teyoung Hong](https://github.com/Teyoung-Hong)
-- [Ito Taiga （伊藤　泰賀）](https://github.com/taiga246)
+- [Ito Taiga （伊藤　泰賀）](https://github.com/taiga248)
 - [Miyazaki katsura （宮崎　嘉桂）](https://github.com/devTKM)
 - [Nagai Kazuki（永井　一輝）](https://github.com/dev-platong)
 
