@@ -32,7 +32,7 @@ git clone https://github.com/liberalfrog/url-sharing.git
 npm install
 ```
 
-** Warnings: 以下のようにsaveオプションをつけて実行してはいけません。**
+ **Warnings: 以下のようにsaveオプションをつけて実行してはいけません。**
 
 ```
 npm install --save
