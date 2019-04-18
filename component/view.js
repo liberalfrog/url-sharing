@@ -16,8 +16,9 @@ class TemplateViewNavTab extends React.Component {
     return(
       <div>
         <div className="window-overlay" onClick={this.props.cancel}></div>
-        <div className="post__container">
+        <div className="delete__container">
           <h1 className="view-title">{this.props.title}</h1>
+            <p>このフォルダを削除しますか？</p>
           {this.props.content}
         </div>
       </div>
