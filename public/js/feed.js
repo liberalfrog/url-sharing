@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -185,6 +185,85 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],2:[function(require,module,exports){
+(function (setImmediate,clearImmediate){
+var nextTick = require('process/browser.js').nextTick;
+var apply = Function.prototype.apply;
+var slice = Array.prototype.slice;
+var immediateIds = {};
+var nextImmediateId = 0;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) { timeout.close(); };
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// That's not how node.js implements it but the exposed api is the same.
+exports.setImmediate = typeof setImmediate === "function" ? setImmediate : function(fn) {
+  var id = nextImmediateId++;
+  var args = arguments.length < 2 ? false : slice.call(arguments, 1);
+
+  immediateIds[id] = true;
+
+  nextTick(function onNextTick() {
+    if (immediateIds[id]) {
+      // fn.call() is faster so we optimize for the common use-case
+      // @see http://jsperf.com/call-apply-segu
+      if (args) {
+        fn.apply(null, args);
+      } else {
+        fn.call(null);
+      }
+      // Prevent ids from leaking
+      exports.clearImmediate(id);
+    }
+  });
+
+  return id;
+};
+
+exports.clearImmediate = typeof clearImmediate === "function" ? clearImmediate : function(id) {
+  delete immediateIds[id];
+};
+}).call(this,require("timers").setImmediate,require("timers").clearImmediate)
+},{"process/browser.js":1,"timers":2}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -423,7 +502,7 @@ var AccountRegister = (function (_React$Component) {
 exports["default"] = AccountRegister;
 module.exports = exports["default"];
 
-},{"./firebase":4}],3:[function(require,module,exports){
+},{"./firebase":5}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -982,7 +1061,7 @@ exports.AddPanel = AddPanel;
 exports.URLFolderPost = URLFolderPost;
 exports.URLPost = URLPost;
 
-},{"./firebase":4,"./img_compressor":6,"./segue":8,"./side_menu":9,"./uuid":11,"./view":12}],4:[function(require,module,exports){
+},{"./firebase":5,"./img_compressor":7,"./segue":9,"./side_menu":10,"./uuid":12,"./view":13}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1004,7 +1083,7 @@ exports.db = db;
 exports.storage = storage;
 exports.auth = auth;
 
-},{"firebase/app":22,"firebase/auth":23,"firebase/firestore":24,"firebase/storage":27}],5:[function(require,module,exports){
+},{"firebase/app":23,"firebase/auth":24,"firebase/firestore":25,"firebase/storage":28}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1154,7 +1233,7 @@ var Folders = (function (_React$Component2) {
 exports['default'] = Folders;
 module.exports = exports['default'];
 
-},{"./firebase":4,"./segue":8,"./url":10,"./view":12,"react":33}],6:[function(require,module,exports){
+},{"./firebase":5,"./segue":9,"./url":11,"./view":13,"react":34}],7:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1295,7 +1374,7 @@ function submitImgToCloudStorage(fileDomObj, bucket, cloudStorageToFireStore) {
 exports.imgCompressor = imgCompressor;
 exports.submitImgToCloudStorage = submitImgToCloudStorage;
 
-},{"./firebase":4,"./uuid":11,"firebase/app":22}],7:[function(require,module,exports){
+},{"./firebase":5,"./uuid":12,"firebase/app":23}],8:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1341,7 +1420,7 @@ var LaterButton = (function (_React$Component) {
 exports["default"] = LaterButton;
 module.exports = exports["default"];
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2146,7 +2225,7 @@ exports.segueFolderToAddPanel = segueFolderToAddPanel;
 exports.segueFolderFeedToPostFolder = segueFolderFeedToPostFolder;
 exports.segueURLPost = segueURLPost;
 
-},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":7,"./side_menu":9,"./view":12,"react":33}],9:[function(require,module,exports){
+},{"./add_button":4,"./firebase":5,"./folder":6,"./later_button":8,"./side_menu":10,"./view":13,"react":34}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2354,7 +2433,7 @@ function sideMenuButtonShift(targetElement) {
 
 exports.sideMenuButtonShift = sideMenuButtonShift;
 
-},{"./firebase":4,"./segue":8,"react":33}],10:[function(require,module,exports){
+},{"./firebase":5,"./segue":9,"react":34}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2521,7 +2600,7 @@ jQuery(function ($) {
 });
 module.exports = exports["default"];
 
-},{"./firebase":4,"react":33}],11:[function(require,module,exports){
+},{"./firebase":5,"react":34}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2548,7 +2627,7 @@ function generateUuid() {
 
 module.exports = exports["default"];
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2945,7 +3024,7 @@ exports.ViewPostFolder = ViewPostFolder;
 exports.ViewURLFeed = ViewURLFeed;
 exports.ViewURLPost = ViewURLPost;
 
-},{"./add_button":3,"./firebase":4,"./folder":5,"./later_button":7,"./segue":8,"./side_menu":9,"./url":10,"react":33}],13:[function(require,module,exports){
+},{"./add_button":4,"./firebase":5,"./folder":6,"./later_button":8,"./segue":9,"./side_menu":10,"./url":11,"react":34}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -3345,7 +3424,7 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":20}],14:[function(require,module,exports){
+},{"@firebase/util":21}],15:[function(require,module,exports){
 (function (global){
 (function() {var firebase = require('@firebase/app').default;var g,aa=aa||{},k=this;function l(a){return"string"==typeof a}function ba(a){return"boolean"==typeof a}function ca(){}
 function da(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -3671,7 +3750,7 @@ firebase.INTERNAL.registerService("auth",function(a,c){a=new bm(a);c({INTERNAL:{
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"@firebase/app":13}],15:[function(require,module,exports){
+},{"@firebase/app":14}],16:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -24760,7 +24839,7 @@ registerFirestore(firebase);
 exports.registerFirestore = registerFirestore;
 
 }).call(this,require('_process'))
-},{"@firebase/app":13,"@firebase/logger":16,"@firebase/webchannel-wrapper":21,"_process":1,"tslib":34}],16:[function(require,module,exports){
+},{"@firebase/app":14,"@firebase/logger":17,"@firebase/webchannel-wrapper":22,"_process":1,"tslib":35}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -24948,8 +25027,8 @@ function setLogLevel(level) {
 exports.setLogLevel = setLogLevel;
 exports.Logger = Logger;
 
-},{}],17:[function(require,module,exports){
-(function (global){
+},{}],18:[function(require,module,exports){
+(function (global,setImmediate){
 'use strict';
 
 require('whatwg-fetch');
@@ -26482,8 +26561,8 @@ var iterator = _wksExt.f('iterator');
  * limitations under the License.
  */
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"whatwg-fetch":18}],18:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {},require("timers").setImmediate)
+},{"timers":2,"whatwg-fetch":19}],19:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -26951,7 +27030,7 @@ var iterator = _wksExt.f('iterator');
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -30412,7 +30491,7 @@ registerStorage(firebase);
 
 exports.registerStorage = registerStorage;
 
-},{"@firebase/app":13}],20:[function(require,module,exports){
+},{"@firebase/app":14}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -32190,7 +32269,7 @@ exports.validateNamespace = validateNamespace;
 exports.stringLength = stringLength;
 exports.stringToByteArray = stringToByteArray$1;
 
-},{"tslib":34}],21:[function(require,module,exports){
+},{"tslib":35}],22:[function(require,module,exports){
 (function (global){
 (function() {'use strict';var e,goog=goog||{},h=this;function l(a){return"string"==typeof a}function m(a,b){a=a.split(".");b=b||h;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function aa(){}
 function ba(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
@@ -32315,7 +32394,7 @@ e.F=function(){Y.L.F.call(this);h.clearTimeout(this.Gd);this.cc.clear();this.cc=
 V.prototype.getStatus=V.prototype.za;V.prototype.getStatusText=V.prototype.Yd;V.prototype.getResponseJson=V.prototype.yf;V.prototype.getResponseText=V.prototype.ya;V.prototype.getResponseText=V.prototype.ya;V.prototype.send=V.prototype.send;module.exports={createWebChannelTransport:fd,ErrorCode:bc,EventType:cc,WebChannel:ec,XhrIoPool:Z};}).call(typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : typeof window !== 'undefined' ? window : {})
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
@@ -32341,7 +32420,7 @@ var firebase = _interopDefault(require('@firebase/app'));
 
 module.exports = firebase;
 
-},{"@firebase/app":25,"@firebase/polyfill":17}],23:[function(require,module,exports){
+},{"@firebase/app":26,"@firebase/polyfill":18}],24:[function(require,module,exports){
 'use strict';
 
 require('@firebase/auth');
@@ -32362,7 +32441,7 @@ require('@firebase/auth');
  * limitations under the License.
  */
 
-},{"@firebase/auth":14}],24:[function(require,module,exports){
+},{"@firebase/auth":15}],25:[function(require,module,exports){
 'use strict';
 
 require('@firebase/firestore');
@@ -32383,7 +32462,7 @@ require('@firebase/firestore');
  * limitations under the License.
  */
 
-},{"@firebase/firestore":15}],25:[function(require,module,exports){
+},{"@firebase/firestore":16}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -32783,9 +32862,9 @@ var firebase = createFirebaseNamespace();
 exports.firebase = firebase;
 exports.default = firebase;
 
-},{"@firebase/util":26}],26:[function(require,module,exports){
-arguments[4][20][0].apply(exports,arguments)
-},{"dup":20,"tslib":34}],27:[function(require,module,exports){
+},{"@firebase/util":27}],27:[function(require,module,exports){
+arguments[4][21][0].apply(exports,arguments)
+},{"dup":21,"tslib":35}],28:[function(require,module,exports){
 'use strict';
 
 require('@firebase/storage');
@@ -32806,7 +32885,7 @@ require('@firebase/storage');
  * limitations under the License.
  */
 
-},{"@firebase/storage":19}],28:[function(require,module,exports){
+},{"@firebase/storage":20}],29:[function(require,module,exports){
 /*
 object-assign
 (c) Sindre Sorhus
@@ -32898,7 +32977,7 @@ module.exports = shouldUseNative() ? Object.assign : function (target, source) {
 	return to;
 };
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 (function (process){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -32993,7 +33072,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
 module.exports = checkPropTypes;
 
 }).call(this,require('_process'))
-},{"./lib/ReactPropTypesSecret":30,"_process":1}],30:[function(require,module,exports){
+},{"./lib/ReactPropTypesSecret":31,"_process":1}],31:[function(require,module,exports){
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -33007,7 +33086,7 @@ var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
 module.exports = ReactPropTypesSecret;
 
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (process){
 /** @license React v16.6.1
  * react.development.js
@@ -34840,7 +34919,7 @@ module.exports = react;
 }
 
 }).call(this,require('_process'))
-},{"_process":1,"object-assign":28,"prop-types/checkPropTypes":29}],32:[function(require,module,exports){
+},{"_process":1,"object-assign":29,"prop-types/checkPropTypes":30}],33:[function(require,module,exports){
 /** @license React v16.6.1
  * react.production.min.js
  *
@@ -34866,7 +34945,7 @@ _currentValue:a,_currentValue2:a,Provider:null,Consumer:null};a.Provider={$$type
 b.ref&&(h=b.ref,f=K.current);void 0!==b.key&&(g=""+b.key);var l=void 0;a.type&&a.type.defaultProps&&(l=a.type.defaultProps);for(c in b)L.call(b,c)&&!M.hasOwnProperty(c)&&(d[c]=void 0===b[c]&&void 0!==l?l[c]:b[c])}c=arguments.length-2;if(1===c)d.children=e;else if(1<c){l=Array(c);for(var m=0;m<c;m++)l[m]=arguments[m+2];d.children=l}return{$$typeof:p,type:a.type,key:g,ref:h,props:d,_owner:f}},createFactory:function(a){var b=N.bind(null,a);b.type=a;return b},isValidElement:O,version:"16.6.1",__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED:{ReactCurrentOwner:K,
 assign:k}};X.unstable_ConcurrentMode=x;X.unstable_Profiler=u;var Y={default:X},Z=Y&&X||Y;module.exports=Z.default||Z;
 
-},{"object-assign":28}],33:[function(require,module,exports){
+},{"object-assign":29}],34:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -34877,7 +34956,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 }).call(this,require('_process'))
-},{"./cjs/react.development.js":31,"./cjs/react.production.min.js":32,"_process":1}],34:[function(require,module,exports){
+},{"./cjs/react.development.js":32,"./cjs/react.production.min.js":33,"_process":1}],35:[function(require,module,exports){
 (function (global){
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -35122,7 +35201,7 @@ var __importDefault;
 });
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],35:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 'use strict';
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -35262,4 +35341,4 @@ function init() {
   });
 }
 
-},{"../../component/account_register":2,"../../component/firebase":4,"../../component/folder":5,"../../component/segue":8,"../../component/url":10,"react":33}]},{},[35]);
+},{"../../component/account_register":3,"../../component/firebase":5,"../../component/folder":6,"../../component/segue":9,"../../component/url":11,"react":34}]},{},[36]);

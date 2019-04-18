@@ -12,6 +12,7 @@ function segueURLFeed(kind, id, ownerAId){
   let d
   let aId = localStorage.accountId
   let query
+  console.log("shazam!!");
   switch(kind){
     case "folders":
       query = db.collection("account").doc(aId).collection("folders").doc(id).collection("urls")
