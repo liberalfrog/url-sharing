@@ -97,7 +97,7 @@ class AddPanel extends React.Component{
           <i className="fas fa-code"></i>
         </div>
         <div className="add_panel" onClick={this.cancel}>
-		  <i className="fas fa-times"></i>
+		      <i className="fas fa-times"></i>
         </div>
       </div>
     );
@@ -223,7 +223,7 @@ class URLPost extends React.Component{
   render(){
     return ([
       <div className="window-overlay" onClick={this.postCancel.bind(this)} key="urlPostOverlay"></div>,
-      <div className="post__container" key="urlPostcontainer">
+      <div className="post__container-url" key="urlPostcontainer">
         <h1 className="view-title">URLを登録</h1>
         <form name="urlput_form">
           <div id="url_input">
@@ -291,7 +291,7 @@ class URLFolderPost extends React.Component{
   render(){
     return ([
       <div className="window-overlay" onClick={this.postCancel} key="urlFolderPostOverlay"></div>,
-      <div className="post__container"key="urlFolderPostContainer">
+      <div className="post__container" id="post__container-map" key="urlFolderPostContainer">
         <h2 className="view-title">フォルダを作成</h2>
         <form action="" name="urlset_form">
           <div className="post-folder__preview">
