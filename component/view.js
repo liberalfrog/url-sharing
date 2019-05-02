@@ -16,8 +16,9 @@ class TemplateViewNavTab extends React.Component {
     return(
       <div>
         <div className="window-overlay" onClick={this.props.cancel}></div>
-        <div className="post__container">
+        <div className="delete__container">
           <h1 className="view-title">{this.props.title}</h1>
+            <p>このフォルダを削除しますか？</p>
           {this.props.content}
         </div>
       </div>
@@ -33,11 +34,8 @@ class ViewFolderEdit extends React.Component {
 	  id: sessionStorage.folderedit_id,
 	  aId: sessionStorage.folderedit_aId,
 	  content: (
-        <div className="add_view">
-          <div className="add_panel" onClick={this.deleteFolder.bind(this)}>
-            <h3>フォルダの削除</h3>
-            <p>このフォルダを削除します</p>
-          </div>
+        <div className="delete_view">
+          <input type="button" value="削除" className="post__delete submit_is_disactive" onClick={this.deleteFolder.bind(this)}/>
         </div>
       )
 	}
@@ -193,36 +191,24 @@ class ViewFolderFeed extends React.Component {
   componentDidMount(){
     let list = []
     let aId = localStorage.getItem("accountId")
-    db.collection("account").doc(aId).collection("folders").get().then(snap1 => {
-      let d;
-      let for_saved_list = []
-      for(let i of snap1.docs){
-        d = i.data()
-        d.id = i.id
-        d.kind = "folders"
-        list.push(d)
-        for_saved_list.push(JSON.stringify(d))
-      };
-      db.collection("account").doc(aId).collection("myfreefolders").get().then(snap2 => {
-        let d;
-        for(let i of snap2.docs){
-          d = i.data()
-          d.id = i.id
-          d.kind = "myfreefolders"
-          list.push(d)
-          for_saved_list.push(JSON.stringify(d))
-        };
-        sessionStorage.urlset_list = for_saved_list.join("-@-");
-        this.setState({list: list})
-        for(let d of list){
-          let aId = localStorage.accountId
+    $.ajax({
+      type: "GET",
+      url: "/api_v1/sets",
+      data: {
+        myAId: localStorage.accountId
+      },
+      success: res => {
+        let sets = res.body.split("-@-").map(x => { return JSON.parse(x) })
+        this.setState({list: sets})
+        let aId = localStorage.accountId
+        for(let d of sets){
           if(d.aId === aId){
             let selector = "#" + d.id + " .edit__folder"
             $(selector).css("display", "block")
           }
           $("#" + d.id ).css("background-image", "url(" + d.img + ")")
         }
-      })
+      }
     })
   }
   openFolderPost(){

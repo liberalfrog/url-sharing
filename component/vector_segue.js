@@ -187,7 +187,12 @@ function vSegueURLPost2FolderChoice(unwind){
 function vSegueURLPost2URL(unwind){
   //* unwind is always false
   let id = queryParser().id
-  let urlList = sessionStorage.url_list.split("-@-").map(x => { return JSON.parse(x)})
+  let urlList 
+  if(!sessionStorage.url_list){
+    urlList = []
+  }else{
+    urlList = sessionStorage.url_list.split("-@-").map(x => { return JSON.parse(x)})
+  }
   if(Boolean(sessionStorage.urlpost_isUpload)){
     let uploadURLList = sessionStorage.urlpost_uploadURLList.split("-@-").map(x => { return JSON.parse(x)})
     Array.prototype.push.apply(urlList, uploadURLList);

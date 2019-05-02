@@ -10,12 +10,10 @@ form{
 }
 
 input[type="text"]{
-  padding: 0;
   border: none;
-  border-radius: 0;
   outline: none;
   background: #EEEEEE;
-  padding: 1.5px 1.5px 0 1em;
+  padding: 2px 1em;
   border-radius: 2px;
 }
 
@@ -379,6 +377,13 @@ button{
     z-index: 20;
   }
   
+  .delete_view{
+    position: fixed;
+    bottom: 13px;
+    right: 15px;
+    z-index: 10;
+  }
+
   .add_panel{
     text-align: center;
     font-size: 4em;
@@ -415,22 +420,37 @@ button{
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.75);
-    z-index: 20;
+    z-index: 25;
   }
-  
-  .post__container{
+  /* delete_folder css */
+  .delete__container{
     position: fixed;
     z-index: 30;
-    top: 50%;
+    top: 45%;
     left: 50%;
     transform: translate(-50%, -50%);
     width: 40vw;
-    height: 55vh;
-    background: #FFD5EC;
-    padding: 2vh 4vw;
-    border-radius: 8px;
+    padding: 1em 1em 4em 1.5em;
+    color: #5d627b;
+    background: white;
+    border-top: solid 4px red;
+    border-radius: 0.5% 0.5% 1% 1%;
   }
-  
+
+ /* add_folder css */ 
+  .post__container{
+    position: fixed;
+    z-index: 30;
+    height: 91vh;
+    top: 0;
+    right: 0;
+    padding: 2em 1.5em;
+    color: #5d627b;
+    background: white;
+    border-top: solid 7px lightgreen;
+    border-radius: 0.5% 0.5% 1% 1%;
+  }
+
   .post-folder__preview{
     position: relative;
   }
@@ -452,8 +472,8 @@ button{
   }
   
   .post-folder__folder, .post-folder__image{
-    width: 40vw;
-    height: 220px;
+    width: 35vw;
+    height: 240px;
   }
   
   .post-folder__image{
@@ -471,8 +491,22 @@ button{
     top: 0;
     left: 0;
   }
-  
+ /* folder submit */ 
   .post__submit{
+    position: absolute;
+    display: block;
+    right: 15px;
+    padding: 0  0.25em;
+    width: 140px;
+    text-decoration: none;
+    transition: 0.3s;
+  }
+  .post__submit:hover {
+    background:#00bcd4;
+    color: white;
+  }
+  
+  .post__delete{
     position: absolute;
     display: block;
     bottom: 13px;
@@ -480,25 +514,26 @@ button{
     padding: 0  0.25em;
     width: 140px;
     text-decoration: none;
-    color: #00BCD4;
-    background: #ECECEC;
-    transition: .4s;
+    transition: 0.3s;
   }
-  .post__submit:hover {
-    background:#00bcd4;
+  .post__delete:hover {
+    background: red;
     color: white;
   }
   
+
   .sell__section{ display: none; }
   
   .submit_is_active{
     background: green;
     color: white;
+    border-radius: 5%;
   }
   
   .submit_is_disactive{
     background: white;
     color: gray;
+    border-radius: 5%;
   }
   
   .list-nav:after {

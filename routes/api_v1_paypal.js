@@ -2,13 +2,6 @@ var express = require('express');
 var request = require('request');
 const admin = require("firebase-admin");
 
-var serviceAccount = require("../service_account/urlsharing-541c7-firebase-adminsdk-k0kuo-b4e94854fe.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://urlsharing-541c7.firebaseio.com"
-});
-
 const db = admin.firestore();
 
 const CLIENT = 'AY9byggP1RG3lxNt3shDNrPITFjGbuJeOpydsEvZw8W1Oe9qMs65vo9nBjjdYSiZFiK0XDODs-H_XzJF';

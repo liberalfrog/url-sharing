@@ -17,10 +17,12 @@
     "fs": "0.0.1-security",
     "http-errors": "~1.6.2",
     "jade": "~1.11.0",
+    "log4js": "^4.1.0",
     "morgan": "~1.9.0",
     "node-fetch": "^2.2.0",
     "react": "^16.6.1",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "typescript": "^3.4.5"
   },
   "devDependencies": {
     "babel-core": "^6.26.3",

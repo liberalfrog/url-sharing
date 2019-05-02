@@ -1,9 +1,9 @@
 import React from 'react';
-import Folders from '../../component/folder';
-import {storage, db} from "../../component/firebase";
-import {imgCompressor} from "../../component/img_compressor";
-import queryParser from "../../lib/query_parser";
-import {backBefore} from "../../lib/spa_router";
+import Folders from '../component/folder';
+import {storage, db} from "../component/firebase";
+import {imgCompressor} from "../component/img_compressor";
+import queryParser from "../lib/query_parser";
+import {backBefore} from "../lib/spa_router";
 
 
 // @plaong Use session storage ( like a iOS user defaults )
@@ -14,15 +14,15 @@ window.addEventListener('popstate', function(e) {
 });
 
 var isFollow
+let aId = queryParser().aId
+let myAId = localStorage.getItem("accountId")
 
 init()
 
 function init(){
-  let targetAId = queryParser().aId
-  let aId = localStorage.getItem("accountId")
-  let queryToFollow = db.collection("account").doc(aId).collection("followees").doc(targetAId)
+  let queryToFollow = db.collection("account").doc(myAId).collection("followees").doc(aId)
 
-  db.collection("account").doc(targetAId).get().then(snap => {
+  db.collection("account").doc(aId).get().then(snap => {
     let d = snap.data();
     document.getElementById("account_profile_img").src =  d.img;
     document.getElementById("account_name").innerHTML= d.name;
@@ -36,7 +36,7 @@ function init(){
     document.getElementById("account_others").setAttribute("href", d.others);
   });
 
-  if(aId === targetAId){
+  if(aId === myAId){
     $("#button_follow").css("display","none");
     $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
     $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
@@ -86,7 +86,7 @@ function init(){
 	    value: value
 	  }
         }).done(function(){
-          document.getElementById("account_intro").value = value;
+          document.getElementById("account_intro").innerHTML = value;
         }).fail(function(){
 	  alert("Introduction's change is failed.")
         });
@@ -193,12 +193,12 @@ function init(){
       document.getElementById("button_follow").innerHTML = "フォロー中"
     }else{
       isFollow = false
-      document.getElementById("button_follow").innerHTML = "フォロー"
+      document.getElementById("button_follow").innerHTML = "フォローする"
     }
   })
 
   // @platong  アカウントのURLフォルダを表示
-  db.collection("account").doc(targetAId).collection("myfreefolders").get().then(snap => {
+  db.collection("account").doc(aId).collection("myfreefolders").get().then(snap => {
     let d;
     let list = []
     let for_saved_list = []
@@ -216,10 +216,8 @@ function init(){
 }
 
 // @platong Follow button
-$("#button_follow").on("click", function(){
-  let targetAId = location.search.substring(1).split('=')[1];
-  let aId = localStorage.getItem("accountId")
-  let queryToFollow = db.collection("account").doc(aId).collection("followees").doc(targetAId)
+$("#button_follow").on("click", () => {
+  let queryToFollow = db.collection("account").doc(myAId).collection("followees").doc(aId)
 
   if(isFollow){
     queryToFollow.delete().then(() => {
@@ -235,7 +233,7 @@ $("#button_follow").on("click", function(){
       console.error("Error adding document: ", error);
     });
   }else{
-    db.collection("account").doc(targetAId).get().then(snap => {
+    db.collection("account").doc(aId).get().then(snap => {
       let d = snap.data()
       queryToFollow.set({
         name: d.name,

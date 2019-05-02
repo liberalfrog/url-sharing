@@ -1,12 +1,10 @@
-var express = require('express');
+const express = require('express');
 const fetch = require('node-fetch'); 
 const cheerio = require('cheerio');
 const fs = require('fs');
-var router = express.Router();
-var admin = require("firebase-admin");
-require('firebase/app');
-require('firebase/firestore');
-const db = admin.firestore();
+const router = express.Router();
+const admin = require("firebase-admin")
+const db = admin.firestore()
 
 //@TKM To change profile 
 router.post('/changeProfileName', function(req, res){
@@ -14,7 +12,7 @@ router.post('/changeProfileName', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({ name: value });
+    db.collection("account").doc(aId).update({ name: value });
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -26,7 +24,7 @@ router.post('/changeProfileIntro', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({intro:value});
+    db.collection("account").doc(aId).update({intro:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -38,7 +36,7 @@ router.post('/changeProfileTwitter', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({twitter:value});
+    db.collection("account").doc(aId).update({twitter:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -50,7 +48,7 @@ router.post('/changeProfileFacebook', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({facebook:value});
+    db.collection("account").doc(aId).update({facebook:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -62,7 +60,7 @@ router.post('/changeProfileGithub', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({github:value});
+    db.collection("account").doc(aId).update({github:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -74,7 +72,7 @@ router.post('/changeProfileInstagram', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({instagram:value});
+    db.collection("account").doc(aId).update({instagram:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -86,7 +84,7 @@ router.post('/changeProfileOthers', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({others:value});
+    db.collection("account").doc(aId).update({others:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -98,7 +96,7 @@ router.post('/changeProfileImg', function(req, res){
       if(!aId){
         res.status(403).send("I'm sorry that We can't find your ID.")
       }
-    //db.collection("accnunt").doc(aId).update({img:value});
+    db.collection("account").doc(aId).update({img:value});
     res.header('Content-Type', 'application/json; charset=utf-8')
     res.send({
       body:value
@@ -210,9 +208,47 @@ function extractMetaProps(html) {
     return 0
   })
 
-  console.log(results)
   return results
 }
+
+
+router.get("/sets", (req, res) => {
+  let myAId = req.query.myAId
+  let promises = [ 
+    db.collection("account").doc(myAId).collection("folders")
+      .get().then(snaps => {
+      return snaps.docs.map(x => {
+        let d = x.data()
+        d.id = x.id
+        d.kind = "folders"
+        return JSON.stringify(d)
+      })  
+    }).catch(e => {
+      console.log(e)
+    }), 
+    db.collection("account").doc(myAId).collection("myfreefolders")
+      .get().then(snaps => {
+      return snaps.docs.map(x => {
+        let d = x.data()
+        d.id = x.id
+        d.kind = "myfreefolders"
+        return JSON.stringify(d)
+      })  
+    }).catch(e => {
+      console.log(e)
+    }) 
+  ]
+  Promise.all(promises).then(setsList => {
+    let sets = setsList[0].concat(setsList[1])
+    res.header("Content-Type", "application/json; charset=utf-8")
+    res.send({
+      body: sets.join("-@-"),
+      state: "200"
+    })  
+  }).catch(e => {
+    console.error(e)
+  })
+})
 
 
 module.exports = router;

@@ -33,15 +33,16 @@ function updateProfileImg(downloadURL){
   let user = auth.currentUser
   $.ajax({
 	  async: true, 
-	  url:"./api_v1/changeProfileImg", 
+	  url: "./api_v1/changeProfileImg",
+	  type: "POST", 
 	  data: {
 	    aId: aId, 
 	    value: downloadURL
 	  }
-  }).done(function(data){
-    document.getElementById("account_profile_img").src = data
+  }).done(function(){
+    document.getElementById("account_profile_img").src = downloadURL
   }).fail(err => {
-    alert("Error adding document: ", err);
+    alert("Error adding document");
   });
 }
 

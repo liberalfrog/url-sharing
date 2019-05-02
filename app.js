@@ -1,8 +1,15 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var createError = require('http-errors')
+var express = require('express')
+var path = require('path')
+var cookieParser = require('cookie-parser')
+var logger = require('morgan')
+let serviceAccount = require("./service_account/urlsharing-541c7-firebase-adminsdk-k0kuo-b4e94854fe.json")
+const admin = require("firebase-admin")
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://urlsharing-541c7.firebaseio.com"
+})
 
 var indexRouter = require('./routes/index');
 var accountRouter = require('./routes/account');

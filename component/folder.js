@@ -20,8 +20,8 @@ class Folder extends React.Component {
     $("#" + this.state.id).css("background-image", 'url("' + this.props.img + '")')
   }
   putShow(){
-	sessionStorage.folderData = JSON.stringify(this.state)
-	folderSegue("url")
+    sessionStorage.folderData = JSON.stringify(this.state)
+    folderSegue("url")
   }
   urlPost(){
 	sessionStorage.folderData = JSON.stringify(this.state)
@@ -73,29 +73,29 @@ function getFolderType(folderId){
   let aId = localStorage.accountId
   return db.collection("account").doc(aId).collection("myfreefolders").doc(folderId).get().then(snap => {
     if(snap.exists){
-	  type = "myfreefolders"
-	  return snap
+      type = "myfreefolders"
+      return snap
     }else{   
       return db.collection("account").doc(aId).collection("folders").doc(folderId).get()
-	}
+    }
  }).then(snap => {
    if(snap.exists){
-	 type = "folders"
-	 return snap
+     type = "folders"
+     return snap
    }else{
      return db.collection("freefolder").doc(folderId).get()
    }
  }).then(snap => {
    if(snap.exists){
-	 type = "freefolder"
+     type = "freefolder"
      let data = snap.data()
-	 return {
-	   id: snap.id,
-	   ownerAId: data.aId,
+     return {
+       id: snap.id,
+       ownerAId: data.aId,
        kind: type	
-	 }
+     }
    }else{
-	 alert("このフォルダは存在しません")
+     alert("このフォルダは存在しません")
      console.error("Such a folder is not found.")
    }   
  })
