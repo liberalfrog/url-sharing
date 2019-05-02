@@ -48,17 +48,28 @@
         <div class="profile__eximg">
           <h2 id="account_name" class="profile-name"></h2>
           <button id="button_follow" class="button__follow">フォローする</button>
-          <button id="buttonDetail" class="button__follow">詳細を見る</button>
+	  <button id="button_edit" class="button__follow">編集する</button>
+	  <div id="bb" class="BB"></div>
+	  <div id="edit_box" class="edi__box">
+		  <button id="edit_cancel" class="edi__cancel">×</button>
+		  <p>Name<input type="text" id="edit_name" class="edi__type" equired><button id="es_name" class="edi__save">保存</button></p>
+		  <p>Introduction</p><p><textarea id="edit_intro" class="edi__intro" rows=4 cols=50></textarea><button id="es_intro" class="edi__save">保存</button></p>
+		  <p>Twitter<input type="url" id="edit_twitter" class="edi__type"><button id="es_twitter" class="edi__save">保存</button></p>
+		  <p>FaceBook<input type="url" id="edit_facebook" class="edi__type" ><button id="es_facebook" class="edi__save">保存</button></p>
+		  <p>GitHub<input type="url" id="edit_github" class="edi__type"><button id="es_github" class="edi__save">保存</button></p>
+		  <p>Instagram<input type="url" id="edit_instagram" class="edi__type" ><button id="es_instagram" class="edi__save">保存</button></p>
+		  <p>Others<input type="url" id="edit_others"  class="edi__type"><button id="es_others" class="edi__save">保存</button></p>
+	  </div>
           <p class="profile__intro clearfix">
             <span id="account_intro"></span>
           </p>
           <button onclick="copyURL()" class="copy_url_design">Copy URL</button>
           <div class="sns__container">
-            <a href="#"><img src="/img/Twitter.png" class="SNS_img"></a>
-            <a href="#"><img src="/img/facebook.png" class="SNS_img"></a>
-            <a href="#"><img src="/img/github.jpg" class="SNS_img"></a>
-            <a href="#"><img src="/img/instagram.png" class="SNS_img"></a>
-            <a href="#"><img src="/img/other.jpg" class="SNS_img"></a> 
+            <a href="#" id="account_twitter"><img src="/img/Twitter.png" class="SNS_img"></a>
+            <a href="#" id="account_facebook"><img src="/img/facebook.png" class="SNS_img"></a>
+            <a href="#" id="account_github"><img src="/img/github.jpg" class="SNS_img"></a>
+            <a href="#" id="account_instagrma"><img src="/img/instagram.png" class="SNS_img"></a>
+            <a href="#" id="account_others"><img src="/img/other.jpg" class="SNS_img"></a> 
           </div>
           <div class="follow__container">
             <a href="#" class="num-follow"><span id="follow__number"></span>フォロー</a>

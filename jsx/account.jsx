@@ -29,6 +29,11 @@ function init(){
     document.getElementById("account_intro").innerHTML= d.intro;
     document.getElementById("follow__number").innerHTML= d.followee;
     document.getElementById("follower__number").innerHTML= d.follower;
+    document.getElementById("account_twitter").setAttribute("href", d.twitter);
+    document.getElementById("account_facebook").setAttribute("href", d.facebook);
+    document.getElementById("account_instagrm").setAttribute("href", d.instagram);
+    document.getElementById("account_github").setAttribute("href", d.github);
+    document.getElementById("account_others").setAttribute("href", d.others);
   });
 
   if(aId === myAId){
@@ -36,7 +41,151 @@ function init(){
     $("#changer__ap__profile-img").removeClass("changer__ap__profile-img");
     $("#changer__ap__profile-img").addClass("edit-active__ap__profile-img");
     $(".ap__profile-img__container").addClass("edit-active__ap__profile-img__container");
+  }else{
+   $("#button_edit").css("display","none");
   }
+
+// @TKM 編集ボタンのクリック時処理
+  $("#button_edit").on("click", function(){
+    $("#edit_box").css("display", "block");
+    $("#bb").css("display", "block");
+  });
+
+// @TKM save button
+  $(".edi__save").on("click", function(){
+    let aId = localStorage.getItem("accountId")
+    let bId = $(this).attr("id");
+    let type = bId.substr(3);
+    let eId = "edit_" + type
+    let value = document.getElementById(eId).value
+   switch(type){
+
+      case'name':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileName", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(){
+          document.getElementById("account_name").innerHTML = value;
+        }).fail(function(){
+	  alert("Name's change is failed.")
+        });
+        break;
+
+      case'intro':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileIntro", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(){
+          document.getElementById("account_intro").innerHTML = value;
+        }).fail(function(){
+	  alert("Introduction's change is failed.")
+        });
+        break;
+
+      case'twitter':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileTwitter", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(data){
+          document.getElementById("account_twitter").serAttribute('href', value);
+        }).fail(function(){
+	  alert("Twitter's change is failed.")
+        });
+        break;
+
+      case'facebook':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileFacebook", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(data){
+          document.getElementById("account_facebook").serAttribute('href', value);
+        }).fail(function(){
+	  alert("Facebook's change is failed.")
+        });
+        break;
+
+      case'github':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileGithub", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(data){
+          document.getElementById("account_github").serAttribute('href', value);
+        }).fail(function(){
+	  alert("Github's change is failed.")
+        });
+        break;
+
+      case'instagram':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileInstagram", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(data){
+          document.getElementById("account_instagram").serAttribute('href', value);
+        }).fail(function(){
+	  alert("Instagram's change is failed.")
+        });
+        break;
+
+      case'others':
+        $.ajax({
+	  async: true,
+	  url: "./api_v1/changeProfileOthers", 
+	  type: "POST", 
+	  data: {
+    	    aId: aId, 
+	    value: value
+	  }
+        }).done(function(data){
+          document.getElementById("account_others").serAttribute('href', value);
+        }).fail(function(){
+	  alert("Others' change is failed.")
+        });
+        break;
+
+      default:
+        alert('error');
+    }
+        $("#edit_box").css("display", "none");
+        $("#bb").css("display", "none");
+  });
+
+// @TKM cancel button
+  $("#edit_cancel").on("click", function(){
+    $("#edit_box").css("display", "none");
+    $("#bb").css("display", "none");
+  });
+
+
 
   queryToFollow.get().then(snap => {
     if(snap.exists){
@@ -65,7 +214,6 @@ function init(){
     }
   });
 }
-
 
 // @platong Follow button
 $("#button_follow").on("click", () => {

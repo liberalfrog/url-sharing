@@ -6,6 +6,103 @@ const router = express.Router();
 const admin = require("firebase-admin")
 const db = admin.firestore()
 
+//@TKM To change profile 
+router.post('/changeProfileName', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({ name: value });
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileIntro', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({intro:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileTwitter', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({twitter:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileFacebook', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({facebook:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileGithub', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({github:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileInstagram', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({instagram:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileOthers', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({others:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
+router.post('/changeProfileImg', function(req, res){
+    let {aId, value} = req.body
+      if(!aId){
+        res.status(403).send("I'm sorry that We can't find your ID.")
+      }
+    db.collection("account").doc(aId).update({img:value});
+    res.header('Content-Type', 'application/json; charset=utf-8')
+    res.send({
+      body:value
+    })
+});
+
 router.get('/url_to_title', function(req, res, next) {
   if(!req.query.url)
     return
