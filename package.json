@@ -26,6 +26,13 @@
   },
   "devDependencies": {
     "babel-core": "^6.26.3",
-    "babelify": "^6.4.0"
+    "babelify": "^6.4.0",
+    "gulp": "^4.0.2",
+    "gulp-concat": "^2.6.1",
+    "gulp-csso": "^3.0.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-uglify": "^3.0.2",
+    "sass": "^1.21.0"
   }
 }

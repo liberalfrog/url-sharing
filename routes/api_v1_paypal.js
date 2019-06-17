@@ -1,12 +1,8 @@
-var express = require('express');
-var request = require('request');
+const express = require('express');
+const request = require('request');
 const admin = require("firebase-admin");
 
 const db = admin.firestore();
-
-const CLIENT = 'AY9byggP1RG3lxNt3shDNrPITFjGbuJeOpydsEvZw8W1Oe9qMs65vo9nBjjdYSiZFiK0XDODs-H_XzJF';
-const SECRET = 'ECLjrZpHON9NpHv9PKZrdDK0d8e_Mjub5_PjoYUr-G3UimPGOwFrtq-SCwmyJ_mcese0bY4xv8wIPDBU';
-var PAYPAL_API = 'https://api.sandbox.paypal.com';
 
 express()
 var router = express.Router();
