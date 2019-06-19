@@ -423,18 +423,19 @@ button{
     z-index: 25;
   }
   /* delete_folder css */
+
   .delete__container{
-    position: fixed;
-    z-index: 30;
-    top: 45%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 40vw;
-    padding: 1em 1em 4em 1.5em;
-    color: #5d627b;
-    background: white;
-    border-top: solid 4px red;
-    border-radius: 0.5% 0.5% 1% 1%;
+    position:fixed;
+    z-index:30;
+    top:45%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    width:40vw;
+    padding:1em 1em 4em 1.5em;
+    color:#5d627b;
+    background:white;
+    border-top:solid 4px red;
+    border-radius:0.5% 0.5% 1% 1%;
   }
 
   .post__container{
@@ -473,6 +474,10 @@ button{
     border-top: solid 4px lightgreen;
     box-shadow: 0 3px 5px rgba(0, 0, 0, 0.22);
     border-radius: 0.5% 0.5% 1% 1%;
+  }
+
+  #url_input{
+    margin: 4% 0;
   }
 
   .post-folder__preview{
