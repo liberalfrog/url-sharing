@@ -56,14 +56,6 @@
   #container .urlset_panel:nth-child(-n+2){ margin-top: 5vh; }
   .container__wrapper .urlset_panel:nth-child(2n){ margin-left: 3%; }
 
-  .edit__folder{
-    position: absolute;
-    bottom: 12px;
-    right: 10px;
-    font-size: 16px;
-    z-index: 3;
-    display: none;
-  }
 }
 
 /* PC */
@@ -114,14 +106,5 @@
     border: 1px solid gray;
     border-radius: 50%;
     margin: 0 6px 0 0;
-  }
-
-  .edit__folder{
-    position: absolute;
-    bottom: 12px;
-    right: 10px;
-    font-size: 16px;
-    z-index: 3;
-    display: none;
   }
 }

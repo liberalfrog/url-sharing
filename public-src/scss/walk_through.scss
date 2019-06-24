@@ -11,7 +11,6 @@
 
 
 body {
-  background: #525760;
   font-family: 'Roboto', 'San Fransisco', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -48,11 +47,6 @@ body {
   width: 100vw;
 }
 
-.walk__key-img{
-  position: relative;
-  height: 60vh;
-  width: 100vw;
-}
 
 .ra{
   position: relative;
@@ -168,7 +162,7 @@ input:focus {
 	opacity: .4;
 }
 
-.skip, button{
+.skip{
   background: #222;
   border: 0;
   border-radius: 3px;
@@ -204,12 +198,17 @@ button {
 
 @media(max-width: 767px){
   
-  .far, .fas{
-    position: absolute;
-    font-size: 50vw;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  .walk__key-img{
+    position: relative;
+    height: 60vh;
+    width: 100vw;
+    .far, .fas{
+      position: absolute;
+      font-size: 50vw;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
   }
 
   form { margin: 0 5vw; }
@@ -226,12 +225,17 @@ button {
 
 @media(min-width: 768px){
 
-  .far, .fas{
-    position: absolute;
-    font-size: 320px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+  .walk__key-img{
+    position: relative;
+    height: 60vh;
+    width: 100vw;
+    .far, .fas{
+      position: absolute;
+      font-size: 320px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
   }
 
   input#ra_name{

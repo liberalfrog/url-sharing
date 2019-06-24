@@ -215,46 +215,6 @@ button{
     color: gray;
   }
   
-  .list-nav:after {
-    content: "";
-    clear: both;
-    display: block;
-  }
-  
-  .list-nav{
-    position: fixed;
-    display: flex;
-    background-color: white;
-    width: 100vw;
-    bottom: 0;
-    left: 0;
-    height: 8vh;
-    z-index: 999;
-    border-top: 1px solid gray;
-  }
-  
-  .list-nav li{
-    text-align: center;
-    width: 20vw;
-    color:#BBB;
-    line-height: 8vh;
-    text-decoration: none;
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-weight: 400;
-  }
-
-  .list-nav li button, .list-nav li a{
-    display: block;
-    width: 100%;
-    height: 100%;
-    font-size: 24px;
-  }
-
-  .list-nav button.tb-active{ 
-  color: aqua; 
-  border-bottom: 8px solid aqua;
-  }
-
   .list-nav__button-text{ display: none; }
 
   #list-nav__button__profile{
@@ -270,7 +230,6 @@ button{
   .centering_popover{
     position: fixed;
     z-index: 30;
-    background: silver;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -598,11 +557,9 @@ button{
   .centering_popover{
     position: fixed;
     z-index: 30;
-    background: silver;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-  
   }
 
   .list-nav{ width:1024px; }

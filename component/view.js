@@ -171,7 +171,7 @@ class ViewTop extends React.Component{
         </div>
       </div>,
       <div id="utility__area" key="UtilityArea">
-        <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
+        <AddButton func={this.openAddPanel.bind(this)} icon={"both"} />
       </div>,
       <SideMenu key="SideMenu" homeStyle="tb-active"/>
     ])
