@@ -171,7 +171,7 @@ class ViewTop extends React.Component{
         </div>
       </div>,
       <div id="utility__area" key="UtilityArea">
-        <AddButton func={this.openAddPanel.bind(this)} icon={"+"} />
+        <AddButton func={this.openAddPanel.bind(this)} icon={"both"} />
       </div>,
       <SideMenu key="SideMenu" homeStyle="tb-active"/>
     ])
@@ -234,13 +234,12 @@ class ViewFolderFeed extends React.Component {
 class ViewPostFolder extends React.Component {
   constructor(props){
     super(props)
-    this.state = { list: this.props.list }
   }
   render(){
     return(
       <div className="container__wrapper">
         <URLFolderPost />
-        <Folders list={this.state.list} />
+        <Folders list={this.props.list} />
       </div>
     )
   }
@@ -260,7 +259,10 @@ class ViewURLFeed extends React.Component {
   }
   componentDidMount(){
     let count = 0
+    // awaitにすべき
     db.collection("freefolder").doc(this.state.id).collection("urls").get().then(snaps => {
+      // TODO: URLを見られた回数を計算して返すならRDBにすべき
+      // NoSQLなら冗長化ロジックを書く（合計値を計算する）
       return snaps.forEach(snap => {
         return db.collection("page_tracking").where("urlId", "==", snap.id).get().then(urlSnaps => {
           count += urlSnaps.size
@@ -285,6 +287,9 @@ class ViewURLFeed extends React.Component {
 
 
 class ViewURLPost extends React.Component {
+  constructor(props){
+    super(props)
+  }
   render(){
     return(
       <div className="container__wrapper">

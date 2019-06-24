@@ -255,28 +255,10 @@ function urlSubmitActiveSwitch() {
 var AddButton = (function (_React$Component) {
   _inherits(AddButton, _React$Component);
 
-  function AddButton(props) {
+  function AddButton() {
     _classCallCheck(this, AddButton);
 
-    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).call(this, props);
-    this.state = {
-      "kind": undefined
-    };
-    switch (props.icon) {
-      case "+":
-        this.state.kind = "fa fa-plus";
-        break;
-      case "folder":
-        this.state.kind = "fa fa-folder-plus";
-        break;
-      case "url":
-        this.state.kind = "fa far fa-code";
-        break;
-
-      default:
-        this.state.kind = "fa";
-        break;
-    }
+    _get(Object.getPrototypeOf(AddButton.prototype), "constructor", this).apply(this, arguments);
   }
 
   // @platong Appear if plus button is tapped or clicked.
@@ -284,7 +266,13 @@ var AddButton = (function (_React$Component) {
   _createClass(AddButton, [{
     key: "render",
     value: function render() {
-      return React.createElement("button", { id: "add_button", key: "addButtons", className: this.state.kind, onClick: this.props.func });
+      var cssClassMap = {
+        both: "fa fa-plus",
+        folder: "fa fa-folder-plus",
+        url: "fa far fa-code"
+      };
+      return React.createElement("button", { id: "add_button", key: "addButtons",
+        className: cssClassMap[this.props.icon], onClick: this.props.func });
     }
   }]);
 
@@ -599,9 +587,9 @@ var URLFolderPost = (function (_React$Component5) {
         "div",
         { className: "post__container", key: "urlFolderPostContainer" },
         React.createElement(
-          "h1",
+          "h2",
           { className: "view-title" },
-          "URLを入れるフォルダを作成"
+          "フォルダを作成"
         ),
         React.createElement(
           "form",
@@ -621,11 +609,12 @@ var URLFolderPost = (function (_React$Component5) {
           React.createElement(
             "div",
             { className: "post-folder__sub" },
-            React.createElement("input", { type: "checkbox", name: "paid", id: "post-folder__sell" }),
+            "このフォルダの金額 ",
+            React.createElement("input", { type: "text", name: "paid", id: "post-folder__sell" }),
             React.createElement(
               "label",
               { htmlFor: "paid" },
-              "販売する"
+              " 円"
             )
           ),
           React.createElement(
@@ -2531,11 +2520,16 @@ var TemplateViewNavTab = (function (_React$Component) {
         _react2["default"].createElement("div", { className: "window-overlay", onClick: this.props.cancel }),
         _react2["default"].createElement(
           "div",
-          { className: "post__container" },
+          { className: "delete__container" },
           _react2["default"].createElement(
             "h1",
             { className: "view-title" },
             this.props.title
+          ),
+          _react2["default"].createElement(
+            "p",
+            null,
+            "このフォルダを削除しますか？"
           ),
           this.props.content
         )
@@ -2558,21 +2552,8 @@ var ViewFolderEdit = (function (_React$Component2) {
       aId: sessionStorage.folderedit_aId,
       content: _react2["default"].createElement(
         "div",
-        { className: "add_view" },
-        _react2["default"].createElement(
-          "div",
-          { className: "add_panel", onClick: this.deleteFolder.bind(this) },
-          _react2["default"].createElement(
-            "h3",
-            null,
-            "フォルダの削除"
-          ),
-          _react2["default"].createElement(
-            "p",
-            null,
-            "このフォルダを削除します"
-          )
-        )
+        { className: "delete_view" },
+        _react2["default"].createElement("input", { type: "button", value: "削除", className: "post__delete submit_is_disactive", onClick: this.deleteFolder.bind(this) })
       )
     };
     sessionStorage.removeItem("folderedit_id");
@@ -2850,7 +2831,7 @@ var ViewTop = (function (_React$Component3) {
       ), _react2["default"].createElement(
         "div",
         { id: "utility__area", key: "UtilityArea" },
-        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "+" })
+        _react2["default"].createElement(_add_button.AddButton, { func: this.openAddPanel.bind(this), icon: "both" })
       ), _react2["default"].createElement(_side_menu2["default"], { key: "SideMenu", homeStyle: "tb-active" })];
     }
   }]);
@@ -2959,7 +2940,6 @@ var ViewPostFolder = (function (_React$Component5) {
     _classCallCheck(this, ViewPostFolder);
 
     _get(Object.getPrototypeOf(ViewPostFolder.prototype), "constructor", this).call(this, props);
-    this.state = { list: this.props.list };
   }
 
   _createClass(ViewPostFolder, [{
@@ -2969,7 +2949,7 @@ var ViewPostFolder = (function (_React$Component5) {
         "div",
         { className: "container__wrapper" },
         _react2["default"].createElement(_add_button.URLFolderPost, null),
-        _react2["default"].createElement(_folder2["default"], { list: this.state.list })
+        _react2["default"].createElement(_folder2["default"], { list: this.props.list })
       );
     }
   }]);
@@ -2999,7 +2979,10 @@ var ViewURLFeed = (function (_React$Component6) {
     key: "componentDidMount",
     value: function componentDidMount() {
       var count = 0;
+      // awaitにすべき
       _firebase.db.collection("freefolder").doc(this.state.id).collection("urls").get().then(function (snaps) {
+        // TODO: URLを見られた回数を計算して返すならRDBにすべき
+        // NoSQLなら冗長化ロジックを書く（合計値を計算する）
         return snaps.forEach(function (snap) {
           return _firebase.db.collection("page_tracking").where("urlId", "==", snap.id).get().then(function (urlSnaps) {
             count += urlSnaps.size;
@@ -3040,10 +3023,10 @@ var ViewURLFeed = (function (_React$Component6) {
 var ViewURLPost = (function (_React$Component7) {
   _inherits(ViewURLPost, _React$Component7);
 
-  function ViewURLPost() {
+  function ViewURLPost(props) {
     _classCallCheck(this, ViewURLPost);
 
-    _get(Object.getPrototypeOf(ViewURLPost.prototype), "constructor", this).apply(this, arguments);
+    _get(Object.getPrototypeOf(ViewURLPost.prototype), "constructor", this).call(this, props);
   }
 
   _createClass(ViewURLPost, [{

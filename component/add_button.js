@@ -48,29 +48,16 @@ function urlSubmitActiveSwitch(){
 
 
 class AddButton extends React.Component{
-  constructor(props){
-    super(props)
-    this.state = {
-      "kind": undefined
-    }
-    switch(props.icon){
-      case "+":
-        this.state.kind = "fa fa-plus";
-        break;
-      case "folder":
-        this.state.kind = "fa fa-folder-plus";
-        break;
-      case "url":
-        this.state.kind = "fa far fa-code";
-        break;
-
-      default:
-        this.state.kind = "fa"
-      break
-    }
-  }
   render(){
-    return( <button id="add_button" key="addButtons" className={this.state.kind} onClick={this.props.func}></button>);
+    const cssClassMap = {
+      both: "fa fa-plus",
+      folder: "fa fa-folder-plus",
+      url: "fa far fa-code"
+    };
+    return( 
+      <button id="add_button" key="addButtons" 
+       className={cssClassMap[this.props.icon]} onClick={this.props.func}></button>
+    );
   }
 }
 

@@ -1,0 +1,42 @@
+@media screen and (max-width: 767px) {
+  .list-nav{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    background-color: white;
+    width: 100vw;
+    height: 8vh;
+    z-index: 999;
+    border-top: 1px solid gray;
+
+    li{
+      text-align: center;
+      width: 20vw;
+      color:#BBB;
+      line-height: 8vh;
+      text-decoration: none;
+      font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+      font-weight: 400;
+
+      button, a{
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-size: 24px;
+      }
+    }
+
+    button.tb-active{
+      color: aqua;
+      border-bottom: 8px solid aqua;
+    }
+
+    &:after {
+      content: "";
+      clear: both;
+      display: block;
+    }
+  }
+
+}
