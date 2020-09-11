@@ -19,7 +19,7 @@
     "jade": "~1.11.0",
     "log4js": "^4.1.0",
     "morgan": "~1.9.0",
-    "node-fetch": "^2.2.0",
+    "node-fetch": "^2.6.1",
     "react": "^16.6.1",
     "request": "^2.88.0",
     "typescript": "^3.4.5"
